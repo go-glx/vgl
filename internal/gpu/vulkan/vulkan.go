@@ -24,7 +24,7 @@ func NewVulkanApi(wm arch.WindowManager, cfg *config.Config) *Vk {
 func (vk *Vk) Close() error {
 	vk.free()
 
-	return vk.container.closer.Close()
+	return nil
 }
 
 func (vk *Vk) free() {
@@ -32,6 +32,12 @@ func (vk *Vk) free() {
 		vulkan.DestroyPipelineLayout(vk.ld.ref, vk.pipelineLayout, nil)
 		vk.pipelineLayout = nil
 		log.Printf("vk: freed: pipeline layout\n")
+	}
+
+	if vk.container.vkPipelineLayoutUBODescriptorSet != nil {
+		vulkan.DestroyDescriptorSetLayout(vk.ld.ref, vk.container.vkPipelineLayoutUBODescriptorSet, nil)
+		vk.container.vkPipelineLayoutUBODescriptorSet = nil
+		log.Printf("vk: freed: descriptor set layout\n")
 	}
 
 	if vk.pipelineManager != nil {
@@ -53,6 +59,11 @@ func (vk *Vk) free() {
 		vk.frameBuffers.free()
 		vk.frameBuffers = nil
 	}
+
+	for _, renderPass := range vk.container.vkRenderPassHandlesLazyCache {
+		vulkan.DestroyRenderPass(vk.ld.ref, renderPass, nil)
+	}
+	log.Printf("vk: freed: all render pases\n")
 
 	if vk.swapChain != nil {
 		vk.swapChain.free()
@@ -113,6 +124,10 @@ func (vk *Vk) rebuildGraphicsPipeline() {
 		vk.pipelineManager.free()
 		vk.pipelineManager = nil
 		vk.container.vkPipelineManager = nil
+	}
+
+	for _, renderPass := range vk.container.vkRenderPassHandlesLazyCache {
+		vulkan.DestroyRenderPass(vk.ld.ref, renderPass, nil)
 	}
 
 	vk.container.vkRenderPassHandlesLazyCache = make(map[renderPassType]vulkan.RenderPass)

@@ -9,7 +9,7 @@ const swapChainTimeout = time.Second * 10
 const maxPresetFails = 100
 
 // Capacity of each vertex buffer page
-const vertexBufferSize = 2048 // 2048 Bytes
+const vertexBufferSize = 4096 // 4096 Bytes
 const indexBufferSize = 65536 // 65 MB
 
 // always equal size of UBO ( 4 * mat4 )

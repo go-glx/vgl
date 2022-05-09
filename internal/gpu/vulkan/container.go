@@ -8,7 +8,6 @@ import (
 
 	"github.com/fe3dback/govgl/arch"
 	"github.com/fe3dback/govgl/config"
-	"github.com/fe3dback/govgl/internal/closer"
 )
 
 type (
@@ -16,7 +15,6 @@ type (
 		// dependencies
 		windowManager arch.WindowManager
 		cfg           *config.Config
-		closer        *closer.Closer
 
 		// internal
 		vkRenderPassHandlesLazyCache map[renderPassType]vulkan.RenderPass
@@ -41,13 +39,9 @@ type (
 )
 
 func newContainer(wm arch.WindowManager, cfg *config.Config) *container {
-	contCloser := closer.NewCloser()
-	contCloser.EnqueueClose(wm.Close)
-
 	return &container{
 		windowManager: wm,
 		cfg:           cfg,
-		closer:        contCloser,
 
 		// internal
 		vkRenderPassHandlesLazyCache: map[renderPassType]vulkan.RenderPass{},

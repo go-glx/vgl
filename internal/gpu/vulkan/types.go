@@ -15,6 +15,7 @@ type (
 		commandPool        *vkCommandPool
 		frameManager       *vkFrameManager
 		swapChain          *vkSwapChain
+		renderPass         vulkan.RenderPass
 		frameBuffers       *vkFrameBuffers
 		dataBuffersManager *vkDataBuffersManager
 		shaderManager      *vkShaderManager

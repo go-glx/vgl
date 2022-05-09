@@ -88,11 +88,11 @@ func (vk *Vk) Draw() {
 	// 	0.1,
 	// 	10,
 	// )
-	uboProjection := glm.Mat4Identity()
-	uboView := glm.Mat4Identity()
-	uboModel := glm.Mat4Identity()
+	// uboProjection := glm.Mat4Identity()
+	// uboView := glm.Mat4Identity()
+	// uboModel := glm.Mat4Identity()
 
-	vk.dataBuffersManager.updateGlobalUniformBuffer(vk.currentFrameImageID, uboProjection, uboView, uboModel)
+	// vk.dataBuffersManager.updateGlobalUniformBuffer(vk.currentFrameImageID, uboProjection, uboView, uboModel)
 
 	// draw all shaders
 	for pipelineID, instances := range vk.renderQueue {

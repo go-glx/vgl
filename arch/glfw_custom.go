@@ -81,7 +81,5 @@ func (g *GLFWCustom) InitVulkanProcAddr() {
 }
 
 func (g *GLFWCustom) Close() error {
-	glfw.Terminate()
-
 	return nil
 }

@@ -164,9 +164,11 @@ func (c *container) createPipelineColorBlendDefault() vulkan.PipelineColorBlendS
 // PipelineLayout used for input not vertex data into shaders (like textures, uniform buffers, etc...)
 func newPipeLineLayout(ld *vkLogicalDevice, ubo vulkan.DescriptorSetLayout) vulkan.PipelineLayout {
 	info := &vulkan.PipelineLayoutCreateInfo{
-		SType:                  vulkan.StructureTypePipelineLayoutCreateInfo,
-		SetLayoutCount:         1,
-		PSetLayouts:            []vulkan.DescriptorSetLayout{ubo},
+		SType: vulkan.StructureTypePipelineLayoutCreateInfo,
+		// SetLayoutCount:         1,
+		// PSetLayouts:            []vulkan.DescriptorSetLayout{ubo},
+		SetLayoutCount:         0,   // todo ^
+		PSetLayouts:            nil, // todo ^
 		PushConstantRangeCount: 0,
 		PPushConstantRanges:    nil,
 	}

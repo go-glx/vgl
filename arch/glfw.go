@@ -76,5 +76,7 @@ func (g *GLFW) InitVulkanProcAddr() {
 }
 
 func (g *GLFW) Close() error {
+	glfw.Terminate()
+
 	return g.custom.Close()
 }

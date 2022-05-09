@@ -16,6 +16,7 @@ func newCommandPool(pd *vkPhysicalDevice, ld *vkLogicalDevice) *vkCommandPool {
 	poolInfo := &vulkan.CommandPoolCreateInfo{
 		SType:            vulkan.StructureTypeCommandPoolCreateInfo,
 		QueueFamilyIndex: pd.families.graphicsFamilyId,
+		Flags:            vulkan.CommandPoolCreateFlags(vulkan.CommandPoolCreateResetCommandBufferBit),
 	}
 
 	var pool vulkan.CommandPool
@@ -52,6 +53,7 @@ func (pool *vkCommandPool) free() {
 }
 
 func (pool *vkCommandPool) commandBufferStart(ind int) {
+
 	vkAssert(
 		vulkan.BeginCommandBuffer(pool.buffers[ind], &vulkan.CommandBufferBeginInfo{
 			SType: vulkan.StructureTypeCommandBufferBeginInfo,
