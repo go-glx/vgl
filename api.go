@@ -7,15 +7,27 @@ import (
 )
 
 type Render struct {
-	renderer *vulkan.Vk
+	gpuApi *vulkan.Vk
 }
 
 func NewRender(wm arch.WindowManager, cfg *config.Config) *Render {
 	return &Render{
-		renderer: vulkan.NewVulkanApi(wm, cfg),
+		gpuApi: vulkan.NewVulkanApi(wm, cfg),
 	}
 }
 
+// WaitGPU should be called in graceful engine shutdown
+// before application exit. This command will sleep and wait
+// current io operation done in GPU.
+// SHOULD BE called before Close
+func (r *Render) WaitGPU() {
+	r.gpuApi.GPUWait()
+}
+
+// Close SHOULD BE called on application exit
+// this will free all vulkan GPU resources, release
+// memory, etc..
+// Render.WaitGPU SHOULD BE called right before Close
 func (r *Render) Close() error {
-	return r.renderer.Close()
+	return r.gpuApi.Close()
 }
