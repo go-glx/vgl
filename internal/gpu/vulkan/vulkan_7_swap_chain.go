@@ -6,7 +6,7 @@ import (
 
 	"github.com/vulkan-go/vulkan"
 
-	"github.com/fe3dback/govgl/config"
+	"github.com/go-glx/vgl/config"
 )
 
 func newSwapChain(width, height uint32, pd *vkPhysicalDevice, ld *vkLogicalDevice, surface *vkSurface, cfg *config.Config) *vkSwapChain {

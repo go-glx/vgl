@@ -1,9 +1,9 @@
-package govgl
+package vgl
 
 import (
-	"github.com/fe3dback/govgl/arch"
-	"github.com/fe3dback/govgl/config"
-	"github.com/fe3dback/govgl/internal/gpu/vulkan"
+	"github.com/go-glx/vgl/arch"
+	"github.com/go-glx/vgl/config"
+	"github.com/go-glx/vgl/internal/gpu/vulkan"
 )
 
 type Render struct {

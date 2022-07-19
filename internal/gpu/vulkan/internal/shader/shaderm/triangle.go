@@ -5,7 +5,7 @@ import (
 
 	"github.com/vulkan-go/vulkan"
 
-	glm2 "github.com/fe3dback/govgl/glm"
+	glm2 "github.com/go-glx/vgl/glm"
 )
 
 const pTriangleTriangleCount = 1

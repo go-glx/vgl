@@ -1,11 +1,12 @@
-# fe3dback/govgl
+# go-glx/vgl
+
+VGL is vulkan graphics library
 
 __NOT READY FOR ANY REAL USAGE YET (IN DEV)__
 
 ---
 
-Its primitive 2D-only graphics library for drawing simple staff like circles, lines, polygons, etc..
-Also textures.
+Its primitive 2D-only graphics library for drawing simple staff like circles, boxes, lines, polygons and textures.
 
 Also support custom SPIR-V shaders
 
@@ -16,12 +17,14 @@ This library use Vulkan for sending GPU commands.
 This library can be used in high performance and rich graphic
 applications. (2D Game engines)
 
+3D not supported right now
+
 ## Arch
 
 ```
-govgl -> driver -> GPU
-                    |
-                    WM
+vgl -> driver -> GPU
+                  |
+                  WM
 ```
 
 Available drivers:

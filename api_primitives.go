@@ -1,6 +1,6 @@
-package govgl
+package vgl
 
-import "github.com/fe3dback/govgl/glm"
+import "github.com/go-glx/vgl/glm"
 
 // All APIs work with vector vertexes, where:
 // x = -1 .. 1

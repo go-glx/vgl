@@ -1,4 +1,4 @@
-package govgl
+package vgl
 
 // FrameStart should be called before any drawing in current frame
 func (r *Render) FrameStart() {

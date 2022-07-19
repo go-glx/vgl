@@ -5,7 +5,7 @@ import (
 
 	"github.com/vulkan-go/vulkan"
 
-	"github.com/fe3dback/govgl/glm"
+	"github.com/go-glx/vgl/glm"
 )
 
 func (vk *Vk) appendToRenderQueue(sp shaderProgram) {

@@ -1,8 +1,8 @@
 package vulkan
 
 import (
-	"github.com/fe3dback/govgl/glm"
-	"github.com/fe3dback/govgl/internal/gpu/vulkan/internal/shader/shaderm"
+	"github.com/go-glx/vgl/glm"
+	"github.com/go-glx/vgl/internal/gpu/vulkan/internal/shader/shaderm"
 )
 
 func (vk *Vk) DrawTmpTriangle() {

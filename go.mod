@@ -1,4 +1,4 @@
-module github.com/fe3dback/govgl
+module github.com/go-glx/vgl
 
 go 1.18
 

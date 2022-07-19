@@ -5,7 +5,7 @@ import (
 
 	"github.com/vulkan-go/vulkan"
 
-	"github.com/fe3dback/govgl/internal/gpu/vulkan/internal/shader/shaderm"
+	"github.com/go-glx/vgl/internal/gpu/vulkan/internal/shader/shaderm"
 )
 
 var buildInShaders = map[shaderProgram]shaderPipelineFactory{

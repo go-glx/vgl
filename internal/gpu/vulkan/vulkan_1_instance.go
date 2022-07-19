@@ -7,7 +7,7 @@ import (
 
 	"github.com/vulkan-go/vulkan"
 
-	"github.com/fe3dback/govgl/arch"
+	"github.com/go-glx/vgl/arch"
 )
 
 var requiredValidationLayers = []string{
