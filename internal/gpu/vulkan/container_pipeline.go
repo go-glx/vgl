@@ -9,9 +9,6 @@ import (
 )
 
 var buildInShaders = map[shaderProgram]shaderPipelineFactory{
-	&shaderm.Triangle{}: func(c *container, sp shaderProgram) vulkan.Pipeline {
-		return c.createShaderPipelineUniversalTriangleList(sp)
-	},
 	&shaderm.Rect{}: func(c *container, sp shaderProgram) vulkan.Pipeline {
 		return c.createShaderPipelineUniversalTriangleList(sp)
 	},

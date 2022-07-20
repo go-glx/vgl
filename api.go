@@ -3,16 +3,23 @@ package vgl
 import (
 	"github.com/go-glx/vgl/arch"
 	"github.com/go-glx/vgl/config"
-	"github.com/go-glx/vgl/internal/gpu/vulkan"
+	"github.com/go-glx/vgl/internal/gpu/vlk"
 )
 
 type Render struct {
-	gpuApi *vulkan.Vk
+	closer *Closer
+	api    *vlk.VLK
 }
 
 func NewRender(wm arch.WindowManager, cfg *config.Config) *Render {
+	closer := newCloser()
+	container := vlk.NewContainer(closer, wm, cfg)
+	renderer := container.VulkanRenderer()
+	renderer.GPUWait()
+
 	return &Render{
-		gpuApi: vulkan.NewVulkanApi(wm, cfg),
+		closer: closer,
+		api:    renderer,
 	}
 }
 
@@ -21,7 +28,7 @@ func NewRender(wm arch.WindowManager, cfg *config.Config) *Render {
 // current io operation done in GPU.
 // SHOULD BE called before Close
 func (r *Render) WaitGPU() {
-	r.gpuApi.GPUWait()
+	r.api.GPUWait()
 }
 
 // Close SHOULD BE called on application exit
@@ -29,5 +36,6 @@ func (r *Render) WaitGPU() {
 // memory, etc..
 // Render.WaitGPU SHOULD BE called right before Close
 func (r *Render) Close() error {
-	return r.gpuApi.Close()
+	r.closer.close()
+	return nil
 }

@@ -18,5 +18,5 @@ func (r *Render) Draw2DRectExt(
 	outline bool,
 ) {
 	// todo: outline
-	r.gpuApi.DrawRect(vertexPos, vertexColor)
+	r.api.DrawRect(vertexPos, vertexColor)
 }
