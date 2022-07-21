@@ -20,7 +20,7 @@ func (d *Device) score(pd *GPU) int {
 		// swap chain
 		len(pd.SurfaceProps.formats) <= 0:             "not GPU",
 		len(pd.SurfaceProps.presentModes) <= 0:        "not GPU",
-		pd.SurfaceProps.richColorSpaceFormat() == nil: "rich colorSpace not supported",
+		pd.SurfaceProps.RichColorSpaceFormat() == nil: "rich colorSpace not supported",
 	}
 
 	// filter

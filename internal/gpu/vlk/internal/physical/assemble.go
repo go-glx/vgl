@@ -3,6 +3,7 @@ package physical
 import (
 	"github.com/vulkan-go/vulkan"
 
+	"github.com/go-glx/vgl/internal/gpu/vlk/internal/def"
 	"github.com/go-glx/vgl/internal/gpu/vlk/internal/must"
 	"github.com/go-glx/vgl/internal/gpu/vlk/internal/vkconv"
 )
@@ -16,8 +17,8 @@ func (d *Device) assembleGPU(pd vulkan.PhysicalDevice) *GPU {
 	vulkan.GetPhysicalDeviceFeatures(pd, &features)
 	features.Deref()
 
-	vkExtList := make([]string, 0, len(requiredDeviceExtensions))
-	for _, extName := range requiredDeviceExtensions {
+	vkExtList := make([]string, 0, len(def.RequiredDeviceExtensions))
+	for _, extName := range def.RequiredDeviceExtensions {
 		vkExtList = append(vkExtList, vkconv.NormalizeString(extName))
 	}
 

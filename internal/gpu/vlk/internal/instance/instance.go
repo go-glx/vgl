@@ -5,6 +5,7 @@ import (
 
 	"github.com/vulkan-go/vulkan"
 
+	"github.com/go-glx/vgl/internal/gpu/vlk/internal/def"
 	"github.com/go-glx/vgl/internal/gpu/vlk/internal/must"
 )
 
@@ -48,7 +49,7 @@ func createInfo(opt CreateOptions) vulkan.InstanceCreateInfo {
 			ApplicationVersion: vulkan.MakeVersion(1, 0, 0),
 			PEngineName:        opt.engineName,
 			EngineVersion:      vulkan.MakeVersion(1, 0, 0),
-			ApiVersion:         vulkan.ApiVersion11,
+			ApiVersion:         def.VKApiVersion,
 		},
 	}
 

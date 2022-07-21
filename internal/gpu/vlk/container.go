@@ -3,6 +3,7 @@ package vlk
 import (
 	"github.com/go-glx/vgl/arch"
 	"github.com/go-glx/vgl/config"
+	"github.com/go-glx/vgl/internal/gpu/vlk/internal/command"
 	"github.com/go-glx/vgl/internal/gpu/vlk/internal/instance"
 	"github.com/go-glx/vgl/internal/gpu/vlk/internal/logical"
 	"github.com/go-glx/vgl/internal/gpu/vlk/internal/physical"
@@ -20,12 +21,15 @@ type Container struct {
 	wm        arch.WindowManager
 	cfg       *config.Config
 
-	// state
+	// static
 	vlkRef            *VLK
 	vlkInstance       *instance.Instance
 	vlkSurface        *surface.Surface
 	vlkPhysicalDevice *physical.Device
 	vlkLogicalDevice  *logical.Device
+
+	// dynamic
+	vlkCommandPool *command.Pool
 }
 
 func NewContainer(

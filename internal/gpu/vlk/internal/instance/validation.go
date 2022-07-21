@@ -5,13 +5,10 @@ import (
 
 	"github.com/vulkan-go/vulkan"
 
+	"github.com/go-glx/vgl/internal/gpu/vlk/internal/def"
 	"github.com/go-glx/vgl/internal/gpu/vlk/internal/must"
 	"github.com/go-glx/vgl/internal/gpu/vlk/internal/vkconv"
 )
-
-var requiredValidationLayers = []string{
-	"VK_LAYER_KHRONOS_validation",
-}
 
 func validationLayers(isDebugMode bool) []string {
 	if !isDebugMode {
@@ -33,7 +30,7 @@ func validationLayers(isDebugMode bool) []string {
 	notFound := make([]string, 0)
 	found := make([]string, 0)
 
-	for _, requiredLayer := range requiredValidationLayers {
+	for _, requiredLayer := range def.RequiredValidationLayers {
 		layerName := vkconv.NormalizeString(requiredLayer)
 
 		if _, exist := foundLayers[layerName]; !exist {

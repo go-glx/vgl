@@ -5,10 +5,6 @@ import (
 	"github.com/go-glx/vgl/internal/gpu/vlk/internal/surface"
 )
 
-var requiredDeviceExtensions = []string{
-	"VK_KHR_swapchain", // require for display buffer to screen
-}
-
 type Device struct {
 	inst    *instance.Instance
 	surface *surface.Surface

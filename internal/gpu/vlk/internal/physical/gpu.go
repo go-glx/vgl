@@ -6,6 +6,7 @@ import (
 
 	"github.com/vulkan-go/vulkan"
 
+	"github.com/go-glx/vgl/internal/gpu/vlk/internal/def"
 	"github.com/go-glx/vgl/internal/gpu/vlk/internal/vkconv"
 )
 
@@ -30,7 +31,7 @@ func (pd *GPU) isSupportAllRequiredExtensions() bool {
 	}
 
 	notSupported := make([]string, 0)
-	for _, extension := range requiredDeviceExtensions {
+	for _, extension := range def.RequiredDeviceExtensions {
 		vkExtName := vkconv.NormalizeString(extension)
 
 		if _, supported := supportedExt[vkExtName]; supported {

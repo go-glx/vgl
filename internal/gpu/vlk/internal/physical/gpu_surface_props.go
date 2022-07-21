@@ -6,6 +6,7 @@ import (
 
 	"github.com/vulkan-go/vulkan"
 
+	"github.com/go-glx/vgl/internal/gpu/vlk/internal/def"
 	"github.com/go-glx/vgl/internal/gpu/vlk/internal/vkconv"
 )
 
@@ -18,13 +19,30 @@ type (
 	}
 )
 
-func (ds *SurfaceProps) richColorSpaceFormat() *vulkan.SurfaceFormat {
+// ConcurrentBuffersCount defines how much
+//  - swap chain images
+//  - command buffers in pool
+//  - etc...
+// we need in pipeline process.
+// Usually we need at least two images for [rendering, display].
+//
+// Each frame, this buffers will be swapped.
+// but for good quality we may use triple buffering
+func (ds *SurfaceProps) ConcurrentBuffersCount() uint32 {
+	return vkconv.ClampUint(
+		def.OptimalSwapChainBuffersCount,
+		ds.capabilities.MinImageCount,
+		ds.capabilities.MaxImageCount,
+	)
+}
+
+func (ds *SurfaceProps) RichColorSpaceFormat() *vulkan.SurfaceFormat {
 	for _, surfaceFormat := range ds.formats {
-		if surfaceFormat.Format != vulkan.FormatB8g8r8a8Srgb {
+		if surfaceFormat.Format != def.SurfaceFormat {
 			continue
 		}
 
-		if surfaceFormat.ColorSpace != vulkan.ColorSpaceSrgbNonlinear {
+		if surfaceFormat.ColorSpace != def.SurfaceColorSpace {
 			continue
 		}
 
@@ -34,13 +52,40 @@ func (ds *SurfaceProps) richColorSpaceFormat() *vulkan.SurfaceFormat {
 	return nil
 }
 
-func (ds *SurfaceProps) bestPresentMode(vSync bool) vulkan.PresentMode {
+func (ds *SurfaceProps) bestPresentMode(mobileFriendly bool) vulkan.PresentMode {
 	for _, mode := range ds.presentModes {
-		if vSync && mode == vulkan.PresentModeFifo {
+		if mobileFriendly && mode == vulkan.PresentModeFifo {
+			// 1# [R]       [D.......][R]
+			// 2# [D.......][R]       [D.......]
+			//    |         |         |
+			//   frm1      frm 2     frm 3
+			//
+			// Fifo is low consumption rendering, friendly for
+			// mobile devices. When we render (R) some buffer, it will
+			// stay all time before displayed (D) on screen.
+			//
+			// + vsync
+			// + good for mobiles (low power consumption)
+			// + always supported
+			// - high latency
 			return mode
 		}
 
 		if mode == vulkan.PresentModeMailbox {
+			// 1# [R][R][R] [D] ///// [R]
+			// 2# [D] ///// [R][R][R] [D]
+			//    |         |         |
+			//   frm1      frm 2     frm 3
+			//
+			// Mailbox is high power consumption mode, that will
+			// heat GPU to max, and re-render (R) all frames when
+			// GPU has free time (idle). It`s a lot of work, that
+			// will be ignored. For example, we render (R) 3 buffers per frame
+			// here, and display (D) only last of them.
+			//
+			// + low latency
+			// - not always supported on all GPU's
+			// - high power consumption
 			return mode
 		}
 
@@ -92,20 +137,4 @@ func (ds *SurfaceProps) chooseSwapExtent(width, height uint32) vulkan.Extent2D {
 	)
 
 	return actualExtent
-}
-
-func (ds *SurfaceProps) imageBuffersCount() uint32 {
-	optimalCount := ds.capabilities.MinImageCount + 1
-
-	if ds.capabilities.MaxImageCount == 0 {
-		// no maximum
-		return optimalCount
-	}
-
-	if optimalCount > ds.capabilities.MaxImageCount {
-		// clamp to max
-		optimalCount = ds.capabilities.MaxImageCount
-	}
-
-	return optimalCount
 }
