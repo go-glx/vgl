@@ -15,6 +15,9 @@ func NewRender(wm arch.WindowManager, cfg *config.Config) *Render {
 	closer := newCloser()
 	container := vlk.NewContainer(closer, wm, cfg)
 	renderer := container.VulkanRenderer()
+
+	// init renderer resources and prepare GPU to work
+	renderer.WarmUp()
 	renderer.GPUWait()
 
 	return &Render{

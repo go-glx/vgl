@@ -31,6 +31,14 @@ func (dev *Device) Ref() vulkan.Device {
 	return dev.ref
 }
 
+func (dev *Device) QueueGraphics() vulkan.Queue {
+	return dev.queueGraphics
+}
+
+func (dev *Device) QueuePresent() vulkan.Queue {
+	return dev.queuePresent
+}
+
 func (dev *Device) Free() {
 	vulkan.DestroyDevice(dev.ref, nil)
 	log.Printf("vk: freed: logical device\n")

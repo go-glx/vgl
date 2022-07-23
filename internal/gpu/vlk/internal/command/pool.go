@@ -35,18 +35,8 @@ func (p *Pool) Free() {
 	log.Printf("vk: freed: command pool\n")
 }
 
-func (p *Pool) CommandBufferBegin(ind int) {
-	must.Work(
-		vulkan.BeginCommandBuffer(p.buffers[ind], &vulkan.CommandBufferBeginInfo{
-			SType: vulkan.StructureTypeCommandBufferBeginInfo,
-		}),
-	)
-}
-
-func (p *Pool) CommandBufferEnd(ind int) {
-	must.Work(
-		vulkan.EndCommandBuffer(p.buffers[ind]),
-	)
+func (p *Pool) BuffersCount() int {
+	return len(p.buffers)
 }
 
 func (p *Pool) CommandBuffer(ind int) vulkan.CommandBuffer {

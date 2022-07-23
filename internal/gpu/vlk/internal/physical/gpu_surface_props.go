@@ -19,6 +19,10 @@ type (
 	}
 )
 
+func (ds *SurfaceProps) Capabilities() vulkan.SurfaceCapabilities {
+	return ds.capabilities
+}
+
 // ConcurrentBuffersCount defines how much
 //  - swap chain images
 //  - command buffers in pool
@@ -52,7 +56,7 @@ func (ds *SurfaceProps) RichColorSpaceFormat() *vulkan.SurfaceFormat {
 	return nil
 }
 
-func (ds *SurfaceProps) bestPresentMode(mobileFriendly bool) vulkan.PresentMode {
+func (ds *SurfaceProps) BestPresentMode(mobileFriendly bool) vulkan.PresentMode {
 	for _, mode := range ds.presentModes {
 		if mobileFriendly && mode == vulkan.PresentModeFifo {
 			// 1# [R]       [D.......][R]
@@ -95,7 +99,7 @@ func (ds *SurfaceProps) bestPresentMode(mobileFriendly bool) vulkan.PresentMode 
 	panic(fmt.Errorf("GPU not support any present mode"))
 }
 
-func (ds *SurfaceProps) chooseSwapExtent(width, height uint32) vulkan.Extent2D {
+func (ds *SurfaceProps) ChooseSwapExtent(width, height uint32) vulkan.Extent2D {
 	calculatedMax := uint32((math.MaxInt32 * 2) + 1)
 
 	// Vulkan tells us to match the resolution of the window by setting the width and height in the currentExtent member.

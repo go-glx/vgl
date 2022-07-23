@@ -1,6 +1,10 @@
 package def
 
-import "github.com/vulkan-go/vulkan"
+import (
+	"time"
+
+	"github.com/vulkan-go/vulkan"
+)
 
 // ------------------------------------------------------
 // -- Instance
@@ -46,3 +50,14 @@ const (
 	SurfaceFormat     = vulkan.FormatB8g8r8a8Srgb
 	SurfaceColorSpace = vulkan.ColorSpaceSrgbNonlinear
 )
+
+// ------------------------------------------------------
+// -- Rendering
+// ------------------------------------------------------
+
+// FrameAcquireTimeout how much time CPU will wait
+// for latest frame<n = OptimalSwapChainBuffersCount - 1>
+// at frameStart. If GPU hang/lag and not present this N frame
+// on screen, after FrameAcquireTimeout CPU will panic and crash
+// application
+const FrameAcquireTimeout = time.Second * 3

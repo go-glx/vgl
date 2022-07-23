@@ -1,18 +1,23 @@
 package vlk
 
 import (
+	"log"
+
 	"github.com/go-glx/vgl/arch"
 	"github.com/go-glx/vgl/config"
 	"github.com/go-glx/vgl/internal/gpu/vlk/internal/command"
+	"github.com/go-glx/vgl/internal/gpu/vlk/internal/frame"
 	"github.com/go-glx/vgl/internal/gpu/vlk/internal/instance"
 	"github.com/go-glx/vgl/internal/gpu/vlk/internal/logical"
 	"github.com/go-glx/vgl/internal/gpu/vlk/internal/physical"
+	"github.com/go-glx/vgl/internal/gpu/vlk/internal/renderpass"
 	"github.com/go-glx/vgl/internal/gpu/vlk/internal/surface"
+	"github.com/go-glx/vgl/internal/gpu/vlk/internal/swapchain"
 )
 
 type closer interface {
 	EnqueueFree(fn func())
-	EnqueueClose(fn func() error)
+	EnqueueBackFree(fn func())
 }
 
 type Container struct {
@@ -29,7 +34,10 @@ type Container struct {
 	vlkLogicalDevice  *logical.Device
 
 	// dynamic
-	vlkCommandPool *command.Pool
+	vlkCommandPool    *command.Pool
+	vlkSwapChain      *swapchain.Chain
+	vlkFrameManager   *frame.Manager
+	vlkRenderPassMain *renderpass.Pass
 }
 
 func NewContainer(
@@ -46,6 +54,11 @@ func NewContainer(
 
 	wm.OnWindowResized(func(_, _ int) {
 		cont.rebuild()
+	})
+
+	closer.EnqueueBackFree(func() {
+		cont.rebuilder.free()
+		log.Printf("vk: freed: dynamic resources\n")
 	})
 
 	return cont

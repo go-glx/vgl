@@ -10,6 +10,31 @@ type (
 const errorCodesUrl = "https://registry.khronos.org/vulkan/specs/1.3-extensions/man/html/VkResult.html"
 
 var codeNameReferences = codeNames{
+	// -- Semi-Successful
+
+	vulkan.NotReady: [2]string{
+		"NotReady",
+		"Resource not ready",
+	},
+	vulkan.Timeout: [2]string{
+		"Timeout",
+		"Operation timed out",
+	},
+	vulkan.EventSet: [2]string{
+		"EventSet",
+		"",
+	},
+	vulkan.EventReset: [2]string{
+		"EventReset",
+		"",
+	},
+	vulkan.Incomplete: [2]string{
+		"Incomplete",
+		"",
+	},
+
+	// -- Errors
+
 	vulkan.ErrorOutOfHostMemory: [2]string{
 		"ErrorOutOfHostMemory",
 		"A host memory allocation has failed.",
