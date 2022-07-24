@@ -9,6 +9,7 @@ import (
 	"github.com/go-glx/vgl/internal/gpu/vlk/internal/instance"
 	"github.com/go-glx/vgl/internal/gpu/vlk/internal/logical"
 	"github.com/go-glx/vgl/internal/gpu/vlk/internal/physical"
+	"github.com/go-glx/vgl/internal/gpu/vlk/internal/pipeline"
 	"github.com/go-glx/vgl/internal/gpu/vlk/internal/surface"
 )
 
@@ -70,6 +71,19 @@ func (c *Container) logicalDevice() *logical.Device {
 		func() *logical.Device {
 			return logical.NewDevice(
 				c.physicalDevice(),
+			)
+		},
+	)
+}
+
+func (c *Container) pipelineFactory() *pipeline.Factory {
+	return static(c, &c.vlkPipelineFactory,
+		func(x *pipeline.Factory) { x.Free() },
+		func() *pipeline.Factory {
+			return pipeline.NewFactory(
+				c.logicalDevice(),
+				c.swapChain(),
+				c.renderPassMain(),
 			)
 		},
 	)

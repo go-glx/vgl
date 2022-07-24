@@ -10,6 +10,7 @@ import (
 	"github.com/go-glx/vgl/internal/gpu/vlk/internal/instance"
 	"github.com/go-glx/vgl/internal/gpu/vlk/internal/logical"
 	"github.com/go-glx/vgl/internal/gpu/vlk/internal/physical"
+	"github.com/go-glx/vgl/internal/gpu/vlk/internal/pipeline"
 	"github.com/go-glx/vgl/internal/gpu/vlk/internal/renderpass"
 	"github.com/go-glx/vgl/internal/gpu/vlk/internal/surface"
 	"github.com/go-glx/vgl/internal/gpu/vlk/internal/swapchain"
@@ -27,11 +28,12 @@ type Container struct {
 	cfg       *config.Config
 
 	// static
-	vlkRef            *VLK
-	vlkInstance       *instance.Instance
-	vlkSurface        *surface.Surface
-	vlkPhysicalDevice *physical.Device
-	vlkLogicalDevice  *logical.Device
+	vlkRef             *VLK
+	vlkInstance        *instance.Instance
+	vlkSurface         *surface.Surface
+	vlkPhysicalDevice  *physical.Device
+	vlkLogicalDevice   *logical.Device
+	vlkPipelineFactory *pipeline.Factory
 
 	// dynamic
 	vlkCommandPool    *command.Pool

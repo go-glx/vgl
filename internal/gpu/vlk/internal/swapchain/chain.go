@@ -6,7 +6,6 @@ import (
 	"github.com/vulkan-go/vulkan"
 
 	"github.com/go-glx/vgl/internal/gpu/vlk/internal/logical"
-	"github.com/go-glx/vgl/internal/gpu/vlk/internal/must"
 	"github.com/go-glx/vgl/internal/gpu/vlk/internal/physical"
 	"github.com/go-glx/vgl/internal/gpu/vlk/internal/renderpass"
 	"github.com/go-glx/vgl/internal/gpu/vlk/internal/surface"
@@ -69,29 +68,23 @@ func (c *Chain) FrameBuffer(index int) vulkan.Framebuffer {
 	return c.buffers[index]
 }
 
-func newSwapChain(pd *physical.Device, ld *logical.Device, surface *surface.Surface, props ChainProps, sharingMode vulkan.SharingMode) vulkan.Swapchain {
-	families := pd.PrimaryGPU().Families.UniqueIDs()
-
-	info := &vulkan.SwapchainCreateInfo{
-		SType:                 vulkan.StructureTypeSwapchainCreateInfo,
-		Surface:               surface.Ref(),
-		MinImageCount:         props.BuffersCount,
-		ImageFormat:           props.ImageFormat,
-		ImageColorSpace:       props.ImageColorSpace,
-		ImageExtent:           props.BufferSize,
-		ImageArrayLayers:      1,
-		ImageUsage:            vulkan.ImageUsageFlags(vulkan.ImageUsageColorAttachmentBit),
-		ImageSharingMode:      sharingMode,
-		QueueFamilyIndexCount: uint32(len(families)),
-		PQueueFamilyIndices:   families,
-		PreTransform:          pd.PrimaryGPU().SurfaceProps.Capabilities().CurrentTransform,
-		CompositeAlpha:        vulkan.CompositeAlphaOpaqueBit,
-		PresentMode:           props.PresentMode,
-		Clipped:               vulkan.True,
+func (c *Chain) Viewport() vulkan.Viewport {
+	return vulkan.Viewport{
+		X:        0,
+		Y:        0,
+		Width:    float32(c.Props().BufferSize.Width),
+		Height:   float32(c.Props().BufferSize.Height),
+		MinDepth: 0.0,
+		MaxDepth: 1.0,
 	}
+}
 
-	var swapChain vulkan.Swapchain
-	must.Work(vulkan.CreateSwapchain(ld.Ref(), info, nil, &swapChain))
-
-	return swapChain
+func (c *Chain) Scissor() vulkan.Rect2D {
+	return vulkan.Rect2D{
+		Offset: vulkan.Offset2D{
+			X: 0,
+			Y: 0,
+		},
+		Extent: c.Props().BufferSize,
+	}
 }
