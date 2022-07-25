@@ -11,9 +11,10 @@ import (
 // objects for work, this must be called one time
 // before first FrameStart
 func (vlk *VLK) WarmUp() {
-	// request frameManager, this will create it
+	// request some managers, this will create it
 	// and all dependencies, like swapChain, renderPass, etc..
 	_ = vlk.cont.frameManager()
+	_ = vlk.cont.shaderManager()
 }
 
 func (vlk *VLK) GPUWait() {
@@ -51,7 +52,7 @@ func (vlk *VLK) FrameEnd() {
 		pipeline.WithMultisampling(),
 	)
 
-	vlk.cont.frameManager().FrameApplyCommands(func(cb vulkan.CommandBuffer) {
+	vlk.cont.frameManager().FrameApplyCommands(func(_ uint32, cb vulkan.CommandBuffer) {
 		vulkan.CmdBindPipeline(cb, vulkan.PipelineBindPointGraphics, pipe)
 
 		// todo: 3,1 to shader
@@ -67,8 +68,9 @@ func (vlk *VLK) DrawRect(vertexPos [4]glm.Vec2, vertexColor [4]glm.Vec3) {
 		return
 	}
 
-	vlk.cont.frameManager().FrameApplyCommands(func(cb vulkan.CommandBuffer) {
-		// todo: add command to draw rect
-		// todo: in current command buffer
-	})
+	// todo:
+	// vlk.cont.frameManager().FrameApplyCommands(func(cb vulkan.CommandBuffer) {
+	// 	// todo: add command to draw rect
+	// 	// todo: in current command buffer
+	// })
 }

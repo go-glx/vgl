@@ -2,11 +2,11 @@ package frame
 
 import "github.com/vulkan-go/vulkan"
 
-func (m *Manager) renderPassMainBegin(cb vulkan.CommandBuffer) {
+func (m *Manager) renderPassMainBegin(imageID uint32, cb vulkan.CommandBuffer) {
 	renderPassBeginInfo := &vulkan.RenderPassBeginInfo{
 		SType:       vulkan.StructureTypeRenderPassBeginInfo,
 		RenderPass:  m.mainRenderPass.Ref(),
-		Framebuffer: m.chain.FrameBuffer(int(m.id)),
+		Framebuffer: m.chain.FrameBuffer(int(imageID)),
 		RenderArea: vulkan.Rect2D{
 			Offset: vulkan.Offset2D{
 				X: 0,
