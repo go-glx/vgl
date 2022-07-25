@@ -61,3 +61,8 @@ const (
 // on screen, after FrameAcquireTimeout CPU will panic and crash
 // application
 const FrameAcquireTimeout = time.Second * 3
+
+// ShaderEntryPoint is entry point in shader bytecode
+// where GPU start executing shader code
+// do not change from "main"
+const ShaderEntryPoint = "main"

@@ -12,6 +12,7 @@ import (
 	"github.com/go-glx/vgl/internal/gpu/vlk/internal/physical"
 	"github.com/go-glx/vgl/internal/gpu/vlk/internal/pipeline"
 	"github.com/go-glx/vgl/internal/gpu/vlk/internal/renderpass"
+	"github.com/go-glx/vgl/internal/gpu/vlk/internal/shader"
 	"github.com/go-glx/vgl/internal/gpu/vlk/internal/surface"
 	"github.com/go-glx/vgl/internal/gpu/vlk/internal/swapchain"
 )
@@ -34,6 +35,7 @@ type Container struct {
 	vlkPhysicalDevice  *physical.Device
 	vlkLogicalDevice   *logical.Device
 	vlkPipelineFactory *pipeline.Factory
+	vlkShaderManager   *shader.Manager
 
 	// dynamic
 	vlkCommandPool    *command.Pool

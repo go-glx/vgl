@@ -10,6 +10,7 @@ import (
 	"github.com/go-glx/vgl/internal/gpu/vlk/internal/logical"
 	"github.com/go-glx/vgl/internal/gpu/vlk/internal/physical"
 	"github.com/go-glx/vgl/internal/gpu/vlk/internal/pipeline"
+	"github.com/go-glx/vgl/internal/gpu/vlk/internal/shader"
 	"github.com/go-glx/vgl/internal/gpu/vlk/internal/surface"
 )
 
@@ -85,6 +86,23 @@ func (c *Container) pipelineFactory() *pipeline.Factory {
 				c.swapChain(),
 				c.renderPassMain(),
 			)
+		},
+	)
+}
+
+func (c *Container) shaderManager() *shader.Manager {
+	return static(c, &c.vlkShaderManager,
+		func(x *shader.Manager) { x.Free() },
+		func() *shader.Manager {
+			mng := shader.NewManager(
+				c.logicalDevice(),
+			)
+
+			// register build-in shaders
+			mng.RegisterShader(defaultShaderTriangle())
+
+			//
+			return mng
 		},
 	)
 }

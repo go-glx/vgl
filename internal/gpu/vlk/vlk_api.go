@@ -4,6 +4,7 @@ import (
 	"github.com/vulkan-go/vulkan"
 
 	"github.com/go-glx/vgl/glm"
+	"github.com/go-glx/vgl/internal/gpu/vlk/internal/pipeline"
 )
 
 // WarmUp will warm vlk renderer and create all needed
@@ -31,6 +32,32 @@ func (vlk *VLK) FrameEnd() {
 	if !vlk.isReady {
 		return
 	}
+
+	// todo: remove test draw
+	triangle := vlk.cont.shaderManager().ShaderByID(buildInShaderTriangle)
+
+	pipe := vlk.cont.pipelineFactory().NewPipeline(
+		pipeline.WithStages([]vulkan.PipelineShaderStageCreateInfo{
+			*triangle.ModuleVert().Stage(),
+			*triangle.ModuleFrag().Stage(),
+		}),
+		pipeline.WithTopology(triangle.Meta().Topology()),
+		pipeline.WithVertexInput(
+			triangle.Meta().Bindings(),
+			triangle.Meta().Attributes(),
+		),
+		pipeline.WithRasterization(vulkan.PolygonModeFill),
+		pipeline.WithColorBlend(),
+		pipeline.WithMultisampling(),
+	)
+
+	vlk.cont.frameManager().FrameApplyCommands(func(cb vulkan.CommandBuffer) {
+		vulkan.CmdBindPipeline(cb, vulkan.PipelineBindPointGraphics, pipe)
+
+		// todo: 3,1 to shader
+		vulkan.CmdDraw(cb, 3, 1, 0, 0)
+	})
+	// todo: ^^^^^^^^^^^^^^
 
 	vlk.cont.frameManager().FrameEnd()
 }

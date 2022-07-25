@@ -44,7 +44,8 @@ func (f *Factory) NewPipeline(opts ...Initializer) vulkan.Pipeline {
 
 	// default opts
 	opts = append(opts, f.withDefaultViewport())
-	opts = append(opts, f.withMainRenderPass())
+	opts = append(opts, f.withDefaultMainRenderPass())
+	opts = append(opts, f.withDefaultLayout())
 
 	// build pipeline info
 	for _, applyOpt := range opts {

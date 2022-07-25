@@ -18,10 +18,16 @@ func (f *Factory) withDefaultViewport() Initializer {
 	}
 }
 
-func (f *Factory) withMainRenderPass() Initializer {
+func (f *Factory) withDefaultMainRenderPass() Initializer {
 	return func(info *vulkan.GraphicsPipelineCreateInfo) {
 		info.RenderPass = f.mainRenderPass.Ref()
 		info.Subpass = 0
+	}
+}
+
+func (f *Factory) withDefaultLayout() Initializer {
+	return func(info *vulkan.GraphicsPipelineCreateInfo) {
+		info.Layout = f.defaultPipelineLayout
 	}
 }
 

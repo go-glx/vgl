@@ -111,19 +111,19 @@ func (f *frame) frameEnd() {
 
 func (f *frame) acquireNextImage() (uint32, bool) {
 	timeout := uint64(def.FrameAcquireTimeout.Nanoseconds())
-	imageID := uint32(0)
+	imageID := uint32(256)
 
 	result := vulkan.AcquireNextImage(f.ld.Ref(), f.chain.Ref(), timeout, f.semImageReady, nil, &imageID)
 	if result == vulkan.ErrorOutOfDate || result == vulkan.Suboptimal {
 		// buffer size changes (window rebuildGraphicsPipeline, minimize, etc..)
 		// and not more valid
 		f.onSuboptimal()
-		return 0, false
+		return imageID, false
 	}
 
 	if result != vulkan.Success {
 		must.NotCare(result)
-		return 0, false
+		return imageID, false
 	}
 
 	return imageID, true
