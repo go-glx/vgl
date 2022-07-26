@@ -1,7 +1,7 @@
 package instance
 
 import (
-	"log"
+	"fmt"
 
 	"github.com/vulkan-go/vulkan"
 
@@ -10,8 +10,8 @@ import (
 	"github.com/go-glx/vgl/internal/gpu/vlk/internal/vkconv"
 )
 
-func validationLayers(isDebugMode bool) []string {
-	if !isDebugMode {
+func validationLayers(opt CreateOptions) []string {
+	if !opt.debugMode {
 		return []string{}
 	}
 
@@ -41,11 +41,14 @@ func validationLayers(isDebugMode bool) []string {
 		found = append(found, layerName)
 	}
 
-	log.Printf("vk: available layers: [%v]\n", found)
+	opt.logger.Debug(fmt.Sprintf("available layers: [%v]", found))
 
 	if len(notFound) > 0 {
-		log.Printf("vk: debug may not work (turn off it in engine config), because some of extensions not found: %v\n",
-			notFound,
+		opt.logger.Error(
+			fmt.Sprintf("debug may not work (turn off it in engine config), "+
+				"because some of extensions not found: %v",
+				notFound,
+			),
 		)
 	}
 

@@ -1,8 +1,6 @@
 package vlk
 
 import (
-	"log"
-
 	"github.com/go-glx/vgl/arch"
 	"github.com/go-glx/vgl/config"
 	"github.com/go-glx/vgl/internal/gpu/vlk/internal/command"
@@ -24,24 +22,25 @@ type closer interface {
 
 type Container struct {
 	closer    closer
+	logger    config.Logger
 	rebuilder *rebuilder
 	wm        arch.WindowManager
 	cfg       *config.Config
 
 	// static
-	vlkRef             *VLK
-	vlkInstance        *instance.Instance
-	vlkSurface         *surface.Surface
-	vlkPhysicalDevice  *physical.Device
-	vlkLogicalDevice   *logical.Device
-	vlkPipelineFactory *pipeline.Factory
-	vlkShaderManager   *shader.Manager
+	vlkRef            *VLK
+	vlkInstance       *instance.Instance
+	vlkSurface        *surface.Surface
+	vlkPhysicalDevice *physical.Device
+	vlkLogicalDevice  *logical.Device
+	vlkShaderManager  *shader.Manager
 
 	// dynamic
-	vlkCommandPool    *command.Pool
-	vlkSwapChain      *swapchain.Chain
-	vlkFrameManager   *frame.Manager
-	vlkRenderPassMain *renderpass.Pass
+	vlkCommandPool     *command.Pool
+	vlkSwapChain       *swapchain.Chain
+	vlkFrameManager    *frame.Manager
+	vlkRenderPassMain  *renderpass.Pass
+	vlkPipelineFactory *pipeline.Factory
 }
 
 func NewContainer(
@@ -51,6 +50,7 @@ func NewContainer(
 ) *Container {
 	cont := &Container{
 		closer:    closer,
+		logger:    cfg.Logger(),
 		rebuilder: newRebuilder(),
 		wm:        wm,
 		cfg:       cfg,
@@ -62,7 +62,7 @@ func NewContainer(
 
 	closer.EnqueueBackFree(func() {
 		cont.rebuilder.free()
-		log.Printf("vk: freed: dynamic resources\n")
+		cont.logger.Debug("freed: dynamic resources")
 	})
 
 	return cont

@@ -2,12 +2,13 @@ package config
 
 type (
 	Config struct {
-		debug bool
-		gpu   configGpu
+		debug  bool
+		gpu    configSwapChain
+		logger Logger
 	}
 
-	configGpu struct {
-		vSync bool
+	configSwapChain struct {
+		mobileFriendly bool
 	}
 
 	Configure = func(*Config)
@@ -16,9 +17,10 @@ type (
 func NewConfig(opts ...Configure) *Config {
 	cfg := &Config{
 		debug: false,
-		gpu: configGpu{
-			vSync: false,
+		gpu: configSwapChain{
+			mobileFriendly: true,
 		},
+		logger: &defaultLogger{},
 	}
 
 	for _, configure := range opts {
@@ -36,11 +38,20 @@ func WithDebug(enabled bool) Configure {
 	}
 }
 
-// WithVSync will use FIFO rendering
+// WithMobileFriendly will use FIFO rendering
 // true - vsync, good for mobile (small power consumption)
-// false - low latency, high power consumption
-func WithVSync(enabled bool) Configure {
+// false - low latency, high power consumption, but better latency
+func WithMobileFriendly(enabled bool) Configure {
 	return func(config *Config) {
-		config.gpu.vSync = enabled
+		config.gpu.mobileFriendly = enabled
+	}
+}
+
+// WithLogger allow to use custom logger
+// for library messages. If not set, default go
+// log.* package will be used for logging
+func WithLogger(logger Logger) Configure {
+	return func(config *Config) {
+		config.logger = logger
 	}
 }

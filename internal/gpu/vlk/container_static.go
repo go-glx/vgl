@@ -2,14 +2,12 @@ package vlk
 
 import (
 	"fmt"
-	"log"
 
 	"github.com/vulkan-go/vulkan"
 
 	"github.com/go-glx/vgl/internal/gpu/vlk/internal/instance"
 	"github.com/go-glx/vgl/internal/gpu/vlk/internal/logical"
 	"github.com/go-glx/vgl/internal/gpu/vlk/internal/physical"
-	"github.com/go-glx/vgl/internal/gpu/vlk/internal/pipeline"
 	"github.com/go-glx/vgl/internal/gpu/vlk/internal/shader"
 	"github.com/go-glx/vgl/internal/gpu/vlk/internal/surface"
 )
@@ -27,11 +25,12 @@ func (c *Container) instance() *instance.Instance {
 				panic(fmt.Errorf("failed init vulkan: %w", err))
 			}
 
-			log.Printf("vk: lib initialized: [%#v]\n", c.cfg)
+			c.logger.Info(fmt.Sprintf("lib initialized: [%#v]", c.cfg))
 
 			// create instance
 			return instance.NewInstance(
 				instance.NewCreateOptions(
+					c.logger,
 					c.wm.AppName(),
 					c.wm.EngineName(),
 					c.wm.GetRequiredInstanceExtensions(),
@@ -47,6 +46,7 @@ func (c *Container) surface() *surface.Surface {
 		func(x *surface.Surface) { x.Free() },
 		func() *surface.Surface {
 			return surface.NewSurface(
+				c.logger,
 				c.instance(),
 				c.wm,
 			)
@@ -59,6 +59,7 @@ func (c *Container) physicalDevice() *physical.Device {
 		func(x *physical.Device) {},
 		func() *physical.Device {
 			return physical.NewDevice(
+				c.logger,
 				c.instance(),
 				c.surface(),
 			)
@@ -71,20 +72,8 @@ func (c *Container) logicalDevice() *logical.Device {
 		func(x *logical.Device) { x.Free() },
 		func() *logical.Device {
 			return logical.NewDevice(
+				c.logger,
 				c.physicalDevice(),
-			)
-		},
-	)
-}
-
-func (c *Container) pipelineFactory() *pipeline.Factory {
-	return static(c, &c.vlkPipelineFactory,
-		func(x *pipeline.Factory) { x.Free() },
-		func() *pipeline.Factory {
-			return pipeline.NewFactory(
-				c.logicalDevice(),
-				c.swapChain(),
-				c.renderPassMain(),
 			)
 		},
 	)
@@ -95,6 +84,7 @@ func (c *Container) shaderManager() *shader.Manager {
 		func(x *shader.Manager) { x.Free() },
 		func() *shader.Manager {
 			mng := shader.NewManager(
+				c.logger,
 				c.logicalDevice(),
 			)
 

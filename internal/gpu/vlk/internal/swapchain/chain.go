@@ -1,10 +1,11 @@
 package swapchain
 
 import (
-	"log"
+	"fmt"
 
 	"github.com/vulkan-go/vulkan"
 
+	"github.com/go-glx/vgl/config"
 	"github.com/go-glx/vgl/internal/gpu/vlk/internal/logical"
 	"github.com/go-glx/vgl/internal/gpu/vlk/internal/physical"
 	"github.com/go-glx/vgl/internal/gpu/vlk/internal/renderpass"
@@ -12,6 +13,7 @@ import (
 )
 
 type Chain struct {
+	logger    config.Logger
 	props     ChainProps
 	swapChain vulkan.Swapchain
 	images    []vulkan.Image
@@ -21,7 +23,7 @@ type Chain struct {
 	ld *logical.Device
 }
 
-func NewChain(width, height uint32, pd *physical.Device, ld *logical.Device, surface *surface.Surface, mainRenderPass *renderpass.Pass, mobileFriendly bool) *Chain {
+func NewChain(logger config.Logger, width, height uint32, pd *physical.Device, ld *logical.Device, surface *surface.Surface, mainRenderPass *renderpass.Pass, mobileFriendly bool) *Chain {
 	props := newProps(width, height, pd, mobileFriendly)
 	sharingMode := deviceSharingMode(pd)
 	swapChain := newSwapChain(pd, ld, surface, props, sharingMode)
@@ -30,9 +32,10 @@ func NewChain(width, height uint32, pd *physical.Device, ld *logical.Device, sur
 	views := createViews(images, ld, props)
 	buffers := createFrameBuffers(ld, mainRenderPass.Ref(), props, views)
 
-	log.Printf("vk: swapchain created, images=%d, props=(%s)\n", len(images), props.String())
+	logger.Debug(fmt.Sprintf("swapchain created, images=%d, props=(%s)", len(images), props.String()))
 
 	return &Chain{
+		logger:    logger,
 		props:     props,
 		swapChain: swapChain,
 		images:    images,
@@ -53,7 +56,7 @@ func (c *Chain) Free() {
 	}
 
 	vulkan.DestroySwapchain(c.ld.Ref(), c.swapChain, nil)
-	log.Printf("vk: freed: swapchain\n")
+	c.logger.Debug("freed: swapchain")
 }
 
 func (c *Chain) Ref() vulkan.Swapchain {

@@ -1,26 +1,30 @@
 package logical
 
 import (
-	"log"
+	"fmt"
+	"strings"
 
 	"github.com/vulkan-go/vulkan"
 
+	"github.com/go-glx/vgl/config"
 	"github.com/go-glx/vgl/internal/gpu/vlk/internal/must"
 	"github.com/go-glx/vgl/internal/gpu/vlk/internal/physical"
 	"github.com/go-glx/vgl/internal/gpu/vlk/internal/vkconv"
 )
 
 type Device struct {
-	pd *physical.Device
+	logger config.Logger
+	pd     *physical.Device
 
 	ref           vulkan.Device
 	queueGraphics vulkan.Queue
 	queuePresent  vulkan.Queue
 }
 
-func NewDevice(pd *physical.Device) *Device {
+func NewDevice(logger config.Logger, pd *physical.Device) *Device {
 	dev := &Device{
-		pd: pd,
+		logger: logger,
+		pd:     pd,
 	}
 	dev.createLogicalAndEnrich()
 
@@ -41,7 +45,7 @@ func (dev *Device) QueuePresent() vulkan.Queue {
 
 func (dev *Device) Free() {
 	vulkan.DestroyDevice(dev.ref, nil)
-	log.Printf("vk: freed: logical device\n")
+	dev.logger.Debug("freed: logical device")
 }
 
 func (dev *Device) createLogicalAndEnrich() {
@@ -58,6 +62,8 @@ func (dev *Device) createLogicalAndEnrich() {
 		PpEnabledExtensionNames: vkconv.NormalizeStringList(gpu.RequiredExtensions),
 	}
 
+	dev.logger.Debug(fmt.Sprintf("gpu require ext: [%s]", strings.Join(gpu.RequiredExtensions, ", ")))
+
 	// create device
 	var logicalDevice vulkan.Device
 	must.Work(vulkan.CreateDevice(gpu.Ref, createInfo, nil, &logicalDevice))
@@ -69,10 +75,10 @@ func (dev *Device) createLogicalAndEnrich() {
 	vulkan.GetDeviceQueue(logicalDevice, gpu.Families.PresentFamilyId, 0, &queuePresent)
 
 	// log
-	log.Printf("vk: logical device created (graphicsQ: %d, presentQ: %d)\n",
+	dev.logger.Debug(fmt.Sprintf("logical device created (graphicsQ: %d, presentQ: %d)",
 		gpu.Families.GraphicsFamilyId,
 		gpu.Families.PresentFamilyId,
-	)
+	))
 
 	// enrich
 	dev.ref = logicalDevice

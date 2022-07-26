@@ -2,10 +2,11 @@ package must
 
 import (
 	"fmt"
-	"log"
 	"runtime"
 
 	"github.com/vulkan-go/vulkan"
+
+	"github.com/go-glx/vgl/config"
 )
 
 // Work will panic when vkResult is not success
@@ -14,22 +15,25 @@ func Work(vkResult vulkan.Result) {
 		return
 	}
 
-	panic(asGoError(vkResult, false))
+	panic(asGoError(vkResult, false, 2))
 }
 
 // NotCare will do nothing when vkResult is success
 // and log error, when is not.
 // also return true when vkResult is success
-func NotCare(vkResult vulkan.Result) bool {
+// NotCare MUST be called from some util function, not directly
+// Code -> utilFn -> NotCare -> goError (3)
+// This will show n-3 stack trace line, where code is halted
+func NotCare(logger config.Logger, vkResult vulkan.Result) bool {
 	if vkResult == vulkan.Success {
 		return true
 	}
 
-	log.Println(asGoError(vkResult, true).Error())
+	logger.Notice(asGoError(vkResult, true, 3).Error())
 	return false
 }
 
-func asGoError(vkResult vulkan.Result, short bool) error {
+func asGoError(vkResult vulkan.Result, short bool, stackLevel int) error {
 	errorName := "unknown"
 	description := ""
 
@@ -38,12 +42,12 @@ func asGoError(vkResult vulkan.Result, short bool) error {
 	}
 
 	where := "unknown"
-	if _, file, line, ok := runtime.Caller(2); ok {
+	if _, file, line, ok := runtime.Caller(stackLevel); ok {
 		where = fmt.Sprintf("%s:%d", file, line)
 	}
 
 	if short {
-		return fmt.Errorf("vk: Err: %d (%s), at %s",
+		return fmt.Errorf("bad result, code=%d (%s), at %s",
 			vkResult,
 			errorName,
 			where,

@@ -35,24 +35,25 @@ func (vlk *VLK) FrameEnd() {
 	}
 
 	// todo: remove test draw
-	triangle := vlk.cont.shaderManager().ShaderByID(buildInShaderTriangle)
-
-	pipe := vlk.cont.pipelineFactory().NewPipeline(
-		pipeline.WithStages([]vulkan.PipelineShaderStageCreateInfo{
-			*triangle.ModuleVert().Stage(),
-			*triangle.ModuleFrag().Stage(),
-		}),
-		pipeline.WithTopology(triangle.Meta().Topology()),
-		pipeline.WithVertexInput(
-			triangle.Meta().Bindings(),
-			triangle.Meta().Attributes(),
-		),
-		pipeline.WithRasterization(vulkan.PolygonModeFill),
-		pipeline.WithColorBlend(),
-		pipeline.WithMultisampling(),
-	)
 
 	vlk.cont.frameManager().FrameApplyCommands(func(_ uint32, cb vulkan.CommandBuffer) {
+		triangle := vlk.cont.shaderManager().ShaderByID(buildInShaderTriangle)
+
+		pipe := vlk.cont.pipelineFactory().NewPipeline(
+			pipeline.WithStages([]vulkan.PipelineShaderStageCreateInfo{
+				*triangle.ModuleVert().Stage(),
+				*triangle.ModuleFrag().Stage(),
+			}),
+			pipeline.WithTopology(triangle.Meta().Topology()),
+			pipeline.WithVertexInput(
+				triangle.Meta().Bindings(),
+				triangle.Meta().Attributes(),
+			),
+			pipeline.WithRasterization(vulkan.PolygonModeFill),
+			pipeline.WithColorBlend(),
+			pipeline.WithMultisampling(),
+		)
+
 		vulkan.CmdBindPipeline(cb, vulkan.PipelineBindPointGraphics, pipe)
 
 		// todo: 3,1 to shader

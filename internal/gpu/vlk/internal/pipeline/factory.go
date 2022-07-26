@@ -3,6 +3,7 @@ package pipeline
 import (
 	"github.com/vulkan-go/vulkan"
 
+	"github.com/go-glx/vgl/config"
 	"github.com/go-glx/vgl/internal/gpu/vlk/internal/logical"
 	"github.com/go-glx/vgl/internal/gpu/vlk/internal/must"
 	"github.com/go-glx/vgl/internal/gpu/vlk/internal/renderpass"
@@ -10,6 +11,7 @@ import (
 )
 
 type Factory struct {
+	logger         config.Logger
 	ld             *logical.Device
 	swapChain      *swapchain.Chain
 	mainRenderPass *renderpass.Pass
@@ -18,14 +20,16 @@ type Factory struct {
 	createdPipelines      []vulkan.Pipeline
 }
 
-func NewFactory(ld *logical.Device, swapChain *swapchain.Chain, mainRenderPass *renderpass.Pass) *Factory {
+func NewFactory(logger config.Logger, ld *logical.Device, swapChain *swapchain.Chain, mainRenderPass *renderpass.Pass) *Factory {
 	factory := &Factory{
+		logger:         logger,
 		ld:             ld,
 		swapChain:      swapChain,
 		mainRenderPass: mainRenderPass,
 	}
 
 	factory.defaultPipelineLayout = factory.newDefaultPipelineLayout()
+	logger.Debug("pipeline factory created")
 	return factory
 }
 
@@ -35,6 +39,8 @@ func (f *Factory) Free() {
 	for _, pipeline := range f.createdPipelines {
 		vulkan.DestroyPipeline(f.ld.Ref(), pipeline, nil)
 	}
+
+	f.logger.Debug("freed: pipeline factory")
 }
 
 func (f *Factory) NewPipeline(opts ...Initializer) vulkan.Pipeline {

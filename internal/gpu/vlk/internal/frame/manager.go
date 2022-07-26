@@ -1,19 +1,18 @@
 package frame
 
 import (
-	"log"
-
 	"github.com/vulkan-go/vulkan"
 
+	"github.com/go-glx/vgl/config"
 	"github.com/go-glx/vgl/internal/gpu/vlk/internal/command"
 	"github.com/go-glx/vgl/internal/gpu/vlk/internal/def"
 	"github.com/go-glx/vgl/internal/gpu/vlk/internal/logical"
-	"github.com/go-glx/vgl/internal/gpu/vlk/internal/must"
 	"github.com/go-glx/vgl/internal/gpu/vlk/internal/renderpass"
 	"github.com/go-glx/vgl/internal/gpu/vlk/internal/swapchain"
 )
 
 type Manager struct {
+	logger         config.Logger
 	chain          *swapchain.Chain
 	mainRenderPass *renderpass.Pass
 	ld             *logical.Device
@@ -31,8 +30,9 @@ type Manager struct {
 	commandBuffers      map[uint32]vulkan.CommandBuffer
 }
 
-func NewManager(ld *logical.Device, pool *command.Pool, chain *swapchain.Chain, renderToScreenPass *renderpass.Pass, onSuboptimal func()) *Manager {
+func NewManager(logger config.Logger, ld *logical.Device, pool *command.Pool, chain *swapchain.Chain, renderToScreenPass *renderpass.Pass, onSuboptimal func()) *Manager {
 	m := &Manager{
+		logger:         logger,
 		chain:          chain,
 		mainRenderPass: renderToScreenPass,
 		ld:             ld,
@@ -57,7 +57,7 @@ func NewManager(ld *logical.Device, pool *command.Pool, chain *swapchain.Chain, 
 		m.syncFrameBusy[fID] = allocateFence(ld)
 	}
 
-	log.Printf("vk: frame manager created\n")
+	logger.Debug("frame manager created")
 	return m
 }
 
@@ -68,7 +68,7 @@ func (m *Manager) Free() {
 		vulkan.DestroySemaphore(m.ld.Ref(), m.semRenderAvailable[fID], nil)
 	}
 
-	log.Printf("vk: freed: frames manager\n")
+	m.logger.Debug("freed: frames manager")
 }
 
 func (m *Manager) FrameBegin() {
@@ -94,7 +94,7 @@ func (m *Manager) prepareFrame() {
 
 	// wait for rendering in current frame is done
 	// then we can occupy current frame for next rendering
-	ok := must.NotCare(vulkan.WaitForFences(m.ld.Ref(), 1, []vulkan.Fence{renderDone}, vulkan.True, timeout))
+	ok := m.notice(vulkan.WaitForFences(m.ld.Ref(), 1, []vulkan.Fence{renderDone}, vulkan.True, timeout))
 	if !ok {
 		m.available = false
 		return
@@ -110,7 +110,7 @@ func (m *Manager) prepareFrame() {
 
 	// wait when image will be available
 	if imageBusy, inFlight := m.syncImageBusy[m.imageID]; inFlight {
-		must.NotCare(vulkan.WaitForFences(m.ld.Ref(), 1, []vulkan.Fence{imageBusy}, vulkan.True, timeout))
+		m.notice(vulkan.WaitForFences(m.ld.Ref(), 1, []vulkan.Fence{imageBusy}, vulkan.True, timeout))
 	}
 	m.syncImageBusy[m.imageID] = renderDone
 
@@ -175,7 +175,7 @@ func (m *Manager) acquireNextImage() (uint32, bool) {
 	}
 
 	if result != vulkan.Success {
-		must.NotCare(result)
+		m.notice(result)
 		return 0, false
 	}
 
@@ -194,7 +194,7 @@ func (m *Manager) render() bool {
 		PSignalSemaphores:    []vulkan.Semaphore{m.semPresentAvailable[m.frameID]},
 	}
 
-	return must.NotCare(vulkan.QueueSubmit(m.ld.QueueGraphics(), 1, []vulkan.SubmitInfo{info}, m.syncFrameBusy[m.frameID]))
+	return m.notice(vulkan.QueueSubmit(m.ld.QueueGraphics(), 1, []vulkan.SubmitInfo{info}, m.syncFrameBusy[m.frameID]))
 }
 
 func (m *Manager) present() bool {
@@ -207,5 +207,5 @@ func (m *Manager) present() bool {
 		PImageIndices:      []uint32{m.imageID},
 	}
 
-	return must.NotCare(vulkan.QueuePresent(m.ld.QueuePresent(), info))
+	return m.notice(vulkan.QueuePresent(m.ld.QueuePresent(), info))
 }

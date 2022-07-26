@@ -6,7 +6,7 @@ type rebuilder struct {
 
 func newRebuilder() *rebuilder {
 	return &rebuilder{
-		queue: make([]func(), 0, 32),
+		queue: make([]func(), 0, 16),
 	}
 }
 
@@ -15,7 +15,11 @@ func (c *rebuilder) enqueue(fn func()) {
 }
 
 func (c *rebuilder) free() {
+	// free all dynamic resources
 	for i := len(c.queue) - 1; i >= 0; i-- {
 		c.queue[i]()
 	}
+
+	// clean queue
+	c.queue = make([]func(), 0, 16)
 }

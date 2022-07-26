@@ -9,14 +9,15 @@ func VarcharAsString(bytes [256]byte) string {
 	r := strings.Builder{}
 
 	for _, b := range bytes {
-		if b == byte(0) { // skip null bytes
-			continue
-		}
+		// if b == byte(0) { // skip null bytes
+		// 	continue
+		// }
 
 		r.WriteByte(b)
 	}
 
-	return strings.TrimSpace(r.String())
+	return r.String()
+	// return strings.TrimSpace(r.String())
 }
 
 func StringAsVarchar(src string) [256]byte {

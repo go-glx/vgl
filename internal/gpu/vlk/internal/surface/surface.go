@@ -2,35 +2,37 @@ package surface
 
 import (
 	"fmt"
-	"log"
 
 	"github.com/vulkan-go/vulkan"
 
 	"github.com/go-glx/vgl/arch"
+	"github.com/go-glx/vgl/config"
 	"github.com/go-glx/vgl/internal/gpu/vlk/internal/instance"
 )
 
 type Surface struct {
-	inst *instance.Instance
+	logger config.Logger
+	inst   *instance.Instance
 
 	ref vulkan.Surface
 }
 
-func NewSurface(inst *instance.Instance, wm arch.WindowManager) *Surface {
+func NewSurface(logger config.Logger, inst *instance.Instance, wm arch.WindowManager) *Surface {
 	surface, err := wm.CreateSurface(inst.Ref())
 	if err != nil {
 		panic(fmt.Errorf("failed create vulkan surface: %w", err))
 	}
 
 	return &Surface{
-		inst: inst,
-		ref:  surface,
+		logger: logger,
+		inst:   inst,
+		ref:    surface,
 	}
 }
 
 func (s *Surface) Free() {
 	vulkan.DestroySurface(s.inst.Ref(), s.ref, nil)
-	log.Printf("vk: freed: surface\n")
+	s.logger.Debug("freed: surface")
 }
 
 func (s *Surface) Ref() vulkan.Surface {

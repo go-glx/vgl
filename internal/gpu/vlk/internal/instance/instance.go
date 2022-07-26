@@ -1,28 +1,31 @@
 package instance
 
 import (
-	"log"
+	"fmt"
 
 	"github.com/vulkan-go/vulkan"
 
+	"github.com/go-glx/vgl/config"
 	"github.com/go-glx/vgl/internal/gpu/vlk/internal/def"
 	"github.com/go-glx/vgl/internal/gpu/vlk/internal/must"
 )
 
 type Instance struct {
-	ref vulkan.Instance
+	logger config.Logger
+	ref    vulkan.Instance
 }
 
 func NewInstance(opt CreateOptions) *Instance {
 	return &Instance{
-		ref: createVk(opt),
+		logger: opt.logger,
+		ref:    createVk(opt),
 	}
 }
 
 func (inst *Instance) Free() {
 	vulkan.DestroyInstance(inst.ref, nil)
 
-	log.Printf("vk: freed: vulkan instance\n")
+	inst.logger.Debug("freed: vulkan instance")
 }
 
 func (inst *Instance) Ref() vulkan.Instance {
@@ -30,7 +33,7 @@ func (inst *Instance) Ref() vulkan.Instance {
 }
 
 func createVk(opt CreateOptions) vulkan.Instance {
-	log.Printf("vk: init '%s' engine, required extensions: [%v]\n", opt.engineName, opt.requiredExtensions)
+	opt.logger.Info(fmt.Sprintf("init '%s' engine, required extensions: [%v]", opt.engineName, opt.requiredExtensions))
 
 	info := createInfo(opt)
 
@@ -54,13 +57,13 @@ func createInfo(opt CreateOptions) vulkan.InstanceCreateInfo {
 	}
 
 	// setup extensions
-	availableExt := fetchAvailableExtensions()
+	availableExt := fetchAvailableExtensions(opt.logger)
 	assertRequiredExtensionsIsAvailable(availableExt, opt.requiredExtensions)
 	info.PpEnabledExtensionNames = opt.requiredExtensions
 	info.EnabledExtensionCount = uint32(len(info.PpEnabledExtensionNames))
 
 	// setup validation (debug)
-	validationLayers := validationLayers(opt.debugMode)
+	validationLayers := validationLayers(opt)
 	info.EnabledLayerCount = uint32(len(validationLayers))
 	info.PpEnabledLayerNames = validationLayers
 

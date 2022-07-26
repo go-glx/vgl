@@ -1,7 +1,7 @@
 package physical
 
 import (
-	"log"
+	"fmt"
 
 	"github.com/vulkan-go/vulkan"
 
@@ -26,11 +26,11 @@ func (d *Device) score(pd *GPU) int {
 	// filter
 	for failed, reason := range required {
 		if failed {
-			log.Printf(
-				"vk: GPU '%s' not pass check: %s\n",
+			d.logger.Notice(fmt.Sprintf(
+				"GPU '%s' not pass check: %s",
 				vkconv.VarcharAsString(pd.Props.DeviceName),
 				reason,
-			)
+			))
 
 			return -1
 		}

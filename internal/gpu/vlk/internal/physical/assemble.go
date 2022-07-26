@@ -3,12 +3,13 @@ package physical
 import (
 	"github.com/vulkan-go/vulkan"
 
+	"github.com/go-glx/vgl/config"
 	"github.com/go-glx/vgl/internal/gpu/vlk/internal/def"
 	"github.com/go-glx/vgl/internal/gpu/vlk/internal/must"
 	"github.com/go-glx/vgl/internal/gpu/vlk/internal/vkconv"
 )
 
-func (d *Device) assembleGPU(pd vulkan.PhysicalDevice) *GPU {
+func (d *Device) assembleGPU(logger config.Logger, pd vulkan.PhysicalDevice) *GPU {
 	var props vulkan.PhysicalDeviceProperties
 	vulkan.GetPhysicalDeviceProperties(pd, &props)
 	props.Deref()
@@ -23,6 +24,7 @@ func (d *Device) assembleGPU(pd vulkan.PhysicalDevice) *GPU {
 	}
 
 	return &GPU{
+		logger:             logger,
 		Ref:                pd,
 		Props:              props,
 		Features:           features,

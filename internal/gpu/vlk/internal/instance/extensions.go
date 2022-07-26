@@ -2,11 +2,11 @@ package instance
 
 import (
 	"fmt"
-	"log"
 	"strings"
 
 	"github.com/vulkan-go/vulkan"
 
+	"github.com/go-glx/vgl/config"
 	"github.com/go-glx/vgl/internal/gpu/vlk/internal/must"
 	"github.com/go-glx/vgl/internal/gpu/vlk/internal/vkconv"
 )
@@ -15,7 +15,7 @@ type (
 	extList map[string]any
 )
 
-func fetchAvailableExtensions() extList {
+func fetchAvailableExtensions(logger config.Logger) extList {
 	var extCount uint32
 	must.Work(vulkan.EnumerateInstanceExtensionProperties("", &extCount, nil))
 
@@ -35,7 +35,7 @@ func fetchAvailableExtensions() extList {
 			continue
 		}
 
-		log.Printf("vk: available ext: %s (v%d)\n", extName, extension.SpecVersion)
+		logger.Debug(fmt.Sprintf("available ext: %s (v%d)", extName, extension.SpecVersion))
 		availableExt[extName] = struct{}{}
 	}
 
@@ -46,7 +46,7 @@ func assertRequiredExtensionsIsAvailable(available extList, required []string) {
 	notAvailable := make([]string, 0)
 
 	for _, ext := range required {
-		if _, exist := available[ext]; exist {
+		if _, exist := available[vkconv.NormalizeString(ext)]; exist {
 			continue
 		}
 

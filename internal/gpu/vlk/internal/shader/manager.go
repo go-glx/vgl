@@ -2,10 +2,10 @@ package shader
 
 import (
 	"fmt"
-	"log"
 
 	"github.com/vulkan-go/vulkan"
 
+	"github.com/go-glx/vgl/config"
 	"github.com/go-glx/vgl/internal/gpu/vlk/internal/def"
 	"github.com/go-glx/vgl/internal/gpu/vlk/internal/logical"
 	"github.com/go-glx/vgl/internal/gpu/vlk/internal/must"
@@ -13,13 +13,15 @@ import (
 )
 
 type Manager struct {
+	logger  config.Logger
 	shaders map[string]*Shader
 
 	ld *logical.Device
 }
 
-func NewManager(ld *logical.Device) *Manager {
+func NewManager(logger config.Logger, ld *logical.Device) *Manager {
 	return &Manager{
+		logger:  logger,
 		shaders: make(map[string]*Shader),
 
 		ld: ld,
@@ -32,7 +34,7 @@ func (m *Manager) Free() {
 		vulkan.DestroyShaderModule(m.ld.Ref(), shader.moduleFrag.module, nil)
 	}
 
-	log.Printf("vk: freed: shaders\n")
+	m.logger.Debug("freed: shaders")
 }
 
 func (m *Manager) ShaderByID(id string) *Shader {
@@ -65,7 +67,7 @@ func (m *Manager) createModule(id string, byteCode []byte, shaderType Type) *Mod
 	var shaderModule vulkan.ShaderModule
 	must.Work(vulkan.CreateShaderModule(m.ld.Ref(), info, nil, &shaderModule))
 
-	log.Printf("vk: created shader '%s' of type '%s', len=%d\n", id, shaderType, len(byteCode))
+	m.logger.Debug(fmt.Sprintf("created shader '%s' of type '%s', len=%d", id, shaderType, len(byteCode)))
 	return &Module{
 		module: shaderModule,
 		stageInfo: vulkan.PipelineShaderStageCreateInfo{

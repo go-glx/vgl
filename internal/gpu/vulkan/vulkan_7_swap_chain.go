@@ -14,7 +14,7 @@ func newSwapChain(width, height uint32, pd *vkPhysicalDevice, ld *vkLogicalDevic
 		imageFormat:     pd.surfaceProps.richColorSpaceFormat().Format,
 		imageColorSpace: pd.surfaceProps.richColorSpaceFormat().ColorSpace,
 		bufferSize:      pd.surfaceProps.chooseSwapExtent(width, height),
-		presentMode:     pd.surfaceProps.bestPresentMode(cfg.HasGPUVSync()),
+		presentMode:     pd.surfaceProps.bestPresentMode(cfg.IsMobileFriendly()),
 	}
 
 	uniqFamilies := pd.families.uniqueIDs()

@@ -2,7 +2,6 @@ package physical
 
 import (
 	"fmt"
-	"log"
 
 	"github.com/vulkan-go/vulkan"
 
@@ -21,10 +20,10 @@ func (d *Device) pickPrimaryGPU() *GPU {
 			continue
 		}
 
-		log.Printf("vk: GPU '%s' is suitable for use, score = %d\n",
+		d.logger.Info(fmt.Sprintf("GPU '%s' is suitable for use, score = %d",
 			vkconv.VarcharAsString(pd.Props.DeviceName),
 			score,
-		)
+		))
 
 		if score > bestScore {
 			bestScore = score
@@ -36,7 +35,7 @@ func (d *Device) pickPrimaryGPU() *GPU {
 		panic(fmt.Errorf("not found suitable vulkan GPU for rendering"))
 	}
 
-	log.Printf("vk: using GPU: %s\n", vkconv.VarcharAsString(bestDevice.Props.DeviceName))
+	d.logger.Info(fmt.Sprintf("using GPU: %s", vkconv.VarcharAsString(bestDevice.Props.DeviceName)))
 	return bestDevice
 }
 
@@ -52,7 +51,7 @@ func (d *Device) listDevices() []*GPU {
 
 	result := make([]*GPU, 0, len(physicalDevices))
 	for _, pd := range physicalDevices {
-		result = append(result, d.assembleGPU(pd))
+		result = append(result, d.assembleGPU(d.logger, pd))
 	}
 
 	return result

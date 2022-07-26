@@ -1,26 +1,27 @@
 package command
 
 import (
-	"log"
-
 	"github.com/vulkan-go/vulkan"
 
+	"github.com/go-glx/vgl/config"
 	"github.com/go-glx/vgl/internal/gpu/vlk/internal/logical"
 	"github.com/go-glx/vgl/internal/gpu/vlk/internal/must"
 	"github.com/go-glx/vgl/internal/gpu/vlk/internal/physical"
 )
 
 type Pool struct {
-	pd *physical.Device
-	ld *logical.Device
+	logger config.Logger
+	pd     *physical.Device
+	ld     *logical.Device
 
 	ref     vulkan.CommandPool
 	buffers []vulkan.CommandBuffer
 }
 
-func NewPool(pd *physical.Device, ld *logical.Device) *Pool {
+func NewPool(logger config.Logger, pd *physical.Device, ld *logical.Device) *Pool {
 	pool, buffers := createPool(pd, ld)
 	return &Pool{
+		logger:  logger,
 		pd:      pd,
 		ld:      ld,
 		ref:     pool,
@@ -32,7 +33,7 @@ func (p *Pool) Free() {
 	vulkan.FreeCommandBuffers(p.ld.Ref(), p.ref, uint32(len(p.buffers)), p.buffers)
 	vulkan.DestroyCommandPool(p.ld.Ref(), p.ref, nil)
 
-	log.Printf("vk: freed: command pool\n")
+	p.logger.Debug("freed: command pool")
 }
 
 func (p *Pool) BuffersCount() int {
