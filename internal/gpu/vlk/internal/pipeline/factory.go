@@ -15,17 +15,25 @@ type Factory struct {
 	ld             *logical.Device
 	swapChain      *swapchain.Chain
 	mainRenderPass *renderpass.Pass
+	cache          *Cache
 
 	defaultPipelineLayout vulkan.PipelineLayout
 	createdPipelines      []vulkan.Pipeline
 }
 
-func NewFactory(logger config.Logger, ld *logical.Device, swapChain *swapchain.Chain, mainRenderPass *renderpass.Pass) *Factory {
+func NewFactory(
+	logger config.Logger,
+	ld *logical.Device,
+	swapChain *swapchain.Chain,
+	mainRenderPass *renderpass.Pass,
+	cache *Cache,
+) *Factory {
 	factory := &Factory{
 		logger:         logger,
 		ld:             ld,
 		swapChain:      swapChain,
 		mainRenderPass: mainRenderPass,
+		cache:          cache,
 	}
 
 	factory.defaultPipelineLayout = factory.newDefaultPipelineLayout()
@@ -62,7 +70,7 @@ func (f *Factory) NewPipeline(opts ...Initializer) vulkan.Pipeline {
 	pipelines := make([]vulkan.Pipeline, 1)
 	result := vulkan.CreateGraphicsPipelines(
 		f.ld.Ref(),
-		nil, // todo: cache
+		f.cache.Ref(),
 		1,
 		[]vulkan.GraphicsPipelineCreateInfo{info},
 		nil,

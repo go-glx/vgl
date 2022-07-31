@@ -43,22 +43,18 @@ func WithRasterization(mode vulkan.PolygonMode) Initializer {
 			DepthClampEnable:        vulkan.False,
 			RasterizerDiscardEnable: vulkan.False,
 			PolygonMode:             mode,
-
-			// todo: vulkan.CullModeBackBit, after faces is debugged and correct
-			CullMode:  vulkan.CullModeFlags(vulkan.CullModeNone),
-			FrontFace: vulkan.FrontFaceClockwise,
-
+			CullMode:                vulkan.CullModeFlags(vulkan.CullModeBackBit),
+			FrontFace:               vulkan.FrontFaceClockwise,
 			DepthBiasEnable:         vulkan.False,
 			DepthBiasConstantFactor: 0.0,
 			DepthBiasClamp:          0.0,
 			DepthBiasSlopeFactor:    0.0,
-			LineWidth:               1.0, // todo: require ext
+			LineWidth:               1.0,
 		}
 	}
 }
 
 func WithMultisampling() Initializer {
-	// todo: options
 	return func(info *vulkan.GraphicsPipelineCreateInfo) {
 		info.PMultisampleState = &vulkan.PipelineMultisampleStateCreateInfo{
 			SType:                 vulkan.StructureTypePipelineMultisampleStateCreateInfo,
@@ -73,7 +69,6 @@ func WithMultisampling() Initializer {
 }
 
 func WithColorBlend() Initializer {
-	// todo: options
 	return func(info *vulkan.GraphicsPipelineCreateInfo) {
 		info.PColorBlendState = &vulkan.PipelineColorBlendStateCreateInfo{
 			SType:           vulkan.StructureTypePipelineColorBlendStateCreateInfo,

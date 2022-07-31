@@ -33,6 +33,7 @@ type Container struct {
 	vlkSurface        *surface.Surface
 	vlkPhysicalDevice *physical.Device
 	vlkLogicalDevice  *logical.Device
+	vlkPipelineCache  *pipeline.Cache
 	vlkShaderManager  *shader.Manager
 
 	// dynamic

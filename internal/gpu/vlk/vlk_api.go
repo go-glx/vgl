@@ -57,7 +57,9 @@ func (vlk *VLK) FrameEnd() {
 		vulkan.CmdBindPipeline(cb, vulkan.PipelineBindPointGraphics, pipe)
 
 		// todo: 3,1 to shader
-		vulkan.CmdDraw(cb, 3, 1, 0, 0)
+		for i := 0; i < 1024; i++ {
+			vulkan.CmdDraw(cb, 3, 1, 0, 0)
+		}
 	})
 	// todo: ^^^^^^^^^^^^^^
 

@@ -78,6 +78,7 @@ func (c *Container) pipelineFactory() *pipeline.Factory {
 				c.logicalDevice(),
 				c.swapChain(),
 				c.renderPassMain(),
+				c.pipelineCache(),
 			)
 		},
 	)

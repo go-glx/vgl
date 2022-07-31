@@ -8,6 +8,7 @@ import (
 	"github.com/go-glx/vgl/internal/gpu/vlk/internal/instance"
 	"github.com/go-glx/vgl/internal/gpu/vlk/internal/logical"
 	"github.com/go-glx/vgl/internal/gpu/vlk/internal/physical"
+	"github.com/go-glx/vgl/internal/gpu/vlk/internal/pipeline"
 	"github.com/go-glx/vgl/internal/gpu/vlk/internal/shader"
 	"github.com/go-glx/vgl/internal/gpu/vlk/internal/surface"
 )
@@ -74,6 +75,18 @@ func (c *Container) logicalDevice() *logical.Device {
 			return logical.NewDevice(
 				c.logger,
 				c.physicalDevice(),
+			)
+		},
+	)
+}
+
+func (c *Container) pipelineCache() *pipeline.Cache {
+	return static(c, &c.vlkPipelineCache,
+		func(x *pipeline.Cache) { x.Free() },
+		func() *pipeline.Cache {
+			return pipeline.NewCache(
+				c.logger,
+				c.logicalDevice(),
 			)
 		},
 	)

@@ -2,9 +2,6 @@ package vlk
 
 import "github.com/vulkan-go/vulkan"
 
-// todo: logger and log levels
-// todo: change config debug to log level = debug
-
 type VLK struct {
 	isReady bool
 	cont    *Container
