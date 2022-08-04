@@ -118,14 +118,6 @@ func (m *Manager) prepareFrame() {
 	vulkan.ResetFences(m.ld.Ref(), 1, []vulkan.Fence{renderDone})
 }
 
-func (m *Manager) FrameApplyCommands(apply func(imageID uint32, cb vulkan.CommandBuffer)) {
-	if !m.available {
-		return
-	}
-
-	apply(m.imageID, m.commandBuffers[m.frameID])
-}
-
 func (m *Manager) FrameEnd() {
 	if !m.available {
 		return
@@ -144,6 +136,14 @@ func (m *Manager) FrameEnd() {
 
 	// frame end
 	m.nextFrame()
+}
+
+func (m *Manager) FrameApplyCommands(apply func(imageID uint32, cb vulkan.CommandBuffer)) {
+	if !m.available {
+		return
+	}
+
+	apply(m.imageID, m.commandBuffers[m.frameID])
 }
 
 func (m *Manager) nextFrame() {

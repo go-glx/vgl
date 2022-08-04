@@ -4,7 +4,6 @@ import (
 	"github.com/vulkan-go/vulkan"
 
 	"github.com/go-glx/vgl/glm"
-	"github.com/go-glx/vgl/internal/gpu/vlk/internal/pipeline"
 )
 
 // WarmUp will warm vlk renderer and create all needed
@@ -39,23 +38,6 @@ func (vlk *VLK) FrameEnd() {
 	vlk.cont.frameManager().FrameApplyCommands(func(_ uint32, cb vulkan.CommandBuffer) {
 		triangle := vlk.cont.shaderManager().ShaderByID(buildInShaderTriangle)
 
-		pipe := vlk.cont.pipelineFactory().NewPipeline(
-			pipeline.WithStages([]vulkan.PipelineShaderStageCreateInfo{
-				*triangle.ModuleVert().Stage(),
-				*triangle.ModuleFrag().Stage(),
-			}),
-			pipeline.WithTopology(triangle.Meta().Topology()),
-			pipeline.WithVertexInput(
-				triangle.Meta().Bindings(),
-				triangle.Meta().Attributes(),
-			),
-			pipeline.WithRasterization(vulkan.PolygonModeFill),
-			pipeline.WithColorBlend(),
-			pipeline.WithMultisampling(),
-		)
-
-		vulkan.CmdBindPipeline(cb, vulkan.PipelineBindPointGraphics, pipe)
-
 		// todo: 3,1 to shader
 		for i := 0; i < 1024; i++ {
 			vulkan.CmdDraw(cb, 3, 1, 0, 0)
@@ -72,7 +54,7 @@ func (vlk *VLK) DrawRect(vertexPos [4]glm.Vec2, vertexColor [4]glm.Vec3) {
 	}
 
 	// todo:
-	// vlk.cont.frameManager().FrameApplyCommands(func(cb vulkan.CommandBuffer) {
+	// vlk.cont.frameManager().frameApplyCommands(func(cb vulkan.CommandBuffer) {
 	// 	// todo: add command to draw rect
 	// 	// todo: in current command buffer
 	// })

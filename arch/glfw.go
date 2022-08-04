@@ -2,6 +2,7 @@ package arch
 
 import (
 	"fmt"
+	"unsafe"
 
 	"github.com/vulkan-go/vulkan"
 
@@ -71,8 +72,8 @@ func (g *GLFW) GetFramebufferSize() (width, height int) {
 	return g.custom.GetFramebufferSize()
 }
 
-func (g *GLFW) InitVulkanProcAddr() {
-	g.custom.InitVulkanProcAddr()
+func (g *GLFW) InitVulkanProcAddr() unsafe.Pointer {
+	return g.custom.InitVulkanProcAddr()
 }
 
 func (g *GLFW) Close() error {

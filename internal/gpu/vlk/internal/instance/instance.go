@@ -2,6 +2,7 @@ package instance
 
 import (
 	"fmt"
+	"unsafe"
 
 	"github.com/vulkan-go/vulkan"
 
@@ -11,14 +12,16 @@ import (
 )
 
 type Instance struct {
-	logger config.Logger
-	ref    vulkan.Instance
+	logger   config.Logger
+	ref      vulkan.Instance
+	procAddr unsafe.Pointer
 }
 
 func NewInstance(opt CreateOptions) *Instance {
 	return &Instance{
-		logger: opt.logger,
-		ref:    createVk(opt),
+		logger:   opt.logger,
+		ref:      createVk(opt),
+		procAddr: opt.procAddr,
 	}
 }
 
@@ -30,6 +33,10 @@ func (inst *Instance) Free() {
 
 func (inst *Instance) Ref() vulkan.Instance {
 	return inst.ref
+}
+
+func (inst *Instance) ProcAddr() unsafe.Pointer {
+	return inst.procAddr
 }
 
 func createVk(opt CreateOptions) vulkan.Instance {

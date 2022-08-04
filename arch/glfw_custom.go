@@ -2,6 +2,7 @@ package arch
 
 import (
 	"fmt"
+	"unsafe"
 
 	"github.com/vulkan-go/vulkan"
 
@@ -71,13 +72,14 @@ func (g *GLFWCustom) GetFramebufferSize() (width, height int) {
 	return g.glfwWindow.GetSize()
 }
 
-func (g *GLFWCustom) InitVulkanProcAddr() {
+func (g *GLFWCustom) InitVulkanProcAddr() unsafe.Pointer {
 	procAddr := glfw.GetVulkanGetInstanceProcAddress()
 	if procAddr == nil {
 		panic(fmt.Errorf("failed get vulkan proc address"))
 	}
 
 	vulkan.SetGetInstanceProcAddr(procAddr)
+	return procAddr
 }
 
 func (g *GLFWCustom) Close() error {

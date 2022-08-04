@@ -2,6 +2,7 @@ package arch
 
 import (
 	"io"
+	"unsafe"
 
 	"github.com/vulkan-go/vulkan"
 )
@@ -16,6 +17,6 @@ type (
 		CreateSurface(inst vulkan.Instance) (vulkan.Surface, error)
 		GetRequiredInstanceExtensions() []string
 		GetFramebufferSize() (width, height int)
-		InitVulkanProcAddr()
+		InitVulkanProcAddr() unsafe.Pointer
 	}
 )

@@ -66,3 +66,21 @@ const FrameAcquireTimeout = time.Second * 3
 // where GPU start executing shader code
 // do not change from "main"
 const ShaderEntryPoint = "main"
+
+// BufferVertexSizeBytes used for transport vertex data from cpu to gpu
+// vertex data mostly is [positions, colors]
+//
+// maximum buffer size for each drawCall
+// if API want draw more objects, that fit into one buffer
+// it will be split into few draw Calls and buffer flush
+//
+// Recommended value:
+//  - too small = more draw calls, less performance in intensive applications
+//  - too big   = less draw calls, slower copy speed cpu->gpu = less performance in simple applications
+//  - 65536     = good in most cases
+const BufferVertexSizeBytes = 65536
+
+// BufferIndexSizeBytes used for transport index data from cpu to gpu
+// index is simple uint16 array. Each index is pointer to specific offset
+// in vertex buffer inside BufferVertexSizeBytes
+const BufferIndexSizeBytes = 2048

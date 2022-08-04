@@ -3,6 +3,7 @@ package vlk
 import (
 	"github.com/go-glx/vgl/arch"
 	"github.com/go-glx/vgl/config"
+	"github.com/go-glx/vgl/internal/gpu/vlk/internal/alloc"
 	"github.com/go-glx/vgl/internal/gpu/vlk/internal/command"
 	"github.com/go-glx/vgl/internal/gpu/vlk/internal/frame"
 	"github.com/go-glx/vgl/internal/gpu/vlk/internal/instance"
@@ -28,13 +29,14 @@ type Container struct {
 	cfg       *config.Config
 
 	// static
-	vlkRef            *VLK
-	vlkInstance       *instance.Instance
-	vlkSurface        *surface.Surface
-	vlkPhysicalDevice *physical.Device
-	vlkLogicalDevice  *logical.Device
-	vlkPipelineCache  *pipeline.Cache
-	vlkShaderManager  *shader.Manager
+	vlkRef             *VLK
+	vlkInstance        *instance.Instance
+	vlkSurface         *surface.Surface
+	vlkPhysicalDevice  *physical.Device
+	vlkLogicalDevice   *logical.Device
+	vlkPipelineCache   *pipeline.Cache
+	vlkShaderManager   *shader.Manager
+	vlkMemoryAllocator *alloc.Allocator
 
 	// dynamic
 	vlkCommandPool     *command.Pool

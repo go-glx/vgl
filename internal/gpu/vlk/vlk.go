@@ -1,10 +1,17 @@
 package vlk
 
-import "github.com/vulkan-go/vulkan"
+import (
+	"github.com/vulkan-go/vulkan"
+)
 
 type VLK struct {
 	isReady bool
 	cont    *Container
+
+	// drawing
+	currentBatch     *drawCall
+	queue            []drawCall
+	allocatedBuffers []vulkan.Buffer
 }
 
 func newVLK(cont *Container) *VLK {

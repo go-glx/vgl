@@ -11,6 +11,6 @@ func (m *Module) Module() vulkan.ShaderModule {
 	return m.module
 }
 
-func (m *Module) Stage() *vulkan.PipelineShaderStageCreateInfo {
-	return &m.stageInfo
+func (m *Module) Stage() vulkan.PipelineShaderStageCreateInfo {
+	return m.stageInfo
 }

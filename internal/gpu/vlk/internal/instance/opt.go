@@ -1,9 +1,14 @@
 package instance
 
-import "github.com/go-glx/vgl/config"
+import (
+	"unsafe"
+
+	"github.com/go-glx/vgl/config"
+)
 
 type CreateOptions struct {
 	logger             config.Logger
+	procAddr           unsafe.Pointer
 	appName            string
 	engineName         string
 	requiredExtensions []string
@@ -12,6 +17,7 @@ type CreateOptions struct {
 
 func NewCreateOptions(
 	logger config.Logger,
+	procAddr unsafe.Pointer,
 	appName string,
 	engineName string,
 	requiredExtensions []string,
@@ -19,6 +25,7 @@ func NewCreateOptions(
 ) CreateOptions {
 	return CreateOptions{
 		logger:             logger,
+		procAddr:           procAddr,
 		appName:            appName,
 		engineName:         engineName,
 		requiredExtensions: requiredExtensions,

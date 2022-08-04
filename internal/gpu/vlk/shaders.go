@@ -4,12 +4,16 @@ import (
 	_ "embed"
 
 	"github.com/vulkan-go/vulkan"
-
-	"github.com/go-glx/vgl/internal/gpu/vlk/internal/shader"
 )
 
 const (
 	buildInShaderTriangle = "triangle"
+)
+
+const (
+	bindingFormatVec2 = vulkan.FormatR32g32Sfloat
+	bindingFormatVec3 = vulkan.FormatR32g32b32Sfloat
+	bindingFormatVec4 = vulkan.FormatR32g32b32a32Sfloat
 )
 
 var (
@@ -19,13 +23,7 @@ var (
 	triangleFrag []byte
 )
 
-func defaultShaderTriangle() *shader.Meta {
-	return shader.NewMeta(
-		buildInShaderTriangle,
-		triangleVert,
-		triangleFrag,
-		vulkan.PrimitiveTopologyTriangleList,
-		make([]vulkan.VertexInputBindingDescription, 0),
-		make([]vulkan.VertexInputAttributeDescription, 0),
-	)
+type shaderData interface {
+	BindingData() []byte
+	Indexes() []uint16
 }

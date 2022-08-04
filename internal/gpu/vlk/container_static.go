@@ -5,6 +5,7 @@ import (
 
 	"github.com/vulkan-go/vulkan"
 
+	"github.com/go-glx/vgl/internal/gpu/vlk/internal/alloc"
 	"github.com/go-glx/vgl/internal/gpu/vlk/internal/instance"
 	"github.com/go-glx/vgl/internal/gpu/vlk/internal/logical"
 	"github.com/go-glx/vgl/internal/gpu/vlk/internal/physical"
@@ -18,7 +19,7 @@ func (c *Container) instance() *instance.Instance {
 		func(x *instance.Instance) { x.Free() },
 		func() *instance.Instance {
 			// init proc addr
-			c.wm.InitVulkanProcAddr()
+			procAddr := c.wm.InitVulkanProcAddr()
 
 			// init vulkan driver
 			err := vulkan.Init()
@@ -32,6 +33,7 @@ func (c *Container) instance() *instance.Instance {
 			return instance.NewInstance(
 				instance.NewCreateOptions(
 					c.logger,
+					procAddr,
 					c.wm.AppName(),
 					c.wm.EngineName(),
 					c.wm.GetRequiredInstanceExtensions(),
@@ -106,6 +108,20 @@ func (c *Container) shaderManager() *shader.Manager {
 
 			//
 			return mng
+		},
+	)
+}
+
+func (c *Container) memoryAllocator() *alloc.Allocator {
+	return static(c, &c.vlkMemoryAllocator,
+		func(x *alloc.Allocator) { x.Free() },
+		func() *alloc.Allocator {
+			return alloc.NewAllocator(
+				c.logger,
+				c.instance(),
+				c.physicalDevice(),
+				c.logicalDevice(),
+			)
 		},
 	)
 }
