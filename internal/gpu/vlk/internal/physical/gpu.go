@@ -17,6 +17,7 @@ type (
 		Ref                vulkan.PhysicalDevice
 		Props              vulkan.PhysicalDeviceProperties
 		Features           vulkan.PhysicalDeviceFeatures
+		MemProperties      vulkan.PhysicalDeviceMemoryProperties
 		Extensions         []vulkan.ExtensionProperties
 		Families           Families
 		SurfaceProps       SurfaceProps

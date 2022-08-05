@@ -3,14 +3,30 @@ package vlk
 import (
 	"github.com/vulkan-go/vulkan"
 
+	"github.com/go-glx/vgl/internal/gpu/vlk/internal/alloc"
 	"github.com/go-glx/vgl/internal/gpu/vlk/internal/pipeline"
 	"github.com/go-glx/vgl/internal/gpu/vlk/internal/shader"
 )
 
+type drawCallChunk struct {
+	shader      *shader.Shader
+	chunks      []alloc.Chunk
+	indexBuffer vulkan.Buffer
+}
+
 // drawQueue used for queue current shader draw with current options to queue
 // all drawing actual will be executed in frameEnd
-func (vlk *VLK) drawQueue(shader *shader.Shader, instance shaderData) {
+func (vlk *VLK) drawQueue(shader *shader.Shader, instance shader.InstanceData) {
+	vlk.autoBake(shader)
+	vlk.currentBatch.instances = append(vlk.currentBatch.instances, instance)
+}
+
+func (vlk *VLK) autoBake(shader *shader.Shader) {
 	brakeBaking := false
+
+	if vlk.currentBatch == nil {
+		vlk.currentBatch = &drawCall{}
+	}
 
 	// brake: shader changed
 	if vlk.currentBatch.shader != nil {
@@ -29,8 +45,6 @@ func (vlk *VLK) drawQueue(shader *shader.Shader, instance shaderData) {
 		vlk.brakeBaking()
 		vlk.currentBatch.shader = shader
 	}
-
-	vlk.currentBatch.instances = append(vlk.currentBatch.instances, instance)
 }
 
 // brakeBaking should be called when render params or shader is changes
@@ -45,43 +59,49 @@ func (vlk *VLK) brakeBaking() {
 
 // brakeBaking should be called when render params or shader is changes
 func (vlk *VLK) drawAll() {
+	vlk.brakeBaking()
 	if len(vlk.queue) == 0 {
 		return
 	}
 
-	// todo: memory manager with chunks
-
 	// prepare buffer
-	bufferIndex := 0
-	bufferOffset := 0
+	buffs := vlk.cont.allocBuffers()
+	buffs.Clear()
 
-	// write data to vertex buffer
+	// stage all shader data to buffers
+	drawChunks := make([]drawCallChunk, 0)
+
 	for _, drawCall := range vlk.queue {
-		// todo: move it to memory manager service
+		if len(drawCall.instances) == 0 {
+			continue
+		}
 
-		drawCall.bufferIndex = bufferIndex
-		drawCall.bufferOffset = bufferOffset
-
-		// todo: vertex buffer
-		// todo: buffer flush
-		// todo: apply global buffer offset to drawCall
-		_ = drawCall
+		drawChunks = append(drawChunks, drawCallChunk{
+			shader:      drawCall.shader,
+			chunks:      buffs.Write(drawCall.instances),
+			indexBuffer: buffs.IndexBufferOf(drawCall.shader, drawCall.instances[0].Indexes()),
+		})
 	}
+
+	// move data to GPU
+	buffs.Flush()
 
 	// render
 	countDrawCalls := 0
 	vlk.cont.frameManager().FrameApplyCommands(func(_ uint32, cb vulkan.CommandBuffer) {
-		for _, drawCall := range vlk.queue {
+		for _, drawChunk := range drawChunks {
+			sdr := drawChunk.shader
+
 			// bind pipe with current shader and options
 			pipe := vlk.cont.pipelineFactory().NewPipeline(
 				pipeline.WithStages([]vulkan.PipelineShaderStageCreateInfo{
-					drawCall.shader.ModuleVert().Stage(),
-					drawCall.shader.ModuleFrag().Stage(),
+					sdr.ModuleVert().Stage(),
+					sdr.ModuleFrag().Stage(),
 				}),
-				pipeline.WithTopology(drawCall.shader.Meta().Topology()),
+				pipeline.WithTopology(sdr.Meta().Topology()),
 				pipeline.WithVertexInput(
-					drawCall.shader.Meta().Bindings(),
-					drawCall.shader.Meta().Attributes(),
+					sdr.Meta().Bindings(),
+					sdr.Meta().Attributes(),
 				),
 				pipeline.WithRasterization(vulkan.PolygonModeFill),
 				pipeline.WithColorBlend(),
@@ -90,14 +110,26 @@ func (vlk *VLK) drawAll() {
 
 			vulkan.CmdBindPipeline(cb, vulkan.PipelineBindPointGraphics, pipe)
 
-			// draw instances
-			indexCount := uint32(len(drawCall.instances[0].Indexes()))
-			instancesCount := uint32(len(drawCall.instances))
+			// index
+			vulkan.CmdBindIndexBuffer(cb, drawChunk.indexBuffer, 0, vulkan.IndexTypeUint16)
 
-			// todo: options for it
-			vulkan.CmdBindVertexBuffers(cb, 0, uint32(1), []vulkan.Buffer{vertexBuffer}, []vulkan.DeviceSize{0})
-			vulkan.CmdDrawIndexed(cb, indexCount, instancesCount, 0, 0, 0)
-			countDrawCalls++
+			// draw instances
+			for _, chunk := range drawChunk.chunks {
+				// vertex buffer
+				buffers := []vulkan.Buffer{chunk.Buffer}
+				offsets := []vulkan.DeviceSize{vulkan.DeviceSize(chunk.BufferOffset)}
+				vulkan.CmdBindVertexBuffers(cb, 0, uint32(len(buffers)), buffers, offsets)
+
+				// draw instances
+				for i := uint32(0); i < chunk.InstancesCount; i++ {
+					vulkan.CmdDraw(cb, chunk.IndexCount, 1, i*chunk.IndexCount, 0)
+					countDrawCalls++
+				}
+
+				// todo: optimization:
+				// todo: indexed draw all data in one draw call
+				// vulkan.CmdDrawIndexed(cb, chunk.IndexCount, chunk.InstancesCount, 0, 0, 0)
+			}
 		}
 	})
 

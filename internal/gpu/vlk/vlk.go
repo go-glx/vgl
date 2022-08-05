@@ -9,9 +9,8 @@ type VLK struct {
 	cont    *Container
 
 	// drawing
-	currentBatch     *drawCall
-	queue            []drawCall
-	allocatedBuffers []vulkan.Buffer
+	currentBatch *drawCall
+	queue        []drawCall
 }
 
 func newVLK(cont *Container) *VLK {

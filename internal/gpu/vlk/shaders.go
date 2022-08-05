@@ -22,8 +22,3 @@ var (
 	//go:embed shaders/triangle.frag.spv
 	triangleFrag []byte
 )
-
-type shaderData interface {
-	BindingData() []byte
-	Indexes() []uint16
-}

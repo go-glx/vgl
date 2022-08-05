@@ -125,3 +125,14 @@ func (c *Container) memoryAllocator() *alloc.Allocator {
 		},
 	)
 }
+
+func (c *Container) allocBuffers() *alloc.Buffers {
+	return static(c, &c.vlkAllocBuffers,
+		func(x *alloc.Buffers) {},
+		func() *alloc.Buffers {
+			return alloc.NewBuffers(
+				c.memoryAllocator(),
+			)
+		},
+	)
+}

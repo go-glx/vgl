@@ -18,6 +18,10 @@ func (d *Device) assembleGPU(logger config.Logger, pd vulkan.PhysicalDevice) *GP
 	vulkan.GetPhysicalDeviceFeatures(pd, &features)
 	features.Deref()
 
+	var memProperties vulkan.PhysicalDeviceMemoryProperties
+	vulkan.GetPhysicalDeviceMemoryProperties(pd, &memProperties)
+	memProperties.Deref()
+
 	vkExtList := make([]string, 0, len(def.RequiredDeviceExtensions))
 	for _, extName := range def.RequiredDeviceExtensions {
 		vkExtList = append(vkExtList, vkconv.NormalizeString(extName))
@@ -28,6 +32,7 @@ func (d *Device) assembleGPU(logger config.Logger, pd vulkan.PhysicalDevice) *GP
 		Ref:                pd,
 		Props:              props,
 		Features:           features,
+		MemProperties:      memProperties,
 		Families:           d.assembleFamilies(pd),
 		Extensions:         d.assembleExtensions(pd),
 		SurfaceProps:       d.assembleSurfaceProps(pd),

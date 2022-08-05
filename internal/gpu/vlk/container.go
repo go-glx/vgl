@@ -37,6 +37,7 @@ type Container struct {
 	vlkPipelineCache   *pipeline.Cache
 	vlkShaderManager   *shader.Manager
 	vlkMemoryAllocator *alloc.Allocator
+	vlkAllocBuffers    *alloc.Buffers
 
 	// dynamic
 	vlkCommandPool     *command.Pool

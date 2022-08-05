@@ -1,6 +1,10 @@
 package vlk
 
 import (
+	"fmt"
+	"math"
+	"time"
+
 	"github.com/vulkan-go/vulkan"
 
 	"github.com/go-glx/vgl/glm"
@@ -34,17 +38,38 @@ func (vlk *VLK) FrameEnd() {
 	}
 
 	// todo: remove test draw
+	triangle := vlk.cont.shaderManager().ShaderByID(buildInShaderTriangle)
 
-	vlk.cont.frameManager().FrameApplyCommands(func(_ uint32, cb vulkan.CommandBuffer) {
-		triangle := vlk.cont.shaderManager().ShaderByID(buildInShaderTriangle)
+	const step = 0.1
+	const stepHalf = step / 2
 
-		// todo: 3,1 to shader
-		for i := 0; i < 1024; i++ {
-			vulkan.CmdDraw(cb, 3, 1, 0, 0)
+	ms := float32(math.Sin(float64(time.Now().UnixMilli()) * 0.005))
+	fmt.Println(ms)
+
+	for xx := float32(-1.0); xx < 1; xx += step {
+		for yy := float32(-1.0); yy < 1; yy += step {
+			xLeft := xx
+			xCenter := xx + (stepHalf + (stepHalf * ms))
+			xRight := xx + step
+
+			vlk.drawQueue(triangle, &dataTriangle{
+				vertexes: [3]glm.Vec2{
+					{X: xCenter, Y: yy},
+					{X: xRight, Y: yy + step},
+					{X: xLeft, Y: yy + step},
+				},
+				colors: [3]glm.Vec3{
+					{R: 1.0, G: 0.0, B: 0.0},
+					{R: 0.0, G: 1.0, B: 0.0},
+					{R: 0.0, G: 0.0, B: 1.0},
+				},
+			})
 		}
-	})
+	}
+
 	// todo: ^^^^^^^^^^^^^^
 
+	vlk.drawAll()
 	vlk.cont.frameManager().FrameEnd()
 }
 

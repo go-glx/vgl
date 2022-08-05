@@ -37,3 +37,16 @@ Available WM:
 Available GPUs:
 - any discrete/integrated/dual(optimus) GPU with shader v1+ support
 
+## Current state of dev
+
+Basic triangles rendering:
+![example](./example/triangles.png)
+
+- [x] shaders rendering
+- [ ] instancing, optimizations
+- [ ] bunnies stress test
+- [ ] buildIn shaders lib (line, rect, polygon)
+- [ ] blend modes
+- [ ] 2d textures
+
+

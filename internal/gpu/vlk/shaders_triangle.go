@@ -8,8 +8,7 @@ import (
 )
 
 const (
-	// 3xVertex(x,y) + 3xColor(r,g,b)
-	triangleDataSize = (3 * glm.SizeOfVec2) + (3 * glm.SizeOfVec3)
+	triangleVertexSize = glm.SizeOfVec2 + glm.SizeOfVec3
 )
 
 func defaultShaderTriangle() *shader.Meta {
@@ -25,7 +24,7 @@ func defaultShaderTriangle() *shader.Meta {
 		[]vulkan.VertexInputBindingDescription{
 			{
 				Binding:   bindingData,
-				Stride:    triangleDataSize,
+				Stride:    triangleVertexSize,
 				InputRate: vulkan.VertexInputRateVertex,
 			},
 		},
@@ -53,7 +52,7 @@ type dataTriangle struct {
 
 func (d *dataTriangle) BindingData() []byte {
 	const vertexCount = 3
-	buff := make([]byte, 0, triangleDataSize)
+	buff := make([]byte, 0, vertexCount*triangleVertexSize)
 
 	for i := 0; i < vertexCount; i++ {
 		buff = append(buff, d.vertexes[i].Data()...)

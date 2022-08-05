@@ -10,8 +10,15 @@ import (
 // -- Instance
 // ------------------------------------------------------
 
+const (
+	vkVersion11 = 0x00401000
+	// const vkVersion12 = 0x00402000
+	// const vkVersion13 = 0x00403000
+)
+
 // VKApiVersion is main vulkan API version
-const VKApiVersion = vulkan.ApiVersion11
+const VKApiVersion = vkVersion11
+const VKVMAVersion = vkVersion11
 
 // RequiredValidationLayers will be used, only when renderer in debug mode
 var RequiredValidationLayers = []string{
@@ -78,7 +85,7 @@ const ShaderEntryPoint = "main"
 //  - too small = more draw calls, less performance in intensive applications
 //  - too big   = less draw calls, slower copy speed cpu->gpu = less performance in simple applications
 //  - 65536     = good in most cases
-const BufferVertexSizeBytes = 65536
+const BufferVertexSizeBytes = 2048 // todo:65536
 
 // BufferIndexSizeBytes used for transport index data from cpu to gpu
 // index is simple uint16 array. Each index is pointer to specific offset
