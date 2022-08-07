@@ -12,16 +12,26 @@ type drawCallChunk struct {
 	shader      *shader.Shader
 	chunks      []alloc.Chunk
 	indexBuffer vulkan.Buffer
+	polygonMode vulkan.PolygonMode
+}
+
+type drawCall struct {
+	shader      *shader.Shader
+	instances   []shader.InstanceData
+	polygonMode vulkan.PolygonMode
+
+	// todo: blending mode
+	// todo: other drawing params
 }
 
 // drawQueue used for queue current shader draw with current options to queue
 // all drawing actual will be executed in frameEnd
 func (vlk *VLK) drawQueue(shader *shader.Shader, instance shader.InstanceData) {
-	vlk.autoBake(shader)
+	vlk.autoBake(shader, instance)
 	vlk.currentBatch.instances = append(vlk.currentBatch.instances, instance)
 }
 
-func (vlk *VLK) autoBake(shader *shader.Shader) {
+func (vlk *VLK) autoBake(shader *shader.Shader, instance shader.InstanceData) {
 	brakeBaking := false
 
 	if vlk.currentBatch == nil {
@@ -38,12 +48,18 @@ func (vlk *VLK) autoBake(shader *shader.Shader) {
 		brakeBaking = true
 	}
 
+	// brake: polygon mode changed
+	if vlk.currentBatch.polygonMode != instance.PolygonMode() {
+		brakeBaking = true
+	}
+
 	// brake: blend mode changed (todo)
 	// brake: settings changed (todo)
 
 	if brakeBaking {
 		vlk.brakeBaking()
 		vlk.currentBatch.shader = shader
+		vlk.currentBatch.polygonMode = instance.PolygonMode()
 	}
 }
 
@@ -80,6 +96,7 @@ func (vlk *VLK) drawAll() {
 			shader:      drawCall.shader,
 			chunks:      buffs.Write(drawCall.instances),
 			indexBuffer: buffs.IndexBufferOf(drawCall.shader, drawCall.instances[0].Indexes()),
+			polygonMode: drawCall.polygonMode,
 		})
 	}
 
@@ -103,7 +120,7 @@ func (vlk *VLK) drawAll() {
 					sdr.Meta().Bindings(),
 					sdr.Meta().Attributes(),
 				),
-				pipeline.WithRasterization(vulkan.PolygonModeFill),
+				pipeline.WithRasterization(drawChunk.polygonMode),
 				pipeline.WithColorBlend(),
 				pipeline.WithMultisampling(),
 			)
@@ -134,6 +151,6 @@ func (vlk *VLK) drawAll() {
 	})
 
 	// reset
-	vlk.queue = []drawCall{}
+	vlk.queue = make([]drawCall, 0, 32)
 	vlk.currentBatch = &drawCall{}
 }

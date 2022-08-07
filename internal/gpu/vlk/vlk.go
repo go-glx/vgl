@@ -8,16 +8,34 @@ type VLK struct {
 	isReady bool
 	cont    *Container
 
+	// surfaces
+	surfaceInd   uint8          // 0 - default (Screen, window); 1-255 reserved for user needs
+	surfacesSize [255][2]uint32 // width, height for each surface
+
 	// drawing
 	currentBatch *drawCall
 	queue        []drawCall
 }
 
 func newVLK(cont *Container) *VLK {
-	return &VLK{
+	vlk := &VLK{
 		isReady: true,
 		cont:    cont,
+
+		// surface
+		surfaceInd:   0, // default - screen
+		surfacesSize: [255][2]uint32{},
+
+		// drawing
+		currentBatch: &drawCall{},
+		queue:        make([]drawCall, 0, 32),
 	}
+
+	// set default screen size
+	wWidth, wHeight := cont.wm.GetFramebufferSize()
+	vlk.surfacesSize[0] = [2]uint32{uint32(wWidth), uint32(wHeight)}
+
+	return vlk
 }
 
 // this will immediately stop render new frames

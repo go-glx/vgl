@@ -11,7 +11,7 @@ const SizeOfVec4 = 16
 
 // Vec4 is common vector data structure
 type Vec4 struct {
-	R, G, B, A float64
+	R, G, B, A float32
 }
 
 func (v *Vec4) String() string {

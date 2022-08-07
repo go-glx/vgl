@@ -80,6 +80,9 @@ func (c *Container) rebuild() {
 		// after maintenance is end
 		// all of these resources will be automatic
 		// lazy recreated when needed by graphic pipeline
+
+		wWidth, wHeight := c.wm.GetFramebufferSize()
+		c.vlkRef.surfacesSize[0] = [2]uint32{uint32(wWidth), uint32(wHeight)}
 	})
 }
 

@@ -8,7 +8,7 @@ import (
 )
 
 const (
-	triangleVertexSize = glm.SizeOfVec2 + glm.SizeOfVec3
+	triangleVertexSize = glm.SizeOfVec2 + glm.SizeOfVec4
 )
 
 func defaultShaderTriangle() *shader.Meta {
@@ -38,7 +38,7 @@ func defaultShaderTriangle() *shader.Meta {
 			{
 				Location: locationColor,
 				Binding:  bindingData,
-				Format:   bindingFormatVec3, // r, g, b
+				Format:   bindingFormatVec4, // r, g, b, a
 				Offset:   glm.SizeOfVec2,
 			},
 		},
@@ -47,7 +47,8 @@ func defaultShaderTriangle() *shader.Meta {
 
 type dataTriangle struct {
 	vertexes [3]glm.Vec2
-	colors   [3]glm.Vec3
+	colors   [3]glm.Vec4
+	filled   bool
 }
 
 func (d *dataTriangle) BindingData() []byte {
@@ -64,4 +65,12 @@ func (d *dataTriangle) BindingData() []byte {
 
 func (d *dataTriangle) Indexes() []uint16 {
 	return []uint16{0, 1, 2}
+}
+
+func (d *dataTriangle) PolygonMode() vulkan.PolygonMode {
+	if d.filled {
+		return vulkan.PolygonModeFill
+	}
+
+	return vulkan.PolygonModeLine
 }
