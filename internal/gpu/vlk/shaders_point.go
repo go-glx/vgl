@@ -8,23 +8,23 @@ import (
 )
 
 const (
-	triangleVertexSize = glm.SizeOfVec2 + glm.SizeOfVec4
+	pointVertexSize = glm.SizeOfVec2 + glm.SizeOfVec4
 )
 
-func defaultShaderTriangle() *shader.Meta {
+func defaultShaderPoint() *shader.Meta {
 	const bindingData = 0
 	const locationVertex = 0
 	const locationColor = 1
 
 	return shader.NewMeta(
-		buildInShaderTriangle,
+		buildInShaderPoint,
 		simpleVert,
 		simpleFrag,
-		vulkan.PrimitiveTopologyTriangleList,
+		vulkan.PrimitiveTopologyPointList,
 		[]vulkan.VertexInputBindingDescription{
 			{
 				Binding:   bindingData,
-				Stride:    triangleVertexSize,
+				Stride:    pointVertexSize,
 				InputRate: vulkan.VertexInputRateVertex,
 			},
 		},
@@ -45,32 +45,23 @@ func defaultShaderTriangle() *shader.Meta {
 	)
 }
 
-type dataTriangle struct {
-	vertexes [3]glm.Vec2
-	colors   [3]glm.Vec4
-	filled   bool
+type dataPoint struct {
+	vertex glm.Vec2
+	color  glm.Vec4
 }
 
-func (d *dataTriangle) BindingData() []byte {
-	const vertexCount = 3
-	buff := make([]byte, 0, vertexCount*triangleVertexSize)
-
-	for i := 0; i < vertexCount; i++ {
-		buff = append(buff, d.vertexes[i].Data()...)
-		buff = append(buff, d.colors[i].Data()...)
-	}
+func (d *dataPoint) BindingData() []byte {
+	buff := make([]byte, 0, pointVertexSize)
+	buff = append(buff, d.vertex.Data()...)
+	buff = append(buff, d.color.Data()...)
 
 	return buff
 }
 
-func (d *dataTriangle) Indexes() []uint16 {
-	return []uint16{0, 1, 2}
+func (d *dataPoint) Indexes() []uint16 {
+	return []uint16{0}
 }
 
-func (d *dataTriangle) PolygonMode() vulkan.PolygonMode {
-	if d.filled {
-		return vulkan.PolygonModeFill
-	}
-
-	return vulkan.PolygonModeLine
+func (d *dataPoint) PolygonMode() vulkan.PolygonMode {
+	return vulkan.PolygonModeFill
 }

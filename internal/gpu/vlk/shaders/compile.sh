@@ -1,2 +1,2 @@
-glslc triangle/fn.vert -o triangle.vert.spv
-glslc triangle/fn.frag -o triangle.frag.spv
+glslc simple/fn.vert -o simple.vert.spv
+glslc simple/fn.frag -o simple.frag.spv

@@ -7,6 +7,7 @@ import (
 )
 
 const (
+	buildInShaderPoint    = "point"
 	buildInShaderTriangle = "triangle"
 )
 
@@ -17,8 +18,8 @@ const (
 )
 
 var (
-	//go:embed shaders/triangle.vert.spv
-	triangleVert []byte
-	//go:embed shaders/triangle.frag.spv
-	triangleFrag []byte
+	//go:embed shaders/simple.vert.spv
+	simpleVert []byte
+	//go:embed shaders/simple.frag.spv
+	simpleFrag []byte
 )
