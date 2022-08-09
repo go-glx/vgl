@@ -41,7 +41,7 @@ func NewManager(logger config.Logger, ld *logical.Device, pool *command.Pool, ch
 		available: true,
 		frameID:   0,
 		imageID:   0,
-		count:     uint32(pool.BuffersCount()),
+		count:     uint32(pool.MainBuffersCount()),
 
 		semRenderAvailable:  make(map[uint32]vulkan.Semaphore),
 		semPresentAvailable: make(map[uint32]vulkan.Semaphore),
@@ -51,7 +51,7 @@ func NewManager(logger config.Logger, ld *logical.Device, pool *command.Pool, ch
 	}
 
 	for fID := uint32(0); fID < m.count; fID++ {
-		m.commandBuffers[fID] = pool.CommandBuffer(int(fID))
+		m.commandBuffers[fID] = pool.MainCommandBuffer(int(fID))
 		m.semRenderAvailable[fID] = allocateSemaphore(ld)
 		m.semPresentAvailable[fID] = allocateSemaphore(ld)
 		m.syncFrameBusy[fID] = allocateFence(ld)

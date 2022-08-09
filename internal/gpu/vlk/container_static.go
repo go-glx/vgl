@@ -122,6 +122,7 @@ func (c *Container) memoryAllocator() *alloc.Allocator {
 				c.instance(),
 				c.physicalDevice(),
 				c.logicalDevice(),
+				c.commandPool(),
 			)
 		},
 	)

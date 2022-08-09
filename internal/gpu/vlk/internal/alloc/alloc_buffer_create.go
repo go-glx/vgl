@@ -10,19 +10,23 @@ import (
 	"github.com/go-glx/vgl/internal/gpu/vlk/internal/physical"
 )
 
+const memRequirementHostVisible = vulkan.MemoryPropertyHostVisibleBit | vulkan.MemoryPropertyHostCoherentBit
+const memRequirementFastGPU = vulkan.MemoryPropertyDeviceLocalBit
+
 type internalBuffer struct {
+	id       internalBufferID
 	ref      vulkan.Buffer
 	dataPtr  unsafe.Pointer
 	memory   vulkan.DeviceMemory
 	capacity vulkan.DeviceSize
 }
 
-func (a *Allocator) createBuffer(size int, buffType vulkan.BufferUsageFlags) internalBuffer {
+func (a *Allocator) createBuffer(size uint32, buffType vulkan.BufferUsageFlagBits, memoryFlags vulkan.MemoryPropertyFlagBits) internalBuffer {
 	// create new buffer page
 	info := &vulkan.BufferCreateInfo{
 		SType:       vulkan.StructureTypeBufferCreateInfo,
 		Size:        vulkan.DeviceSize(size),
-		Usage:       buffType,
+		Usage:       vulkan.BufferUsageFlags(buffType),
 		SharingMode: vulkan.SharingModeExclusive,
 	}
 
@@ -34,13 +38,10 @@ func (a *Allocator) createBuffer(size int, buffType vulkan.BufferUsageFlags) int
 	vulkan.GetBufferMemoryRequirements(a.ld.Ref(), buffer, &memoryReq)
 	memoryReq.Deref()
 
-	memoryTypeIndex := findVertexBufferMemoryType(
+	memoryTypeIndex := findBufferWithMemoryType(
 		a.pd,
 		memoryReq,
-		vulkan.MemoryPropertyFlags(
-			vulkan.MemoryPropertyHostVisibleBit|
-				vulkan.MemoryPropertyHostCoherentBit,
-		),
+		vulkan.MemoryPropertyFlags(memoryFlags),
 	)
 
 	memAllocInfo := &vulkan.MemoryAllocateInfo{
@@ -57,20 +58,25 @@ func (a *Allocator) createBuffer(size int, buffType vulkan.BufferUsageFlags) int
 	var data unsafe.Pointer
 	vulkan.MapMemory(a.ld.Ref(), bufferMemory, 0, info.Size, 0, &data)
 
+	a.internalBufferLastID++
 	internalBuff := internalBuffer{
+		id:       a.internalBufferLastID,
 		ref:      buffer,
 		dataPtr:  data,
 		memory:   bufferMemory,
 		capacity: info.Size,
 	}
 
-	a.logger.Debug(fmt.Sprintf("Buffer %.3fMB capacity - allocated", float64(info.Size/1024)))
-	a.allocatedBuffers = append(a.allocatedBuffers, internalBuff)
+	a.allocatedBuffers[internalBuff.id] = internalBuff
+	a.logger.Debug(fmt.Sprintf("Buffer %d with %.3fKB capacity - allocated",
+		internalBuff.id,
+		float64(info.Size/1024)),
+	)
 
 	return internalBuff
 }
 
-func findVertexBufferMemoryType(pd *physical.Device, memoryReq vulkan.MemoryRequirements, memFlags vulkan.MemoryPropertyFlags) uint32 {
+func findBufferWithMemoryType(pd *physical.Device, memoryReq vulkan.MemoryRequirements, memFlags vulkan.MemoryPropertyFlags) uint32 {
 	typeFilter := memoryReq.MemoryTypeBits
 
 	var memProperties vulkan.PhysicalDeviceMemoryProperties

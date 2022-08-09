@@ -12,6 +12,11 @@ func (vlk *VLK) WarmUp() {
 	// and all dependencies, like swapChain, renderPass, etc..
 	_ = vlk.cont.frameManager()
 	_ = vlk.cont.shaderManager()
+
+	// preload shader indexes
+	for _, shaderID := range preloadIndexShaders {
+		vlk.preloadShaderIndexes(vlk.cont.shaderManager().ShaderByID(shaderID))
+	}
 }
 
 func (vlk *VLK) GPUWait() {

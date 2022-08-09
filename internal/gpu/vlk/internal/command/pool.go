@@ -14,34 +14,75 @@ type Pool struct {
 	pd     *physical.Device
 	ld     *logical.Device
 
-	ref     vulkan.CommandPool
-	buffers []vulkan.CommandBuffer
+	ref vulkan.CommandPool
+
+	// main command buffers, used for draw commands
+	// one buffer for each swapChain image
+	mainBuffers []vulkan.CommandBuffer
 }
 
 func NewPool(logger config.Logger, pd *physical.Device, ld *logical.Device) *Pool {
 	pool, buffers := createPool(pd, ld)
 	return &Pool{
-		logger:  logger,
-		pd:      pd,
-		ld:      ld,
-		ref:     pool,
-		buffers: buffers,
+		logger:      logger,
+		pd:          pd,
+		ld:          ld,
+		ref:         pool,
+		mainBuffers: buffers,
 	}
 }
 
 func (p *Pool) Free() {
-	vulkan.FreeCommandBuffers(p.ld.Ref(), p.ref, uint32(len(p.buffers)), p.buffers)
+	vulkan.FreeCommandBuffers(p.ld.Ref(), p.ref, uint32(len(p.mainBuffers)), p.mainBuffers)
 	vulkan.DestroyCommandPool(p.ld.Ref(), p.ref, nil)
 
 	p.logger.Debug("freed: command pool")
 }
 
-func (p *Pool) BuffersCount() int {
-	return len(p.buffers)
+func (p *Pool) MainBuffersCount() int {
+	return len(p.mainBuffers)
 }
 
-func (p *Pool) CommandBuffer(ind int) vulkan.CommandBuffer {
-	return p.buffers[ind]
+func (p *Pool) MainCommandBuffer(ind int) vulkan.CommandBuffer {
+	return p.mainBuffers[ind]
+}
+
+// TemporaryBuffer will create temporary one time command buffer
+// and give it to exec for execution
+// right after exec is completed, this buffer will be destroyed
+// this useful for one time GPU commands, like data uploading to GPU
+//
+// All written commands will be automatically executed in GPU
+// after exec
+func (p *Pool) TemporaryBuffer(exec func(cb vulkan.CommandBuffer)) {
+	// create tmp command buffer
+	buffers := createBuffers(p.ld.Ref(), p.ref, 1)
+	tmpBuffer := buffers[0]
+
+	// execute some user command on it
+	vulkan.BeginCommandBuffer(tmpBuffer, &vulkan.CommandBufferBeginInfo{
+		SType: vulkan.StructureTypeCommandBufferBeginInfo,
+		Flags: vulkan.CommandBufferUsageFlags(vulkan.CommandBufferUsageOneTimeSubmitBit),
+	})
+
+	exec(tmpBuffer)
+
+	vulkan.EndCommandBuffer(tmpBuffer)
+
+	// submit written commands to GPU execution
+	submitInfo := vulkan.SubmitInfo{
+		SType:              vulkan.StructureTypeSubmitInfo,
+		CommandBufferCount: 1,
+		PCommandBuffers:    []vulkan.CommandBuffer{buffers[0]},
+	}
+	vulkan.QueueSubmit(p.ld.QueueGraphics(), 1, []vulkan.SubmitInfo{submitInfo}, nil)
+
+	// wait for GPU execute it
+	vulkan.QueueWaitIdle(p.ld.QueuePresent())
+
+	// now command buffer is not used anymore
+	// and can be destroyed safely
+	vulkan.FreeCommandBuffers(p.ld.Ref(), p.ref, uint32(len(buffers)), buffers)
 }
 
 func createPool(pd *physical.Device, ld *logical.Device) (vulkan.CommandPool, []vulkan.CommandBuffer) {
@@ -57,6 +98,13 @@ func createPool(pd *physical.Device, ld *logical.Device) (vulkan.CommandPool, []
 
 	// create buffers
 	buffersCount := pd.PrimaryGPU().SurfaceProps.ConcurrentBuffersCount()
+	buffers := createBuffers(ld.Ref(), pool, buffersCount)
+
+	// ok
+	return pool, buffers
+}
+
+func createBuffers(ld vulkan.Device, pool vulkan.CommandPool, buffersCount uint32) []vulkan.CommandBuffer {
 	allocInfo := &vulkan.CommandBufferAllocateInfo{
 		SType:              vulkan.StructureTypeCommandBufferAllocateInfo,
 		CommandPool:        pool,
@@ -65,8 +113,7 @@ func createPool(pd *physical.Device, ld *logical.Device) (vulkan.CommandPool, []
 	}
 
 	buffers := make([]vulkan.CommandBuffer, buffersCount)
-	must.Work(vulkan.AllocateCommandBuffers(ld.Ref(), allocInfo, buffers))
+	must.Work(vulkan.AllocateCommandBuffers(ld, allocInfo, buffers))
 
-	// ok
-	return pool, buffers
+	return buffers
 }

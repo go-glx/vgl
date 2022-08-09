@@ -2,6 +2,8 @@ package vlk
 
 import (
 	"github.com/vulkan-go/vulkan"
+
+	"github.com/go-glx/vgl/internal/gpu/vlk/internal/alloc"
 )
 
 type VLK struct {
@@ -13,8 +15,9 @@ type VLK struct {
 	surfacesSize [255][2]uint32 // width, height for each surface
 
 	// drawing
-	currentBatch *drawCall
-	queue        []drawCall
+	shaderIndexPtr map[string]alloc.AllocationID // shaderID -> allocationID (is pointer to index buffer for this shader)
+	currentBatch   *drawCall
+	queue          []drawCall
 }
 
 func newVLK(cont *Container) *VLK {
@@ -27,8 +30,9 @@ func newVLK(cont *Container) *VLK {
 		surfacesSize: [255][2]uint32{},
 
 		// drawing
-		currentBatch: &drawCall{},
-		queue:        make([]drawCall, 0, 32),
+		shaderIndexPtr: make(map[string]alloc.AllocationID),
+		currentBatch:   &drawCall{},
+		queue:          make([]drawCall, 0, 32),
 	}
 
 	// set default screen size

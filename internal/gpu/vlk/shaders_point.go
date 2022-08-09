@@ -42,6 +42,7 @@ func defaultShaderPoint() *shader.Meta {
 				Offset:   glm.SizeOfVec2,
 			},
 		},
+		[]uint16{0},
 	)
 }
 
@@ -58,8 +59,8 @@ func (d *dataPoint) BindingData() []byte {
 	return buff
 }
 
-func (d *dataPoint) Indexes() []uint16 {
-	return []uint16{0}
+func (d *dataPoint) IndexesCount() int {
+	return 1
 }
 
 func (d *dataPoint) PolygonMode() vulkan.PolygonMode {

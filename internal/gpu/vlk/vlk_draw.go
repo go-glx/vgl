@@ -11,7 +11,7 @@ import (
 type drawCallChunk struct {
 	shader      *shader.Shader
 	chunks      []alloc.Chunk
-	indexBuffer vulkan.Buffer
+	indexBuffer alloc.Allocation
 	polygonMode vulkan.PolygonMode
 }
 
@@ -95,7 +95,7 @@ func (vlk *VLK) drawAll() {
 		drawChunks = append(drawChunks, drawCallChunk{
 			shader:      drawCall.shader,
 			chunks:      buffs.Write(drawCall.instances),
-			indexBuffer: buffs.IndexBufferOf(drawCall.shader, drawCall.instances[0].Indexes()),
+			indexBuffer: vlk.indexBufferOf(drawCall.shader),
 			polygonMode: drawCall.polygonMode,
 		})
 	}
@@ -128,7 +128,9 @@ func (vlk *VLK) drawAll() {
 			vulkan.CmdBindPipeline(cb, vulkan.PipelineBindPointGraphics, pipe)
 
 			// index
-			vulkan.CmdBindIndexBuffer(cb, drawChunk.indexBuffer, 0, vulkan.IndexTypeUint16)
+			if drawChunk.indexBuffer.HasData {
+				vulkan.CmdBindIndexBuffer(cb, drawChunk.indexBuffer.Buffer, 0, vulkan.IndexTypeUint16)
+			}
 
 			// draw instances
 			for _, chunk := range drawChunk.chunks {
@@ -137,15 +139,18 @@ func (vlk *VLK) drawAll() {
 				offsets := []vulkan.DeviceSize{vulkan.DeviceSize(chunk.BufferOffset)}
 				vulkan.CmdBindVertexBuffers(cb, 0, uint32(len(buffers)), buffers, offsets)
 
-				// draw instances
+				// Drawing Type: 1 (optimized indexed draw - instancing)
+				if drawChunk.indexBuffer.HasData {
+					vulkan.CmdDrawIndexed(cb, chunk.IndexCount*chunk.InstancesCount, 1, 0, 0, 0)
+					countDrawCalls++
+					continue
+				}
+
+				// Drawing Type: 2 (default fallback)
 				for i := uint32(0); i < chunk.InstancesCount; i++ {
 					vulkan.CmdDraw(cb, chunk.IndexCount, 1, i*chunk.IndexCount, 0)
 					countDrawCalls++
 				}
-
-				// todo: optimization:
-				// todo: indexed draw all data in one draw call
-				// vulkan.CmdDrawIndexed(cb, chunk.IndexCount, chunk.InstancesCount, 0, 0, 0)
 			}
 		}
 	})

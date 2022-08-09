@@ -42,6 +42,7 @@ func defaultShaderTriangle() *shader.Meta {
 				Offset:   glm.SizeOfVec2,
 			},
 		},
+		[]uint16{0, 1, 2},
 	)
 }
 
@@ -63,8 +64,8 @@ func (d *dataTriangle) BindingData() []byte {
 	return buff
 }
 
-func (d *dataTriangle) Indexes() []uint16 {
-	return []uint16{0, 1, 2}
+func (d *dataTriangle) IndexesCount() int {
+	return 3
 }
 
 func (d *dataTriangle) PolygonMode() vulkan.PolygonMode {

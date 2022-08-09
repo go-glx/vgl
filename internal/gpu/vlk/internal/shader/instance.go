@@ -4,6 +4,6 @@ import "github.com/vulkan-go/vulkan"
 
 type InstanceData interface {
 	BindingData() []byte
-	Indexes() []uint16
+	IndexesCount() int
 	PolygonMode() vulkan.PolygonMode
 }

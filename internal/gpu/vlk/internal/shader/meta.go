@@ -10,6 +10,7 @@ type Meta struct {
 	topology   vulkan.PrimitiveTopology
 	bindings   []vulkan.VertexInputBindingDescription
 	attributes []vulkan.VertexInputAttributeDescription
+	indexes    []uint16
 }
 
 func NewMeta(
@@ -19,6 +20,7 @@ func NewMeta(
 	topology vulkan.PrimitiveTopology,
 	bindings []vulkan.VertexInputBindingDescription,
 	attributes []vulkan.VertexInputAttributeDescription,
+	indexes []uint16,
 ) *Meta {
 	return &Meta{
 		id:         id,
@@ -27,6 +29,7 @@ func NewMeta(
 		topology:   topology,
 		bindings:   bindings,
 		attributes: attributes,
+		indexes:    indexes,
 	}
 }
 
@@ -44,4 +47,8 @@ func (s *Meta) Bindings() []vulkan.VertexInputBindingDescription {
 
 func (s *Meta) Attributes() []vulkan.VertexInputAttributeDescription {
 	return s.attributes
+}
+
+func (s *Meta) Indexes() []uint16 {
+	return s.indexes
 }

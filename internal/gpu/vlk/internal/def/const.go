@@ -85,9 +85,20 @@ const ShaderEntryPoint = "main"
 //  - too small = more draw calls, less performance in intensive applications
 //  - too big   = less draw calls, slower copy speed cpu->gpu = less performance in simple applications
 //  - 65536     = good in most cases
-const BufferVertexSizeBytes = 2048 // todo:65536
+const BufferVertexSizeBytes = 65536
 
-// BufferIndexSizeBytes used for transport index data from cpu to gpu
-// index is simple uint16 array. Each index is pointer to specific offset
-// in vertex buffer inside BufferVertexSizeBytes
-const BufferIndexSizeBytes = 2048
+// BufferIndexMapInstances How many index data will be generated
+// and saved to fast-persistent GPU buffer memory
+// bufferSize = BufferIndexMapInstances * instanceSize
+// instanceSize = vertexSize * vertexesCount
+//
+// example:
+//   for triangle, we need 3 vertexes
+//   each vertex has 24 bytes (vec2(xy) + vec4(rgba))
+//   total is 72 bytes per instance
+//   total is 4_718_592 bytes (or 4.71 MB)
+//
+// this is maximum instance count, that can be drawn
+// in one draw-call. So, when we want draw 100k instances
+// library will use 2 draw calls.
+const BufferIndexMapInstances = 65536
