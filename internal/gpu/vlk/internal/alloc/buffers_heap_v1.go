@@ -39,7 +39,6 @@ func (b *Buffers) Write(instances []shader.InstanceData) []Chunk {
 
 	chunks := make([]Chunk, 0)
 	instSize := uint64(len(instances[0].BindingData()))
-	instIndexCount := uint32(instances[0].IndexesCount())
 
 	instCount := uint32(0)
 
@@ -70,7 +69,6 @@ func (b *Buffers) Write(instances []shader.InstanceData) []Chunk {
 				Buffer:         page.buff.ref,
 				BufferOffset:   currentPageOffset,
 				InstancesCount: instCount,
-				IndexCount:     instIndexCount,
 			})
 			instCount = 0
 
@@ -94,7 +92,6 @@ func (b *Buffers) Write(instances []shader.InstanceData) []Chunk {
 		Buffer:         page.buff.ref,
 		BufferOffset:   currentPageOffset,
 		InstancesCount: instCount,
-		IndexCount:     instIndexCount,
 	})
 
 	return chunks

@@ -43,10 +43,13 @@ Basic triangles rendering:
 ![example](./example/triangles.png)
 
 - [x] shaders rendering
-- [ ] instancing, optimizations
+- [x] instancing, optimizations
+- [ ] buildIn shaders libs: point(+), line, circle, triangle(+), rect(+), polygon
 - [ ] bunnies stress test
-- [ ] buildIn shaders lib (line, rect, polygon)
 - [ ] blend modes
 - [ ] 2d textures
+- [ ] polish
+- [ ] documentation
+- [ ] release v1.0
 
 

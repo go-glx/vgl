@@ -4,8 +4,6 @@ import (
 	_ "embed"
 	"fmt"
 
-	"github.com/vulkan-go/vulkan"
-
 	"github.com/go-glx/vgl/internal/gpu/vlk/internal/alloc"
 	"github.com/go-glx/vgl/internal/gpu/vlk/internal/def"
 	"github.com/go-glx/vgl/internal/gpu/vlk/internal/shader"
@@ -14,6 +12,7 @@ import (
 const (
 	buildInShaderPoint    = "point"
 	buildInShaderTriangle = "triangle"
+	buildInShaderRect     = "rect"
 )
 
 // shaders that will preload indexes to fast-buffer
@@ -21,20 +20,8 @@ const (
 var preloadIndexShaders = []string{
 	buildInShaderPoint,
 	buildInShaderTriangle,
+	buildInShaderRect,
 }
-
-const (
-	bindingFormatVec2 = vulkan.FormatR32g32Sfloat
-	bindingFormatVec3 = vulkan.FormatR32g32b32Sfloat
-	bindingFormatVec4 = vulkan.FormatR32g32b32a32Sfloat
-)
-
-var (
-	//go:embed shaders/simple.vert.spv
-	simpleVert []byte
-	//go:embed shaders/simple.frag.spv
-	simpleFrag []byte
-)
 
 func (vlk *VLK) preloadShaderIndexes(shader *shader.Shader) {
 	shaderID := shader.Meta().ID()
@@ -45,8 +32,7 @@ func (vlk *VLK) preloadShaderIndexes(shader *shader.Shader) {
 	// create new index buffer for this shader
 	// and pre-generate index data for N instances
 
-	size := uint32(len(shader.Meta().Indexes()))
-	indexes := make([]byte, 0, size*2) // uint16 -> uint32
+	indexes := make([]byte, 0, len(shader.Meta().Indexes())*2) // uint16 -> uint32
 
 	// index is something like [0,1,2] for one instance (triangle for example)
 	// we want to populate index buffer for N instances, for example when N=3
@@ -55,8 +41,16 @@ func (vlk *VLK) preloadShaderIndexes(shader *shader.Shader) {
 
 	for inst := uint32(0); inst < def.BufferIndexMapInstances; inst++ {
 		for _, index := range shader.Meta().Indexes() {
-			offset := size * inst
-			instanceIndex := offset + uint32(index)
+			var instanceIndex uint32
+
+			if index == 0xffff {
+				// do not change offset of breaking sequence
+				// this is special index (65535 = 0xffff)
+				instanceIndex = uint32(index)
+			} else {
+				offset := shader.Meta().VertexCount() * inst
+				instanceIndex = offset + uint32(index)
+			}
 
 			indexes = append(indexes, uint8(instanceIndex&0xff), uint8(instanceIndex>>8))
 		}

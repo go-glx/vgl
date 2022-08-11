@@ -76,6 +76,7 @@ type Params2dTriangle struct {
 }
 
 // Draw2dTriangle will draw triangle on current surface with current blend mode
+// Params2dTriangle.Pos must be in clock-wise order
 func (r *Render) Draw2dTriangle(p *Params2dTriangle) {
 	pos := [3]glm.Vec2{
 		r.toLocalSpace2d(p.Pos[0]),
@@ -114,8 +115,37 @@ type Params2dRect struct {
 }
 
 // Draw2dRect will draw rect on current surface with current blend mode
+// order of Params2dRect.Pos must be specified in order:
+//   1) top-left
+//   2) top-right
+//   3) bottom-right
+//   4) bottom-left
 func (r *Render) Draw2dRect(p *Params2dRect) {
-	// todo: draw
+	pos := [4]glm.Vec2{
+		r.toLocalSpace2d(p.Pos[0]),
+		r.toLocalSpace2d(p.Pos[1]),
+		r.toLocalSpace2d(p.Pos[2]),
+		r.toLocalSpace2d(p.Pos[3]),
+	}
+
+	if !p.NoCulling && !r.cullingRect(pos) {
+		return
+	}
+
+	color := [4]glm.Vec4{}
+	if p.ColorUseGradient {
+		color[0] = p.ColorGradient[0].VecRGBA()
+		color[1] = p.ColorGradient[1].VecRGBA()
+		color[2] = p.ColorGradient[2].VecRGBA()
+		color[3] = p.ColorGradient[3].VecRGBA()
+	} else {
+		color[0] = p.Color.VecRGBA()
+		color[1] = color[0]
+		color[2] = color[0]
+		color[3] = color[0]
+	}
+
+	r.api.DrawRect(pos, color, p.Filled)
 }
 
 // -----------------------------------------------------------------------------

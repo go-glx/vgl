@@ -5,43 +5,23 @@ import (
 
 	"github.com/go-glx/vgl/glm"
 	"github.com/go-glx/vgl/internal/gpu/vlk/internal/shader"
+	"github.com/go-glx/vgl/internal/gpu/vlk/shaders/simple"
 )
 
 const (
-	triangleVertexSize = glm.SizeOfVec2 + glm.SizeOfVec4
+	shaderTriangleVertexCount = 3
+	shaderTriangleVertexSize  = glm.SizeOfVec2 + glm.SizeOfVec4
 )
 
 func defaultShaderTriangle() *shader.Meta {
-	const bindingData = 0
-	const locationVertex = 0
-	const locationColor = 1
-
 	return shader.NewMeta(
 		buildInShaderTriangle,
-		simpleVert,
-		simpleFrag,
-		vulkan.PrimitiveTopologyTriangleList,
-		[]vulkan.VertexInputBindingDescription{
-			{
-				Binding:   bindingData,
-				Stride:    triangleVertexSize,
-				InputRate: vulkan.VertexInputRateVertex,
-			},
-		},
-		[]vulkan.VertexInputAttributeDescription{ // [x,y,r,g,b,a],..
-			{
-				Location: locationVertex,
-				Binding:  bindingData,
-				Format:   bindingFormatVec2, // x, y
-				Offset:   0,
-			},
-			{
-				Location: locationColor,
-				Binding:  bindingData,
-				Format:   bindingFormatVec4, // r, g, b, a
-				Offset:   glm.SizeOfVec2,
-			},
-		},
+		simple.CodeVertex(),
+		simple.CodeFragment(),
+		vulkan.PrimitiveTopologyTriangleList, false,
+		simple.Bindings(shaderTriangleVertexSize),
+		simple.Attributes(),
+		shaderTriangleVertexCount,
 		[]uint16{0, 1, 2},
 	)
 }
@@ -53,19 +33,14 @@ type dataTriangle struct {
 }
 
 func (d *dataTriangle) BindingData() []byte {
-	const vertexCount = 3
-	buff := make([]byte, 0, vertexCount*triangleVertexSize)
+	buff := make([]byte, 0, shaderTriangleVertexCount*shaderTriangleVertexSize)
 
-	for i := 0; i < vertexCount; i++ {
+	for i := 0; i < shaderTriangleVertexCount; i++ {
 		buff = append(buff, d.vertexes[i].Data()...)
 		buff = append(buff, d.colors[i].Data()...)
 	}
 
 	return buff
-}
-
-func (d *dataTriangle) IndexesCount() int {
-	return 3
 }
 
 func (d *dataTriangle) PolygonMode() vulkan.PolygonMode {

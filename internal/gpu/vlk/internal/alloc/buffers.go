@@ -8,7 +8,6 @@ type Chunk struct {
 	Buffer         vulkan.Buffer
 	BufferOffset   uint64
 	InstancesCount uint32
-	IndexCount     uint32
 }
 
 type Buffers struct {

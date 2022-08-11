@@ -7,10 +7,12 @@ type Meta struct {
 	vert []byte
 	frag []byte
 
-	topology   vulkan.PrimitiveTopology
-	bindings   []vulkan.VertexInputBindingDescription
-	attributes []vulkan.VertexInputAttributeDescription
-	indexes    []uint16
+	topology        vulkan.PrimitiveTopology
+	topologyRestart bool
+	bindings        []vulkan.VertexInputBindingDescription
+	attributes      []vulkan.VertexInputAttributeDescription
+	vertexCount     uint32
+	indexes         []uint16
 }
 
 func NewMeta(
@@ -18,18 +20,22 @@ func NewMeta(
 	vert []byte,
 	frag []byte,
 	topology vulkan.PrimitiveTopology,
+	topologyRestart bool,
 	bindings []vulkan.VertexInputBindingDescription,
 	attributes []vulkan.VertexInputAttributeDescription,
+	vertexCount uint32,
 	indexes []uint16,
 ) *Meta {
 	return &Meta{
-		id:         id,
-		vert:       vert,
-		frag:       frag,
-		topology:   topology,
-		bindings:   bindings,
-		attributes: attributes,
-		indexes:    indexes,
+		id:              id,
+		vert:            vert,
+		frag:            frag,
+		topology:        topology,
+		topologyRestart: topologyRestart,
+		bindings:        bindings,
+		attributes:      attributes,
+		vertexCount:     vertexCount,
+		indexes:         indexes,
 	}
 }
 
@@ -41,12 +47,20 @@ func (s *Meta) Topology() vulkan.PrimitiveTopology {
 	return s.topology
 }
 
+func (s *Meta) TopologyRestartEnable() bool {
+	return s.topologyRestart
+}
+
 func (s *Meta) Bindings() []vulkan.VertexInputBindingDescription {
 	return s.bindings
 }
 
 func (s *Meta) Attributes() []vulkan.VertexInputAttributeDescription {
 	return s.attributes
+}
+
+func (s *Meta) VertexCount() uint32 {
+	return s.vertexCount
 }
 
 func (s *Meta) Indexes() []uint16 {

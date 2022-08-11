@@ -6,6 +6,10 @@ import (
 	"github.com/go-glx/vgl/internal/gpu/vlk/internal/alloc"
 )
 
+// todo: fullScreen switch panics in examples
+// todo: vertex buffers is override in swapChain (can have multiple frames in-fly)
+// todo: panic in rect scene after one second
+
 type VLK struct {
 	isReady bool
 	cont    *Container

@@ -4,6 +4,7 @@ import (
 	"github.com/vulkan-go/vulkan"
 
 	"github.com/go-glx/vgl/internal/gpu/vlk/internal/alloc"
+	"github.com/go-glx/vgl/internal/gpu/vlk/internal/def"
 	"github.com/go-glx/vgl/internal/gpu/vlk/internal/pipeline"
 	"github.com/go-glx/vgl/internal/gpu/vlk/internal/shader"
 )
@@ -108,6 +109,7 @@ func (vlk *VLK) drawAll() {
 	vlk.cont.frameManager().FrameApplyCommands(func(_ uint32, cb vulkan.CommandBuffer) {
 		for _, drawChunk := range drawChunks {
 			sdr := drawChunk.shader
+			indexCount := uint32(len(sdr.Meta().Indexes()))
 
 			// bind pipe with current shader and options
 			pipe := vlk.cont.pipelineFactory().NewPipeline(
@@ -115,7 +117,10 @@ func (vlk *VLK) drawAll() {
 					sdr.ModuleVert().Stage(),
 					sdr.ModuleFrag().Stage(),
 				}),
-				pipeline.WithTopology(sdr.Meta().Topology()),
+				pipeline.WithTopology(
+					sdr.Meta().Topology(),
+					sdr.Meta().TopologyRestartEnable(),
+				),
 				pipeline.WithVertexInput(
 					sdr.Meta().Bindings(),
 					sdr.Meta().Attributes(),
@@ -141,14 +146,20 @@ func (vlk *VLK) drawAll() {
 
 				// Drawing Type: 1 (optimized indexed draw - instancing)
 				if drawChunk.indexBuffer.HasData {
-					vulkan.CmdDrawIndexed(cb, chunk.IndexCount*chunk.InstancesCount, 1, 0, 0, 0)
-					countDrawCalls++
+					instPerCall := min(chunk.InstancesCount, def.BufferIndexMapInstances)
+					for firstInst := uint32(0); firstInst < chunk.InstancesCount; firstInst += instPerCall {
+						// if we try to draw more instances, that fit in warm index map (>65536)
+						// we split it into chunks of def.BufferIndexMapInstances size each
+						vulkan.CmdDrawIndexed(cb, indexCount*instPerCall, 1, 0, int32(firstInst*sdr.Meta().VertexCount()), 0)
+						countDrawCalls++
+					}
+
 					continue
 				}
 
 				// Drawing Type: 2 (default fallback)
 				for i := uint32(0); i < chunk.InstancesCount; i++ {
-					vulkan.CmdDraw(cb, chunk.IndexCount, 1, i*chunk.IndexCount, 0)
+					vulkan.CmdDraw(cb, indexCount, 1, i*indexCount, 0)
 					countDrawCalls++
 				}
 			}
@@ -158,4 +169,12 @@ func (vlk *VLK) drawAll() {
 	// reset
 	vlk.queue = make([]drawCall, 0, 32)
 	vlk.currentBatch = &drawCall{}
+}
+
+func min(a, b uint32) uint32 {
+	if a < b {
+		return a
+	}
+
+	return b
 }

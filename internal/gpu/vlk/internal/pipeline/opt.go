@@ -11,12 +11,12 @@ func WithStages(stages []vulkan.PipelineShaderStageCreateInfo) Initializer {
 	}
 }
 
-func WithTopology(topology vulkan.PrimitiveTopology) Initializer {
+func WithTopology(topology vulkan.PrimitiveTopology, restartEnable bool) Initializer {
 	return func(info *vulkan.GraphicsPipelineCreateInfo) {
 		info.PInputAssemblyState = &vulkan.PipelineInputAssemblyStateCreateInfo{
 			SType:                  vulkan.StructureTypePipelineInputAssemblyStateCreateInfo,
 			Topology:               topology,
-			PrimitiveRestartEnable: vulkan.False,
+			PrimitiveRestartEnable: castToVKBool(restartEnable),
 		}
 	}
 }
@@ -90,4 +90,12 @@ func WithColorBlend() Initializer {
 			BlendConstants: [4]float32{0, 0, 0, 0},
 		}
 	}
+}
+
+func castToVKBool(b bool) vulkan.Bool32 {
+	if b {
+		return vulkan.True
+	}
+
+	return vulkan.False
 }

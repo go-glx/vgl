@@ -5,43 +5,23 @@ import (
 
 	"github.com/go-glx/vgl/glm"
 	"github.com/go-glx/vgl/internal/gpu/vlk/internal/shader"
+	"github.com/go-glx/vgl/internal/gpu/vlk/shaders/simple"
 )
 
 const (
-	pointVertexSize = glm.SizeOfVec2 + glm.SizeOfVec4
+	shaderPointVertexCount = 1
+	shaderPointVertexSize  = glm.SizeOfVec2 + glm.SizeOfVec4
 )
 
 func defaultShaderPoint() *shader.Meta {
-	const bindingData = 0
-	const locationVertex = 0
-	const locationColor = 1
-
 	return shader.NewMeta(
 		buildInShaderPoint,
-		simpleVert,
-		simpleFrag,
-		vulkan.PrimitiveTopologyPointList,
-		[]vulkan.VertexInputBindingDescription{
-			{
-				Binding:   bindingData,
-				Stride:    pointVertexSize,
-				InputRate: vulkan.VertexInputRateVertex,
-			},
-		},
-		[]vulkan.VertexInputAttributeDescription{ // [x,y,r,g,b,a],..
-			{
-				Location: locationVertex,
-				Binding:  bindingData,
-				Format:   bindingFormatVec2, // x, y
-				Offset:   0,
-			},
-			{
-				Location: locationColor,
-				Binding:  bindingData,
-				Format:   bindingFormatVec4, // r, g, b, a
-				Offset:   glm.SizeOfVec2,
-			},
-		},
+		simple.CodeVertex(),
+		simple.CodeFragment(),
+		vulkan.PrimitiveTopologyPointList, false,
+		simple.Bindings(shaderPointVertexSize),
+		simple.Attributes(),
+		shaderPointVertexCount,
 		[]uint16{0},
 	)
 }
@@ -52,15 +32,11 @@ type dataPoint struct {
 }
 
 func (d *dataPoint) BindingData() []byte {
-	buff := make([]byte, 0, pointVertexSize)
+	buff := make([]byte, 0, shaderPointVertexSize*shaderPointVertexCount)
 	buff = append(buff, d.vertex.Data()...)
 	buff = append(buff, d.color.Data()...)
 
 	return buff
-}
-
-func (d *dataPoint) IndexesCount() int {
-	return 1
 }
 
 func (d *dataPoint) PolygonMode() vulkan.PolygonMode {
