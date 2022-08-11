@@ -36,7 +36,7 @@ func newVLK(cont *Container) *VLK {
 		// drawing
 		shaderIndexPtr: make(map[string]alloc.AllocationID),
 		currentBatch:   &drawCall{},
-		queue:          make([]drawCall, 0, 32),
+		queue:          make([]drawCall, 0, queueCapacity),
 	}
 
 	// set default screen size

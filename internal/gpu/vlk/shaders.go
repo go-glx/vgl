@@ -39,7 +39,7 @@ func (vlk *VLK) preloadShaderIndexes(shader *shader.Shader) {
 	// buffer will be equal to [0,1,2, 3,4,5, 6,7,8]
 	// this allows to draw at least 3 instance of same triangle in one draw call
 
-	for inst := uint32(0); inst < def.BufferIndexMapInstances; inst++ {
+	for inst := uint32(0); inst < def.BufferIndexMaxInstances; inst++ {
 		for _, index := range shader.Meta().Indexes() {
 			var instanceIndex uint32
 

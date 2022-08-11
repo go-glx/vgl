@@ -9,6 +9,10 @@ import (
 	"github.com/go-glx/vgl/internal/gpu/vlk/internal/shader"
 )
 
+// default capacity for batch queue
+// will be reset every frame
+const queueCapacity = 32
+
 type drawCallChunk struct {
 	shader      *shader.Shader
 	chunks      []alloc.Chunk
@@ -146,10 +150,10 @@ func (vlk *VLK) drawAll() {
 
 				// Drawing Type: 1 (optimized indexed draw - instancing)
 				if drawChunk.indexBuffer.HasData {
-					instPerCall := min(chunk.InstancesCount, def.BufferIndexMapInstances)
+					instPerCall := min(chunk.InstancesCount, def.BufferIndexMaxInstances)
 					for firstInst := uint32(0); firstInst < chunk.InstancesCount; firstInst += instPerCall {
 						// if we try to draw more instances, that fit in warm index map (>65536)
-						// we split it into chunks of def.BufferIndexMapInstances size each
+						// we split it into chunks of def.BufferIndexMaxInstances size each
 						vulkan.CmdDrawIndexed(cb, indexCount*instPerCall, 1, 0, int32(firstInst*sdr.Meta().VertexCount()), 0)
 						countDrawCalls++
 					}
@@ -167,7 +171,7 @@ func (vlk *VLK) drawAll() {
 	})
 
 	// reset
-	vlk.queue = make([]drawCall, 0, 32)
+	vlk.queue = make([]drawCall, 0, queueCapacity)
 	vlk.currentBatch = &drawCall{}
 }
 

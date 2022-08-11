@@ -10,15 +10,8 @@ import (
 // -- Instance
 // ------------------------------------------------------
 
-const (
-	vkVersion11 = 0x00401000
-	// const vkVersion12 = 0x00402000
-	// const vkVersion13 = 0x00403000
-)
-
 // VKApiVersion is main vulkan API version
-const VKApiVersion = vkVersion11
-const VKVMAVersion = vkVersion11
+const VKApiVersion = vulkan.ApiVersion11
 
 // RequiredValidationLayers will be used, only when renderer in debug mode
 var RequiredValidationLayers = []string{
@@ -87,9 +80,9 @@ const ShaderEntryPoint = "main"
 //  - 65536     = good in most cases
 const BufferVertexSizeBytes = 65536
 
-// BufferIndexMapInstances How many index data will be generated
+// BufferIndexMaxInstances How many index data will be generated
 // and saved to fast-persistent GPU buffer memory
-// bufferSize = BufferIndexMapInstances * instanceSize
+// bufferSize = BufferIndexMaxInstances * instanceSize
 // instanceSize = vertexSize * vertexesCount
 //
 // example:
@@ -101,4 +94,4 @@ const BufferVertexSizeBytes = 65536
 // this is maximum instance count, that can be drawn
 // in one draw-call. So, when we want draw 100k instances
 // library will use 2 draw calls.
-const BufferIndexMapInstances = 65536
+const BufferIndexMaxInstances = 65536
