@@ -1,0 +1,12 @@
+github.com/davecgh/go-spew v1.1.0/go.mod h1:J7Y8YcW2NihsgmVo/mv3lAwl/skON4iLHjSsI+c5H38=
+github.com/go-gl/glfw/v3.3/glfw v0.0.0-20220320163800-277f93cfa958 h1:TL70PMkdPCt9cRhKTqsm+giRpgrd0IGEj763nNr2VFY=
+github.com/go-gl/glfw/v3.3/glfw v0.0.0-20220320163800-277f93cfa958/go.mod h1:tQ2UAYgL5IevRw8kRxooKSPJfGvJ9fJQFa0TUsXzTg8=
+github.com/go-glx/vgl v0.0.2 h1:T0L5c8ZJY0IuW65/hOpwds2rTgKWAg0gVfGxU1zVf1o=
+github.com/go-glx/vgl v0.0.2/go.mod h1:H6/H1fB40BbS19w/YxcYQn+bndHDk10WqhlIMA6ADW0=
+github.com/inkyblackness/imgui-go/v4 v4.5.0 h1:iUon7q0Hr0c0/Gc2V6bTP7Anu9WH7H26dI7JkPBmMEA=
+github.com/inkyblackness/imgui-go/v4 v4.5.0/go.mod h1:g8SAGtOYUP7rYaOB2AsVKCEHmPMDmJKgt4z6d+flhb0=
+github.com/pmezard/go-difflib v1.0.0/go.mod h1:iKH77koFhYxTK1pcRnkKkqfTogsbg7gZNVY4sRDYZ/4=
+github.com/stretchr/objx v0.1.0/go.mod h1:HFkY916IF+rwdDfMAkV7OtwuqBVzrE8GR6GFx+wExME=
+github.com/stretchr/testify v1.3.0/go.mod h1:M5WIy9Dh21IEIfnGCwXGc5bZfKNJtfHm1UVUgZn+9EI=
+github.com/vulkan-go/vulkan v0.0.0-20210402152248-956e3850d8f9 h1:WFujQpkMAAd8dqccEm10n8dly4yQ/R5d2+Us7GutowA=
+github.com/vulkan-go/vulkan v0.0.0-20210402152248-956e3850d8f9/go.mod h1:Y5Ti1uUBdKDsb0W8aPtIo9krs+29Y7p6Bc9yyy4AM6g=

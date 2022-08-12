@@ -11,6 +11,7 @@ import (
 
 const (
 	buildInShaderPoint    = "point"
+	buildInShaderLine     = "line"
 	buildInShaderTriangle = "triangle"
 	buildInShaderRect     = "rect"
 )
@@ -19,6 +20,7 @@ const (
 // this allows instancing them in one draw call
 var preloadIndexShaders = []string{
 	buildInShaderPoint,
+	buildInShaderLine,
 	buildInShaderTriangle,
 	buildInShaderRect,
 }

@@ -18,6 +18,21 @@ func (vlk *VLK) DrawPoint(vertex glm.Vec2, color glm.Vec4) {
 	)
 }
 
+func (vlk *VLK) DrawLine(vertexes [2]glm.Vec2, colors [2]glm.Vec4, width float32) {
+	if !vlk.isReady {
+		return
+	}
+
+	vlk.drawQueue(
+		vlk.cont.shaderManager().ShaderByID(buildInShaderLine),
+		&dataLine{
+			vertexes: vertexes,
+			colors:   colors,
+			width:    width,
+		},
+	)
+}
+
 func (vlk *VLK) DrawTriangle(vertexes [3]glm.Vec2, colors [3]glm.Vec4, filled bool) {
 	if !vlk.isReady {
 		return

@@ -37,6 +37,10 @@ func (vlk *VLK) FrameStart() {
 		return
 	}
 
+	// clear stats from prev frame
+	vlk.stats.Reset()
+
+	// start command buffers
 	vlk.cont.frameManager().FrameBegin()
 }
 
@@ -45,6 +49,14 @@ func (vlk *VLK) FrameEnd() {
 		return
 	}
 
+	// draw queued shaders
 	vlk.drawAll()
+
+	// submit command buffers
 	vlk.cont.frameManager().FrameEnd()
+
+	// send stats
+	for _, listener := range vlk.statsListeners {
+		listener(vlk.stats)
+	}
 }

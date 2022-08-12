@@ -28,6 +28,20 @@ func (r *Render) toLocalSpace2d(pos glm.Local2D) glm.Vec2 {
 	}
 }
 
+func (r *Render) toLocalAspectRation(n int) float32 {
+	w, h := r.api.GetSurfaceSize()
+
+	if w <= 0 || h <= 0 {
+		return 0
+	}
+
+	if w > h {
+		return float32(n) / float32(h)
+	}
+
+	return float32(n) / float32(w)
+}
+
 func (r *Render) cullingPoint(vert glm.Vec2) bool {
 	return vert.X >= -1 && vert.X <= 1 && vert.Y >= -1 && vert.Y <= 1
 }

@@ -1,8 +1,11 @@
 package vlk
 
 import (
+	"time"
+
 	"github.com/vulkan-go/vulkan"
 
+	"github.com/go-glx/vgl/glm"
 	"github.com/go-glx/vgl/internal/gpu/vlk/internal/alloc"
 )
 
@@ -13,6 +16,10 @@ import (
 type VLK struct {
 	isReady bool
 	cont    *Container
+
+	// stats
+	stats          glm.Stats
+	statsListeners []func(glm.Stats)
 
 	// surfaces
 	surfaceInd   uint8          // 0 - default (Screen, window); 1-255 reserved for user needs
@@ -29,6 +36,10 @@ func newVLK(cont *Container) *VLK {
 		isReady: true,
 		cont:    cont,
 
+		// stats
+		stats:          glm.Stats{},
+		statsListeners: make([]func(glm.Stats), 0),
+
 		// surface
 		surfaceInd:   0, // default - screen
 		surfacesSize: [255][2]uint32{},
@@ -42,6 +53,8 @@ func newVLK(cont *Container) *VLK {
 	// set default screen size
 	wWidth, wHeight := cont.wm.GetFramebufferSize()
 	vlk.surfacesSize[0] = [2]uint32{uint32(wWidth), uint32(wHeight)}
+
+	go countFPS(&vlk.stats)
 
 	return vlk
 }
@@ -63,4 +76,22 @@ func (vlk *VLK) maintenance(mutate func()) {
 
 	// turn on back
 	vlk.isReady = true
+}
+
+// ListenStats will subscribe listener to frame stats
+// listener will be executed every frame with last frame Stats
+func (vlk *VLK) ListenStats(listener func(stats glm.Stats)) {
+	vlk.statsListeners = append(vlk.statsListeners, listener)
+}
+
+func countFPS(stats *glm.Stats) {
+	ticker := time.NewTicker(time.Second)
+
+	for {
+		select {
+		case <-ticker.C:
+			stats.FPS = stats.FrameIndex
+			stats.FrameIndex = 0
+		}
+	}
 }

@@ -60,7 +60,25 @@ func (r *Render) Draw2dLine(p *Params2dLine) {
 		p.Width = 32
 	}
 
-	// todo: draw
+	pos := [2]glm.Vec2{
+		r.toLocalSpace2d(p.Pos[0]),
+		r.toLocalSpace2d(p.Pos[1]),
+	}
+
+	if !p.NoCulling && !r.cullingLine(pos) {
+		return
+	}
+
+	color := [2]glm.Vec4{}
+	if p.ColorUseGradient {
+		color[0] = p.ColorGradient[0].VecRGBA()
+		color[1] = p.ColorGradient[1].VecRGBA()
+	} else {
+		color[0] = p.Color.VecRGBA()
+		color[1] = color[0]
+	}
+
+	r.api.DrawLine(pos, color, r.toLocalAspectRation(p.Width))
 }
 
 // -----------------------------------------------------------------------------
