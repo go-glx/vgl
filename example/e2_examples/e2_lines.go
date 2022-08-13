@@ -6,21 +6,32 @@ import (
 )
 
 func e2Lines(rnd *vgl.Render) {
-	const offsetY = 150
+	const unitSize = 24          // each character size
+	const offsetY = unitSize * 5 // offset between features
 
-	points := []glm.Local2D{
-		{100, 100},
-		{150, 120},
-		{240, 130},
-		{300, 110},
-		{500, 130},
-		{650, 100},
-		{640, 50},
-		{520, 40},
-		{340, 60},
-		{200, 75},
-		{125, 50},
-		{100, 100},
+	// Drawing "VGL" word with lines
+	chars := [][]glm.Local2D{
+		{
+			// V
+			{2, 1},
+			{3, 4},
+			{4, 1},
+		},
+		{
+			// G
+			{7, 1},
+			{5, 1},
+			{5, 4},
+			{7, 4},
+			{7, 2},
+			{6, 2},
+		},
+		{
+			// L
+			{8, 1},
+			{8, 4},
+			{10, 4},
+		},
 	}
 
 	features := []vgl.Params2dLine{
@@ -34,11 +45,6 @@ func e2Lines(rnd *vgl.Render) {
 			Width: 1,
 		},
 		{
-			// bold line
-			Color: glm.NewColor(255, 255, 0, 255),
-			Width: 5,
-		},
-		{
 			// gradient line
 			ColorGradient: [2]glm.Color{
 				glm.NewColor(255, 0, 0, 255),
@@ -46,23 +52,45 @@ func e2Lines(rnd *vgl.Render) {
 			},
 			ColorUseGradient: true,
 		},
+		{
+			// bold line
+			Color: glm.NewColor(255, 255, 0, 255),
+			Width: 10,
+		},
+		{
+			// bold + gradient line
+			ColorGradient: [2]glm.Color{
+				glm.NewColor(255, 0, 0, 255),
+				glm.NewColor(0, 0, 255, 255),
+			},
+			ColorUseGradient: true,
+			Width:            10,
+		},
 	}
 
 	for featInd, feature := range features {
-		for pointInd, curr := range points {
-			if pointInd == len(points)-1 {
-				break
+		for _, points := range chars {
+			for pointInd, curr := range points {
+				if pointInd == len(points)-1 {
+					break
+				}
+
+				next := points[pointInd+1]
+
+				// abstractPos -> realPos
+				curr[0] *= unitSize
+				curr[1] *= unitSize
+				next[0] *= unitSize
+				next[1] *= unitSize
+
+				// add feature Y offset
+				curr[1] += int32(featInd * offsetY)
+				next[1] += int32(featInd * offsetY)
+
+				feature.Pos = [2]glm.Local2D{curr, next}
+
+				rnd.Draw2dLine(&feature)
 			}
-
-			next := points[pointInd+1]
-
-			curr[1] += int32(featInd * offsetY)
-			next[1] += int32(featInd * offsetY)
-
-			feature.Pos = [2]glm.Local2D{curr, next}
-
-			rnd.Draw2dLine(&feature)
 		}
 	}
-
 }

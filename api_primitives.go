@@ -1,6 +1,8 @@
 package vgl
 
 import (
+	"math"
+
 	"github.com/go-glx/vgl/glm"
 )
 
@@ -65,10 +67,6 @@ func (r *Render) Draw2dLine(p *Params2dLine) {
 		r.toLocalSpace2d(p.Pos[1]),
 	}
 
-	if !p.NoCulling && !r.cullingLine(pos) {
-		return
-	}
-
 	color := [2]glm.Vec4{}
 	if p.ColorUseGradient {
 		color[0] = p.ColorGradient[0].VecRGBA()
@@ -78,7 +76,31 @@ func (r *Render) Draw2dLine(p *Params2dLine) {
 		color[1] = color[0]
 	}
 
-	r.api.DrawLine(pos, color, r.toLocalAspectRation(p.Width))
+	if p.Width == 1 {
+		// native GPU line (faster that emulating with rect)
+		if !p.NoCulling && !r.cullingLine(pos) {
+			return
+		}
+
+		r.api.DrawLine(pos, color)
+		return
+	}
+
+	// not all GPU support of lines with width 1px+
+	// so, in case of custom width, we will emulate it with rect
+	radTo := pos[0].AngleTo(pos[1])
+	offset := r.toLocalAspectRation(p.Width) / 2
+	topLeft := pos[0].PolarOffset(offset, radTo+(math.Pi/2))
+	bottomLeft := pos[0].PolarOffset(offset, radTo-(math.Pi/2))
+	topRight := pos[1].PolarOffset(offset, radTo+(math.Pi/2))
+	bottomRight := pos[1].PolarOffset(offset, radTo-(math.Pi/2))
+
+	rectPos := [4]glm.Vec2{topLeft, topRight, bottomRight, bottomLeft}
+	if !p.NoCulling && !r.cullingRect(rectPos) {
+		return
+	}
+
+	r.api.DrawRect(rectPos, [4]glm.Vec4{color[0], color[1], color[1], color[0]}, true)
 }
 
 // -----------------------------------------------------------------------------

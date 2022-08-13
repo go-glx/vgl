@@ -2,6 +2,7 @@ package glm
 
 import (
 	"fmt"
+	"math"
 	"unsafe"
 )
 
@@ -20,4 +21,15 @@ func (v *Vec2) String() string {
 
 func (v *Vec2) Data() []byte {
 	return (*(*[SizeOfVec2]byte)(unsafe.Pointer(v)))[:]
+}
+
+func (v *Vec2) AngleTo(to Vec2) (rad float64) {
+	return math.Atan2(float64(to.Y-v.Y), float64(v.X-to.X)) + math.Pi
+}
+
+func (v *Vec2) PolarOffset(distance float32, rad float64) Vec2 {
+	return Vec2{
+		X: v.X + distance*float32(math.Cos(rad)),
+		Y: v.Y - distance*float32(math.Sin(rad)),
+	}
 }

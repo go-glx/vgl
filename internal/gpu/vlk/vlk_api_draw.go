@@ -18,7 +18,7 @@ func (vlk *VLK) DrawPoint(vertex glm.Vec2, color glm.Vec4) {
 	)
 }
 
-func (vlk *VLK) DrawLine(vertexes [2]glm.Vec2, colors [2]glm.Vec4, width float32) {
+func (vlk *VLK) DrawLine(vertexes [2]glm.Vec2, colors [2]glm.Vec4) {
 	if !vlk.isReady {
 		return
 	}
@@ -28,7 +28,6 @@ func (vlk *VLK) DrawLine(vertexes [2]glm.Vec2, colors [2]glm.Vec4, width float32
 		&dataLine{
 			vertexes: vertexes,
 			colors:   colors,
-			width:    width,
 		},
 	)
 }

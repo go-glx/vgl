@@ -29,7 +29,6 @@ func defaultShaderLine() *shader.Meta {
 type dataLine struct {
 	vertexes [2]glm.Vec2
 	colors   [2]glm.Vec4
-	width    float32 // todo
 }
 
 func (d *dataLine) BindingData() []byte {
