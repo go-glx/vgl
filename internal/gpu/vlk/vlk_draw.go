@@ -154,7 +154,7 @@ func (vlk *VLK) drawChunk(cb vulkan.CommandBuffer, drawChunk drawCallChunk) int 
 			ts := time.Now()
 			vulkan.CmdDraw(cb, indexCount, 1, i*indexCount, 0)
 			vlk.stats.TimeRenderFallback += time.Since(ts)
-			
+
 			countDrawCalls++
 		}
 	}

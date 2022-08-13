@@ -28,7 +28,15 @@ type Container struct {
 	wm        arch.WindowManager
 	cfg       *config.Config
 
+	// global state
+
+	// this only for use inside of Frame Manager
+	// it cannot be part of fm struct, because FM
+	// will be recreated every time, when GPU suboptimal (window resize)
+	vlkFrameRenderingAvailable bool
+
 	// static
+
 	vlkRef             *VLK
 	vlkInstance        *instance.Instance
 	vlkSurface         *surface.Surface
@@ -40,6 +48,7 @@ type Container struct {
 	vlkAllocBuffers    *alloc.Buffers
 
 	// dynamic
+
 	vlkCommandPool     *command.Pool
 	vlkSwapChain       *swapchain.Chain
 	vlkFrameManager    *frame.Manager
@@ -59,10 +68,6 @@ func NewContainer(
 		wm:        wm,
 		cfg:       cfg,
 	}
-
-	wm.OnWindowResized(func(_, _ int) {
-		cont.rebuild()
-	})
 
 	closer.EnqueueBackFree(func() {
 		cont.rebuilder.free()

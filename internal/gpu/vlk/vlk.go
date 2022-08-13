@@ -9,17 +9,17 @@ import (
 	"github.com/go-glx/vgl/internal/gpu/vlk/internal/alloc"
 )
 
-// todo: fullScreen switch panics in examples
 // todo: vertex buffers is override in swapChain (can have multiple frames in-fly)
-// todo: panic in rect scene after one second
+// todo: panic in rect scene after few seconds
 
 type VLK struct {
 	isReady bool
 	cont    *Container
 
 	// stats
-	stats          glm.Stats
-	statsListeners []func(glm.Stats)
+	stats            glm.Stats
+	statsListeners   []func(glm.Stats)
+	statsResetQueued bool
 
 	// surfaces
 	surfaceInd   uint8          // 0 - default (Screen, window); 1-255 reserved for user needs
@@ -37,8 +37,9 @@ func newVLK(cont *Container) *VLK {
 		cont:    cont,
 
 		// stats
-		stats:          glm.Stats{},
-		statsListeners: make([]func(glm.Stats), 0),
+		stats:            glm.Stats{},
+		statsListeners:   make([]func(glm.Stats), 0),
+		statsResetQueued: false,
 
 		// surface
 		surfaceInd:   0, // default - screen
@@ -54,8 +55,7 @@ func newVLK(cont *Container) *VLK {
 	wWidth, wHeight := cont.wm.GetFramebufferSize()
 	vlk.surfacesSize[0] = [2]uint32{uint32(wWidth), uint32(wHeight)}
 
-	go countFPS(&vlk.stats)
-
+	go vlk.countFPS()
 	return vlk
 }
 
@@ -84,14 +84,13 @@ func (vlk *VLK) ListenStats(listener func(stats glm.Stats)) {
 	vlk.statsListeners = append(vlk.statsListeners, listener)
 }
 
-func countFPS(stats *glm.Stats) {
+func (vlk *VLK) countFPS() {
 	ticker := time.NewTicker(time.Second)
 
 	for {
 		select {
 		case <-ticker.C:
-			stats.FPS = stats.FrameIndex
-			stats.FrameIndex = 0
+			vlk.statsResetQueued = true
 		}
 	}
 }

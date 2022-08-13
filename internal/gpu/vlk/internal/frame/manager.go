@@ -11,6 +11,8 @@ import (
 	"github.com/go-glx/vgl/internal/gpu/vlk/internal/swapchain"
 )
 
+// todo: need some refactoring with available state management
+
 type Manager struct {
 	logger         config.Logger
 	chain          *swapchain.Chain
@@ -18,7 +20,7 @@ type Manager struct {
 	ld             *logical.Device
 	onSuboptimal   func()
 
-	available bool
+	available *bool
 	frameID   uint32
 	imageID   uint32
 	count     uint32
@@ -30,18 +32,26 @@ type Manager struct {
 	commandBuffers      map[uint32]vulkan.CommandBuffer
 }
 
-func NewManager(logger config.Logger, ld *logical.Device, pool *command.Pool, chain *swapchain.Chain, renderToScreenPass *renderpass.Pass, onSuboptimal func()) *Manager {
+func NewManager(
+	logger config.Logger,
+	ld *logical.Device,
+	pool *command.Pool,
+	chain *swapchain.Chain,
+	renderToScreenPass *renderpass.Pass,
+	onSuboptimal func(),
+	available *bool,
+) *Manager {
 	m := &Manager{
 		logger:         logger,
 		chain:          chain,
 		mainRenderPass: renderToScreenPass,
 		ld:             ld,
 		onSuboptimal:   onSuboptimal,
+		available:      available,
 
-		available: true,
-		frameID:   0,
-		imageID:   0,
-		count:     uint32(pool.MainBuffersCount()),
+		frameID: 0,
+		imageID: 0,
+		count:   uint32(pool.MainBuffersCount()),
 
 		semRenderAvailable:  make(map[uint32]vulkan.Semaphore),
 		semPresentAvailable: make(map[uint32]vulkan.Semaphore),
@@ -73,7 +83,7 @@ func (m *Manager) Free() {
 
 func (m *Manager) FrameBegin() {
 	m.prepareFrame()
-	if !m.available {
+	if !*m.available {
 		m.nextFrame()
 		return
 	}
@@ -88,7 +98,7 @@ func (m *Manager) FrameBegin() {
 }
 
 func (m *Manager) prepareFrame() {
-	m.available = true
+	*m.available = true
 	timeout := uint64(def.FrameAcquireTimeout.Nanoseconds())
 	renderDone := m.syncFrameBusy[m.frameID]
 
@@ -96,15 +106,17 @@ func (m *Manager) prepareFrame() {
 	// then we can occupy current frame for next rendering
 	ok := m.notice(vulkan.WaitForFences(m.ld.Ref(), 1, []vulkan.Fence{renderDone}, vulkan.True, timeout))
 	if !ok {
-		m.available = false
+		*m.available = false
 		return
 	}
 
 	// acquire new image
-	m.imageID, m.available = m.acquireNextImage()
+	var hasNextImage bool
+	m.imageID, hasNextImage = m.acquireNextImage()
 
-	// frame suboptimal, skip rendering
-	if !m.available {
+	if !hasNextImage {
+		// frame suboptimal, skip rendering
+		*m.available = false
 		return
 	}
 
@@ -119,7 +131,7 @@ func (m *Manager) prepareFrame() {
 }
 
 func (m *Manager) FrameEnd() {
-	if !m.available {
+	if !*m.available {
 		return
 	}
 
@@ -139,7 +151,7 @@ func (m *Manager) FrameEnd() {
 }
 
 func (m *Manager) FrameApplyCommands(apply func(imageID uint32, cb vulkan.CommandBuffer)) {
-	if !m.available {
+	if !*m.available {
 		return
 	}
 

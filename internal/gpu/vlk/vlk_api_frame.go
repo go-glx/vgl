@@ -37,6 +37,12 @@ func (vlk *VLK) FrameStart() {
 		return
 	}
 
+	if vlk.statsResetQueued {
+		vlk.stats.FPS = vlk.stats.FrameIndex
+		vlk.stats.FrameIndex = -1
+		vlk.statsResetQueued = false
+	}
+
 	// clear stats from prev frame
 	vlk.stats.Reset()
 

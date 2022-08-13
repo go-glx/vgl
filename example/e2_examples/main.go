@@ -18,6 +18,7 @@ const appHeight = 720
 const (
 	demoE1RectDrawOrder = iota
 	demoE2Lines
+	demoE3Points
 )
 
 // todo: switch in demo UI and/or keyboard input
@@ -26,6 +27,7 @@ const currentDemo = demoE2Lines
 var demos = map[int]func(rnd *vgl.Render){
 	demoE1RectDrawOrder: e1RectDrawOrder,
 	demoE2Lines:         e2Lines,
+	demoE3Points:        e3Points,
 }
 
 func main() {
