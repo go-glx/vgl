@@ -20,6 +20,7 @@ import (
 //    - 3d - reserved for feature
 // 3) figure is buildIn shader type (point, line, triangle, circle, rect, polygon, texture)
 // 4) params called exactly as method, but "Params" prefix instead of "Draw"
+// 5) all params struct default golang values should be some valid value (and good defaults)
 // -----------------------------------------------------------------------------
 
 // Params2dPoint is input for Draw2dPoint
@@ -49,7 +50,7 @@ type Params2dLine struct {
 	Color            glm.Color      // line color
 	ColorGradient    [2]glm.Color   // color for each vertex
 	ColorUseGradient bool           // will use ColorGradient instead of Color
-	Width            int            // default=1px; max=32px; line width (1px is only guaranteed to fast GPU render).
+	Width            int32          // default=1px; max=32px; line width (1px is only guaranteed to fast GPU render).
 	NoCulling        bool           // will send render command to GPU, even if all vertexes outside of visible screen
 }
 
@@ -192,27 +193,72 @@ func (r *Render) Draw2dRect(p *Params2dRect) {
 
 // Params2dCircle is input for Draw2dCircle
 type Params2dCircle struct {
-	Pos              glm.Local2D  // circle center pos
-	Radius           float32      // radius of circle in px
-	OutlineWidth     float32      // default=radius; width of circle border, when width < radius, circle will have hole in center
-	Color            glm.Color    // color for circle body/border
-	ColorGradient    [2]glm.Color // 0 = color of circle center, 1 = color of circle border
-	ColorUseGradient bool         // will use ColorGradient instead of Color
-	Filled           bool         // fill circle with color/gradient
-	NoCulling        bool         // will send render command to GPU, even if all vertexes outside of visible screen
+	PosCenter        glm.Local2D    // pos: v1: circle center pos
+	PosCenterRadius  int32          // pos: v1: radius of circle in px
+	PosArea          [4]glm.Local2D // pos: v2: circle bounding box (allow drawing ellipses)
+	PosUseArea       bool           // will use PosArea instead of PosCenter+PosCenterRadius
+	HoleRadius       float32        // value [0 .. 1]. 0=without hole, 0.1=90% circle is visible, 1=invisible circle
+	Smooth           float32        // value [-1, 0 .. 1]. -1=no smooth, 0.005=default, 1=full blur (default value will be used, if no value (0) specified)
+	Color            glm.Color      // color for circle body/border
+	ColorGradient    [4]glm.Color   // color for circle part (tl, tr, br, bl)
+	ColorUseGradient bool           // will use ColorGradient instead of Color
+	NoCulling        bool           // will send render command to GPU, even if all vertexes outside of visible screen
 }
 
 // Draw2dCircle will draw circle on current surface with current blend mode
 func (r *Render) Draw2dCircle(p *Params2dCircle) {
-	if p.Radius <= 0 {
+	if p.HoleRadius >= 0.9999 {
 		return
 	}
 
-	if p.OutlineWidth == 0 {
-		p.OutlineWidth = p.Radius
+	pos := [4]glm.Vec2{}
+	if p.PosUseArea {
+		pos[0] = r.toLocalSpace2d(p.PosArea[0])
+		pos[1] = r.toLocalSpace2d(p.PosArea[1])
+		pos[2] = r.toLocalSpace2d(p.PosArea[2])
+		pos[3] = r.toLocalSpace2d(p.PosArea[3])
+	} else {
+		radiusX := r.toLocalAspectRationX(p.PosCenterRadius)
+		radiusY := r.toLocalAspectRationY(p.PosCenterRadius)
+		pos[0] = r.toLocalSpace2d(p.PosCenter).Add(-radiusX, -radiusY) // tl
+		pos[1] = r.toLocalSpace2d(p.PosCenter).Add(radiusX, -radiusY)  // tr
+		pos[2] = r.toLocalSpace2d(p.PosCenter).Add(radiusX, radiusY)   // br
+		pos[3] = r.toLocalSpace2d(p.PosCenter).Add(-radiusX, radiusY)  // bl
 	}
 
-	// todo: draw
+	if !p.NoCulling && !r.cullingRect(pos) {
+		return
+	}
+
+	if p.Smooth == 0 {
+		// default value (if no specified)
+		p.Smooth = 0.005
+	}
+
+	if p.Smooth == -1 {
+		// specified to turn off
+		p.Smooth = 0
+	}
+
+	color := [4]glm.Vec4{}
+	if p.ColorUseGradient {
+		color[0] = p.ColorGradient[0].VecRGBA()
+		color[1] = p.ColorGradient[1].VecRGBA()
+		color[2] = p.ColorGradient[2].VecRGBA()
+		color[3] = p.ColorGradient[3].VecRGBA()
+	} else {
+		color[0] = p.Color.VecRGBA()
+		color[1] = color[0]
+		color[2] = color[0]
+		color[3] = color[0]
+	}
+
+	r.api.DrawCircle(
+		pos,
+		color,
+		glm.Vec1{X: 1.0 - glm.Clamp(p.HoleRadius, 0, 1)},
+		glm.Vec1{X: glm.Clamp(p.Smooth, 0, 1)},
+	)
 }
 
 // -----------------------------------------------------------------------------

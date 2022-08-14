@@ -10,7 +10,6 @@ import (
 
 const (
 	shaderRectVertexCount = 4
-	shaderRectVertexSize  = glm.SizeOfVec2 + glm.SizeOfVec4
 )
 
 func defaultShaderRect() *shader.Meta {
@@ -19,7 +18,7 @@ func defaultShaderRect() *shader.Meta {
 		simple.CodeVertex(),
 		simple.CodeFragment(),
 		vulkan.PrimitiveTopologyLineStrip, true,
-		simple.Bindings(shaderRectVertexSize),
+		simple.Bindings(),
 		simple.Attributes(),
 		shaderRectVertexCount,
 		[]uint16{0, 1, 2, 3, 0, 0xffff},
@@ -32,7 +31,7 @@ type dataRectOutline struct {
 }
 
 func (d *dataRectOutline) BindingData() []byte {
-	buff := make([]byte, 0, shaderRectVertexCount*shaderRectVertexSize)
+	buff := make([]byte, 0, shaderRectVertexCount*simple.VertexSize)
 
 	for i := 0; i < shaderRectVertexCount; i++ {
 		buff = append(buff, d.vertexes[i].Data()...)

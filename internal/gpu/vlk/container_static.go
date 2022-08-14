@@ -107,6 +107,7 @@ func (c *Container) shaderManager() *shader.Manager {
 			mng.RegisterShader(defaultShaderPoint())
 			mng.RegisterShader(defaultShaderLine())
 			mng.RegisterShader(defaultShaderTriangle())
+			mng.RegisterShader(defaultShaderCircle())
 			mng.RegisterShader(defaultShaderRect())
 
 			//

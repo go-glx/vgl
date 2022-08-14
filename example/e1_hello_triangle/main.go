@@ -53,6 +53,5 @@ func main() {
 
 	// always should be closed on exit
 	// this will clean vulkan resources in GPU/system
-	app.WaitGPU()
 	_ = app.Close()
 }

@@ -1,4 +1,4 @@
-package simple
+package circle
 
 import (
 	_ "embed"
@@ -9,14 +9,16 @@ import (
 )
 
 const (
-	shaderBindingMainID                 = 0
-	shaderBindingMainIDLocationPosition = 0
-	shaderBindingMainIDLocationColor    = 1
+	shaderBindingMainID                     = 0
+	shaderBindingMainIDLocationPosition     = 0
+	shaderBindingMainIDLocationColor        = 1
+	shaderBindingMainIDLocationThickness    = 2
+	shaderBindingMainIDLocationBorderSmooth = 3
 )
 
 const (
-	// VertexSize = pos + color
-	VertexSize = glm.SizeOfVec2 + glm.SizeOfVec4
+	// VertexSize =  pos + color + Thickness + BorderSmooth
+	VertexSize = glm.SizeOfVec2 + glm.SizeOfVec4 + glm.SizeOfVec1 + glm.SizeOfVec1
 )
 
 var (
@@ -57,6 +59,18 @@ func Attributes() []vulkan.VertexInputAttributeDescription {
 			Binding:  shaderBindingMainID,
 			Format:   vulkan.FormatR32g32b32a32Sfloat, // r, g, b, a
 			Offset:   glm.SizeOfVec2,
+		},
+		{
+			Location: shaderBindingMainIDLocationThickness,
+			Binding:  shaderBindingMainID,
+			Format:   vulkan.FormatR32Sfloat,          // thickness
+			Offset:   glm.SizeOfVec2 + glm.SizeOfVec4, // todo: ??
+		},
+		{
+			Location: shaderBindingMainIDLocationBorderSmooth,
+			Binding:  shaderBindingMainID,
+			Format:   vulkan.FormatR32Sfloat,                           // smooth
+			Offset:   glm.SizeOfVec2 + glm.SizeOfVec4 + glm.SizeOfVec1, // todo: ??
 		},
 	}
 }

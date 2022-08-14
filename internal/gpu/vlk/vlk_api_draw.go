@@ -47,6 +47,32 @@ func (vlk *VLK) DrawTriangle(vertexes [3]glm.Vec2, colors [3]glm.Vec4, filled bo
 	)
 }
 
+func (vlk *VLK) DrawCircle(vertexes [4]glm.Vec2, colors [4]glm.Vec4, thickness glm.Vec1, smooth glm.Vec1) {
+	if !vlk.isReady {
+		return
+	}
+
+	vlk.drawQueue(
+		vlk.cont.shaderManager().ShaderByID(buildInShaderCircle),
+		&dataCircle{
+			vertexes: vertexes,
+			colors:   colors,
+			thickness: [4]glm.Vec1{ // todo: params?
+				thickness,
+				thickness,
+				thickness,
+				thickness,
+			},
+			smooth: [4]glm.Vec1{ // todo: params?
+				smooth,
+				smooth,
+				smooth,
+				smooth,
+			},
+		},
+	)
+}
+
 // DrawRect input vertexes order is [tl,tr,br,bl]
 func (vlk *VLK) DrawRect(vertexes [4]glm.Vec2, colors [4]glm.Vec4, filled bool) {
 	if !vlk.isReady {

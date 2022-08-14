@@ -13,21 +13,23 @@ import (
 )
 
 const appWidth = 960
-const appHeight = 720
+const appHeight = 480
 
 const (
 	demoE1RectDrawOrder = iota
 	demoE2Lines
 	demoE3Points
+	demoE4Circles
 )
 
 // todo: switch in demo UI and/or keyboard input
-const currentDemo = demoE2Lines
+const currentDemo = demoE4Circles
 
 var demos = map[int]func(rnd *vgl.Render){
 	demoE1RectDrawOrder: e1RectDrawOrder,
 	demoE2Lines:         e2Lines,
 	demoE3Points:        e3Points,
+	demoE4Circles:       e4Circles,
 }
 
 func main() {
@@ -56,7 +58,6 @@ func main() {
 
 	// always should be closed on exit
 	// this will clean vulkan resources in GPU/system
-	rnd.WaitGPU()
 	_ = rnd.Close()
 }
 

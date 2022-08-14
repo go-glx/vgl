@@ -13,6 +13,7 @@ const (
 	buildInShaderPoint    = "point"
 	buildInShaderLine     = "line"
 	buildInShaderTriangle = "triangle"
+	buildInShaderCircle   = "circle"
 	buildInShaderRect     = "rect"
 )
 
@@ -22,6 +23,7 @@ var preloadIndexShaders = []string{
 	buildInShaderPoint,
 	buildInShaderLine,
 	buildInShaderTriangle,
+	buildInShaderCircle,
 	buildInShaderRect,
 }
 

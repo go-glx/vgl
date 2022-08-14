@@ -10,7 +10,6 @@ import (
 
 const (
 	shaderTriangleVertexCount = 3
-	shaderTriangleVertexSize  = glm.SizeOfVec2 + glm.SizeOfVec4
 )
 
 func defaultShaderTriangle() *shader.Meta {
@@ -19,7 +18,7 @@ func defaultShaderTriangle() *shader.Meta {
 		simple.CodeVertex(),
 		simple.CodeFragment(),
 		vulkan.PrimitiveTopologyTriangleList, false,
-		simple.Bindings(shaderTriangleVertexSize),
+		simple.Bindings(),
 		simple.Attributes(),
 		shaderTriangleVertexCount,
 		[]uint16{0, 1, 2},
@@ -33,7 +32,7 @@ type dataTriangle struct {
 }
 
 func (d *dataTriangle) BindingData() []byte {
-	buff := make([]byte, 0, shaderTriangleVertexCount*shaderTriangleVertexSize)
+	buff := make([]byte, 0, shaderTriangleVertexCount*simple.VertexSize)
 
 	for i := 0; i < shaderTriangleVertexCount; i++ {
 		buff = append(buff, d.vertexes[i].Data()...)

@@ -33,3 +33,10 @@ func (v *Vec2) PolarOffset(distance float32, rad float64) Vec2 {
 		Y: v.Y - distance*float32(math.Sin(rad)),
 	}
 }
+
+func (v Vec2) Add(x, y float32) Vec2 {
+	return Vec2{
+		X: v.X + x,
+		Y: v.Y + y,
+	}
+}

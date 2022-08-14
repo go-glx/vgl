@@ -1,15 +1,13 @@
 package glm
 
-import "math"
+func Clamp(v float32, min float32, max float32) float32 {
+	if v < min {
+		v = min
+	}
 
-const convDeg2Rad = math.Pi / circleHalfDeg
-const convRad2Deg = circleHalfDeg / math.Pi
-const circleHalfDeg = 180.0
-
-func Deg2rad(deg float32) float32 {
-	return deg * convDeg2Rad
-}
-
-func Rad2deg(rad float32) float32 {
-	return rad * convRad2Deg
+	if v > max {
+		v = max
+	}
+	
+	return v
 }

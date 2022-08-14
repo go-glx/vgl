@@ -28,7 +28,7 @@ func (r *Render) toLocalSpace2d(pos glm.Local2D) glm.Vec2 {
 	}
 }
 
-func (r *Render) toLocalAspectRation(n int) float32 {
+func (r *Render) toLocalAspectRation(n int32) float32 {
 	w, h := r.api.GetSurfaceSize()
 
 	if w <= 0 || h <= 0 {
@@ -42,6 +42,16 @@ func (r *Render) toLocalAspectRation(n int) float32 {
 	return float32(n) / float32(w)
 }
 
+func (r *Render) toLocalAspectRationX(n int32) float32 {
+	w, _ := r.api.GetSurfaceSize()
+	return float32(n) / float32(w)
+}
+
+func (r *Render) toLocalAspectRationY(n int32) float32 {
+	_, h := r.api.GetSurfaceSize()
+	return float32(n) / float32(h)
+}
+
 func (r *Render) cullingPoint(vert glm.Vec2) bool {
 	return vert.X >= -1 && vert.X <= 1 && vert.Y >= -1 && vert.Y <= 1
 }
@@ -52,11 +62,6 @@ func (r *Render) cullingLine(vert [2]glm.Vec2) bool {
 }
 
 func (r *Render) cullingTriangle(vert [3]glm.Vec2) bool {
-	// todo
-	return true
-}
-
-func (r *Render) cullingCircle(vert glm.Vec2, radius float32) bool {
 	// todo
 	return true
 }

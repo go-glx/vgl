@@ -8,20 +8,15 @@ import (
 	"github.com/go-glx/vgl/internal/gpu/vlk/shaders/simple"
 )
 
-const (
-	shaderPointVertexCount = 1
-	shaderPointVertexSize  = glm.SizeOfVec2 + glm.SizeOfVec4
-)
-
 func defaultShaderPoint() *shader.Meta {
 	return shader.NewMeta(
 		buildInShaderPoint,
 		simple.CodeVertex(),
 		simple.CodeFragment(),
 		vulkan.PrimitiveTopologyPointList, false,
-		simple.Bindings(shaderPointVertexSize),
+		simple.Bindings(),
 		simple.Attributes(),
-		shaderPointVertexCount,
+		1,
 		[]uint16{0},
 	)
 }
@@ -32,7 +27,7 @@ type dataPoint struct {
 }
 
 func (d *dataPoint) BindingData() []byte {
-	buff := make([]byte, 0, shaderPointVertexSize*shaderPointVertexCount)
+	buff := make([]byte, 0, simple.VertexSize)
 	buff = append(buff, d.vertex.Data()...)
 	buff = append(buff, d.color.Data()...)
 
