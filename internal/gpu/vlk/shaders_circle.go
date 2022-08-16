@@ -8,7 +8,7 @@ import (
 	"github.com/go-glx/vgl/internal/gpu/vlk/shaders/circle"
 )
 
-const shaderCircleVertexCount = 4
+const shaderCircleVertexCount = 1
 
 func defaultShaderCircle() *shader.Meta {
 	return shader.NewMeta(
@@ -19,26 +19,22 @@ func defaultShaderCircle() *shader.Meta {
 		circle.Bindings(),
 		circle.Attributes(),
 		shaderCircleVertexCount,
-		[]uint16{0, 1, 2, 2, 3, 0}, // todo: can be reused with quad textures (same index for two shaders)
+		[]uint16{0, 0, 0, 0, 0, 0}, // only len is matter here
 	)
 }
 
 type dataCircle struct {
-	vertexes  [4]glm.Vec2
-	colors    [4]glm.Vec4
-	thickness [4]glm.Vec1
-	smooth    [4]glm.Vec1
+	center glm.Vec2
+	radius glm.Vec2
+	// colors    [4]glm.Vec4
+	// thickness [4]glm.Vec1
+	// smooth    [4]glm.Vec1
 }
 
 func (d *dataCircle) BindingData() []byte {
 	buff := make([]byte, 0, shaderCircleVertexCount*circle.VertexSize)
-
-	for i := 0; i < shaderCircleVertexCount; i++ {
-		buff = append(buff, d.vertexes[i].Data()...)
-		buff = append(buff, d.colors[i].Data()...)
-		buff = append(buff, d.thickness[i].Data()...)
-		buff = append(buff, d.smooth[i].Data()...)
-	}
+	buff = append(buff, d.center.Data()...)
+	buff = append(buff, d.radius.Data()...)
 
 	return buff
 }

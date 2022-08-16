@@ -23,7 +23,6 @@ var preloadIndexShaders = []string{
 	buildInShaderPoint,
 	buildInShaderLine,
 	buildInShaderTriangle,
-	buildInShaderCircle,
 	buildInShaderRect,
 }
 
