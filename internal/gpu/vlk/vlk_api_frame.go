@@ -61,6 +61,9 @@ func (vlk *VLK) FrameEnd() {
 	// submit command buffers
 	vlk.cont.frameManager().FrameEnd()
 
+	// clean unused memory
+	vlk.cont.allocHeap().GarbageCollect()
+
 	// send stats
 	for _, listener := range vlk.statsListeners {
 		listener(vlk.stats)

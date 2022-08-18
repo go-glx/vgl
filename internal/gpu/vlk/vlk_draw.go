@@ -116,8 +116,8 @@ func (vlk *VLK) drawChunk(cb vulkan.CommandBuffer, drawChunk drawCallChunk) int 
 	vulkan.CmdBindPipeline(cb, vulkan.PipelineBindPointGraphics, pipe)
 
 	// bind index buffer
-	if drawChunk.indexBuffer.HasData {
-		vulkan.CmdBindIndexBuffer(cb, drawChunk.indexBuffer.Buffer, 0, vulkan.IndexTypeUint16)
+	if drawChunk.indexBuffer.Valid {
+		vulkan.CmdBindIndexBuffer(cb, drawChunk.indexBuffer.Buffer, drawChunk.indexBuffer.Offset, vulkan.IndexTypeUint16)
 	}
 
 	// params
@@ -129,11 +129,11 @@ func (vlk *VLK) drawChunk(cb vulkan.CommandBuffer, drawChunk drawCallChunk) int 
 	for _, chunk := range drawChunk.chunks {
 		// bind vertex buffer
 		buffers := []vulkan.Buffer{chunk.Buffer}
-		offsets := []vulkan.DeviceSize{vulkan.DeviceSize(chunk.BufferOffset)}
+		offsets := []vulkan.DeviceSize{chunk.BufferOffset}
 		vulkan.CmdBindVertexBuffers(cb, 0, uint32(len(buffers)), buffers, offsets)
 
 		// Drawing Type: 1 (optimized indexed draw - instancing)
-		if drawChunk.indexBuffer.HasData {
+		if drawChunk.indexBuffer.Valid {
 			instPerCall := min(chunk.InstancesCount, def.BufferIndexMaxInstances)
 			for firstInst := uint32(0); firstInst < chunk.InstancesCount; firstInst += instPerCall {
 				// if we try to draw more instances, that fit in warm index cache (>65536)
@@ -164,7 +164,6 @@ func (vlk *VLK) drawChunk(cb vulkan.CommandBuffer, drawChunk drawCallChunk) int 
 
 func (vlk *VLK) prepareDrawingChunks() []drawCallChunk {
 	buffs := vlk.cont.allocBuffers()
-	buffs.Clear()
 
 	// stage all shader data to buffers
 	drawChunks := make([]drawCallChunk, 0, len(vlk.queue))
@@ -179,7 +178,7 @@ func (vlk *VLK) prepareDrawingChunks() []drawCallChunk {
 		uniqShaders[drawCall.shader.Meta().ID()] = struct{}{}
 		drawChunks = append(drawChunks, drawCallChunk{
 			shader:      drawCall.shader,
-			chunks:      buffs.Write(drawCall.instances),
+			chunks:      buffs.WriteInstancesVertexes(drawCall.instances),
 			indexBuffer: vlk.indexBufferOf(drawCall.shader),
 			polygonMode: drawCall.polygonMode,
 		})
@@ -187,8 +186,6 @@ func (vlk *VLK) prepareDrawingChunks() []drawCallChunk {
 
 	vlk.stats.DrawUniqueShaders = len(uniqShaders)
 
-	// move data to GPU
-	buffs.Flush()
 	return drawChunks
 }
 

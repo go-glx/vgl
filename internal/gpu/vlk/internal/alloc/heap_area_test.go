@@ -23,20 +23,20 @@ func Test_h3Area_Claim(t *testing.T) {
 	const sizeBig = 64
 	const sizeSmall = 16
 
-	area := NewArea(heapSize, alignSize)
+	area := newArea(heapSize, alignSize)
 	assert.Equal(t, uint32(0), area.size)
 	assert.Equal(t, uint32(heapSize), area.capacity)
 
 	testVisualizeChanges(t, area,
 		[]func(area *h3Area){
 			func(curr *h3Area) {},
-			func(curr *h3Area) { area.Claim(sizeBig) },
-			func(curr *h3Area) { area.Claim(sizeSmall) },
-			func(curr *h3Area) { area.Claim(sizeBig) },
-			func(curr *h3Area) { area.Claim(150) }, // claim all free space (-10 bytes)
+			func(curr *h3Area) { area.claim(sizeBig) },
+			func(curr *h3Area) { area.claim(sizeSmall) },
+			func(curr *h3Area) { area.claim(sizeBig) },
+			func(curr *h3Area) { area.claim(150) }, // claim all free space (-10 bytes)
 			func(curr *h3Area) {
 				// try to allocate more space that exist in area
-				allocatedNode, ok := area.Claim(32)
+				allocatedNode, ok := area.claim(32)
 				assert.Nil(t, allocatedNode)
 				assert.False(t, ok)
 			},
@@ -82,14 +82,14 @@ func Test_h3Area_Free(t *testing.T) {
 	testVisualizeChanges(t, area,
 		[]func(area *h3Area){
 			func(curr *h3Area) {},
-			func(curr *h3Area) { area.Free(testAreaNodes(curr)[2].offset) },
-			func(curr *h3Area) { area.Free(testAreaNodes(curr)[3].offset) },
-			func(curr *h3Area) { area.Free(testAreaNodes(curr)[1].offset) },
-			func(curr *h3Area) { area.Free(testAreaNodes(curr)[3].offset) },
-			func(curr *h3Area) { area.Free(testAreaNodes(curr)[2].offset) },
-			func(curr *h3Area) { area.Free(512) }, // outside of memory
-			func(curr *h3Area) { area.Free(64) },  // offset of node[1]+32 (invalid)
-			func(curr *h3Area) { area.Free(32) },  // offset of node[1] (valid, but free)
+			func(curr *h3Area) { area.free(testAreaNodes(curr)[2].offset) },
+			func(curr *h3Area) { area.free(testAreaNodes(curr)[3].offset) },
+			func(curr *h3Area) { area.free(testAreaNodes(curr)[1].offset) },
+			func(curr *h3Area) { area.free(testAreaNodes(curr)[3].offset) },
+			func(curr *h3Area) { area.free(testAreaNodes(curr)[2].offset) },
+			func(curr *h3Area) { area.free(512) }, // outside of memory
+			func(curr *h3Area) { area.free(64) },  // offset of node[1]+32 (invalid)
+			func(curr *h3Area) { area.free(32) },  // offset of node[1] (valid, but free)
 		},
 		map[string]string{
 			"1. initial state":                 "| 000- 1111 2222 2222 3333 3333 44-- 5555 ...6 ...6 |",
@@ -146,13 +146,13 @@ func Test_h3Area_Free(t *testing.T) {
 // | 000- 1111 2222 2222 3333 3333 44-- 5555 ...6 ...6 |
 // |---------------------------------------------------|
 func testPrepareTestMemoryLayout(t *testing.T) *h3Area {
-	area := NewArea(320, 32)
+	area := newArea(320, 32)
 
 	expectedLayout := "| 000- 1111 2222 2222 3333 3333 44-- 5555 ...6 ...6 |"
 	blocks := []uint32{24, 32, 64, 64, 16, 32}
 
 	for _, block := range blocks {
-		_, ok := area.Claim(block)
+		_, ok := area.claim(block)
 		assert.True(t, ok)
 	}
 
@@ -327,11 +327,11 @@ func testAreaPropertiesValid(t *testing.T, area *h3Area, mutate func(area *h3Are
 	totalCapacity := uint32(0)
 
 	testAreaWalkForward(area, func(n *h3Node) {
-		totalSize += n.size
+		totalSize += uint32(math.Ceil(float64(n.size)/float64(area.align)) * float64(area.align))
 		totalCapacity += n.capacity
 	})
 
-	assert.LessOrEqual(t, totalSize, area.size, "total nodes size should be <= area.Size (not always equal because of align)")
+	assert.Equal(t, totalSize, area.size, "total nodes size should be equal of area size")
 	assert.Equal(t, area.capacity, totalCapacity, "total nodes capacity not equal area capacity")
 
 	// test offsets

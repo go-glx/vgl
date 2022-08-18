@@ -2,7 +2,6 @@ package alloc
 
 import (
 	"fmt"
-	"unsafe"
 
 	"github.com/vulkan-go/vulkan"
 
@@ -14,9 +13,8 @@ const memRequirementHostVisible = vulkan.MemoryPropertyHostVisibleBit | vulkan.M
 const memRequirementFastGPU = vulkan.MemoryPropertyDeviceLocalBit
 
 type internalBuffer struct {
-	id       internalBufferID
+	id       bufferID
 	ref      vulkan.Buffer
-	dataPtr  unsafe.Pointer
 	memory   vulkan.DeviceMemory
 	capacity vulkan.DeviceSize
 }
@@ -55,14 +53,10 @@ func (a *Allocator) createBuffer(size uint32, buffType vulkan.BufferUsageFlagBit
 
 	vulkan.BindBufferMemory(a.ld.Ref(), buffer, bufferMemory, 0)
 
-	var data unsafe.Pointer
-	vulkan.MapMemory(a.ld.Ref(), bufferMemory, 0, info.Size, 0, &data)
-
 	a.internalBufferLastID++
 	internalBuff := internalBuffer{
 		id:       a.internalBufferLastID,
 		ref:      buffer,
-		dataPtr:  data,
 		memory:   bufferMemory,
 		capacity: info.Size,
 	}

@@ -26,7 +26,7 @@ type VLK struct {
 	surfacesSize [255][2]uint32 // width, height for each surface
 
 	// drawing
-	shaderIndexPtr map[string]alloc.AllocationID // shaderID -> allocationID (is pointer to index buffer for this shader)
+	shaderIndexPtr map[string]alloc.Allocation // shaderID -> allocation (is pointer to index buffer for this shader)
 	currentBatch   *drawCall
 	queue          []drawCall
 }
@@ -46,7 +46,7 @@ func newVLK(cont *Container) *VLK {
 		surfacesSize: [255][2]uint32{},
 
 		// drawing
-		shaderIndexPtr: make(map[string]alloc.AllocationID),
+		shaderIndexPtr: make(map[string]alloc.Allocation),
 		currentBatch:   &drawCall{},
 		queue:          make([]drawCall, 0, queueCapacity),
 	}

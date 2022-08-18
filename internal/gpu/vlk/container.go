@@ -46,6 +46,7 @@ type Container struct {
 	vlkShaderManager   *shader.Manager
 	vlkMemoryAllocator *alloc.Allocator
 	vlkAllocBuffers    *alloc.Buffers
+	vlkAllocHeap       *alloc.Heap
 
 	// dynamic
 

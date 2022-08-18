@@ -15,6 +15,8 @@ type Stats struct {
 	TimeFlushVertexBuffer time.Duration
 	TimeRenderInstanced   time.Duration
 	TimeRenderFallback    time.Duration
+
+	// todo: memory size & capacity (grouped by buffer type (vert,ind,ubo..)
 }
 
 func (s *Stats) Reset() {

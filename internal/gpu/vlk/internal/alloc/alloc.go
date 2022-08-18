@@ -13,7 +13,7 @@ import (
 )
 
 type (
-	internalBufferID uint32
+	bufferID uint32
 
 	Allocator struct {
 		logger config.Logger
@@ -22,8 +22,8 @@ type (
 		ld     *logical.Device
 		pool   *command.Pool
 
-		internalBufferLastID internalBufferID
-		allocatedBuffers     map[internalBufferID]internalBuffer
+		internalBufferLastID bufferID
+		allocatedBuffers     map[bufferID]internalBuffer
 	}
 )
 
@@ -42,7 +42,7 @@ func NewAllocator(
 		pool:   pool,
 
 		internalBufferLastID: 0,
-		allocatedBuffers:     make(map[internalBufferID]internalBuffer),
+		allocatedBuffers:     make(map[bufferID]internalBuffer),
 	}
 }
 

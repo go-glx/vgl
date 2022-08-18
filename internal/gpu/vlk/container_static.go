@@ -136,6 +136,17 @@ func (c *Container) allocBuffers() *alloc.Buffers {
 		func(x *alloc.Buffers) {},
 		func() *alloc.Buffers {
 			return alloc.NewBuffers(
+				c.allocHeap(),
+			)
+		},
+	)
+}
+
+func (c *Container) allocHeap() *alloc.Heap {
+	return static(c, &c.vlkAllocHeap,
+		func(x *alloc.Heap) {},
+		func() *alloc.Heap {
+			return alloc.NewHeap(
 				c.memoryAllocator(),
 			)
 		},

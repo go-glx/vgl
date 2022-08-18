@@ -3,38 +3,32 @@ package alloc
 import "math"
 
 type h3Area struct {
-	generation uint64
-	align      uint32
-	capacity   uint32
-	size       uint32
-	head       *h3Node
+	align    uint32  // memory align, typically it`s something like "32 bytes". It is also minimum node size
+	capacity uint32  // total area capacity (equal to capacity sum of all nodes)
+	size     uint32  // total area physical size (aligned) (can be not equal to sum of nodes size)
+	head     *h3Node // ptr to first node
 }
 
-func NewArea(capacity uint32, alignSize uint32) *h3Area {
-	space := newH3Node(0, capacity)
-
+func newArea(capacity uint32, alignSize uint32) *h3Area {
 	return &h3Area{
-		generation: 0,
-		align:      alignSize,
-		capacity:   capacity,
-		size:       0,
-		head:       space,
+		align:    alignSize,
+		capacity: capacity,
+		size:     0,
+		head:     newH3Node(capacity),
 	}
 }
 
 type h3Node struct {
-	generationID uint64
-	offset       uint32
-	capacity     uint32
-	size         uint32
-	next         *h3Node
+	offset   uint32  // offset from area start (also nodeID for apis)
+	capacity uint32  // node capacity (logical size)
+	size     uint32  // node physical size (if size is aligned, its will be equal to capacity)
+	next     *h3Node // ptr to next node
 }
 
-func newH3Node(generation uint64, capacity uint32) *h3Node {
+func newH3Node(capacity uint32) *h3Node {
 	return &h3Node{
-		generationID: generation,
-		capacity:     capacity,
-		size:         0,
+		capacity: capacity,
+		size:     0,
 	}
 }
 
@@ -46,22 +40,24 @@ func (curr *h3Node) freeSize() uint32 {
 	return curr.capacity - curr.size
 }
 
-// Claim will create new virtual memory node with size
+// claim will create new virtual memory node with size
 // and return offset(ID) of created node
 // returns false if node not have enough free space
-func (h3 *h3Area) Claim(size uint32) (*h3Node, bool) {
+func (h3 *h3Area) claim(size uint32) (*h3Node, bool) {
 	if h3.freeSize() < size {
 		return nil, false
 	}
 
+	// hint: can be optimized to walk only by free nodes
+	//       but currently not see reason of it
 	return h3.walk(func(node *h3Node) bool {
 		return h3.splitNodes(node, size)
 	})
 }
 
-// Free will find occupied memory node at offset
+// free will find occupied memory node at offset
 // and mark it as free
-func (h3 *h3Area) Free(offset uint32) (*h3Node, bool) {
+func (h3 *h3Area) free(offset uint32) (*h3Node, bool) {
 	return h3.walk(func(node *h3Node) bool {
 		if node.offset != offset {
 			return false
@@ -94,6 +90,7 @@ func (h3 *h3Area) walk(act func(node *h3Node) bool) (exitNode *h3Node, found boo
 //
 // returns false if node not have enough free space
 func (h3 *h3Area) splitNodes(node *h3Node, realSize uint32) bool {
+	// align physical size
 	size := uint32(math.Ceil(float64(realSize)/float64(h3.align)) * float64(h3.align))
 
 	if node.freeSize() < size {
@@ -115,9 +112,7 @@ func (h3 *h3Area) splitNodes(node *h3Node, realSize uint32) bool {
 	}
 
 	// create new node for unused space
-	newRight := newH3Node(node.generationID, unusedSpaces)
-	newRight.size = 0
-	newRight.capacity = unusedSpaces
+	newRight := newH3Node(unusedSpaces)
 	newRight.offset = node.offset + node.capacity
 	newRight.next = node.next
 
@@ -131,6 +126,11 @@ func (h3 *h3Area) splitNodes(node *h3Node, realSize uint32) bool {
 // before:  [PREV][ ____ ][ XXXXXX ][ ____ ][NEXT]
 //  after:  [PREV][ ______________________ ][NEXT]
 func (h3 *h3Area) mergeNodes(node *h3Node) bool {
+	// update area size, if current node non empty
+	if node.size > 0 {
+		h3.size -= node.capacity // capacity is aligned size
+	}
+
 	// free current node
 	node.size = 0
 	right := node.next

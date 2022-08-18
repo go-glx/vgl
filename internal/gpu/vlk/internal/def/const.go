@@ -77,8 +77,21 @@ const ShaderEntryPoint = "main"
 // Recommended value:
 //  - too small = more draw calls, less performance in intensive applications
 //  - too big   = less draw calls, slower copy speed cpu->gpu = less performance in simple applications
-//  - 65536     = good in most cases
-const BufferVertexSizeBytes = 65536
+//  - 16MB      = good in most cases
+const BufferVertexSizeBytes = 16 * 1024 * 1024
+
+// BufferIndexSizeBytes used for initial pre-generated shader indexes
+// Count of indexed (batched) draw calls primary depend on this value
+//
+// Recommended value:
+//  - too small = more draw calls, less performance in intensive applications
+//  - too big   = just more GPU local immutable memory usage
+//  - 4MB       = good in most cases
+const BufferIndexSizeBytes = 4 * 1024 * 1024
+
+// BufferUniformSizeBytes
+// todo: specify default value
+const BufferUniformSizeBytes = 1 * 1024 * 1024
 
 // BufferIndexMaxInstances How many index data will be generated
 // and saved to fast-persistent GPU buffer memory
