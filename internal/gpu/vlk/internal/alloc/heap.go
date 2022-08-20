@@ -52,6 +52,20 @@ type (
 		buffID  bufferID
 		allocID allocID
 	}
+
+	Stats struct {
+		Grouped       []GroupedStats
+		TotalCapacity uint32
+		TotalSize     uint32
+	}
+
+	GroupedStats struct {
+		BufferType BufferType
+		TotalPages uint32
+		TotalAreas uint32
+		Capacity   uint32
+		Size       uint32
+	}
 )
 
 func NewHeap(allocator *Allocator) *Heap {
@@ -75,6 +89,38 @@ func (h *Heap) GarbageCollect() {
 	for _, page := range h.pages {
 		page.garbageCollect()
 	}
+}
+
+func (h *Heap) Stats() Stats {
+	grouped := make(map[BufferType]*GroupedStats)
+
+	for _, page := range h.pages {
+		features := h.featuresPtr[page.id]
+		gStats, exist := grouped[features.bufferType]
+		if !exist {
+			grouped[features.bufferType] = &GroupedStats{
+				BufferType: features.bufferType,
+			}
+			gStats = grouped[features.bufferType]
+		}
+
+		gStats.TotalPages++
+
+		for _, area := range page.areas {
+			gStats.TotalAreas++
+			gStats.Capacity += area.capacity
+			gStats.Size += area.size
+		}
+	}
+
+	stats := Stats{}
+	for _, gStats := range grouped {
+		stats.TotalCapacity += gStats.Capacity
+		stats.TotalSize += gStats.Size
+		stats.Grouped = append(stats.Grouped, *gStats)
+	}
+
+	return stats
 }
 
 // Write will find/create buffer with specified features, automatic write

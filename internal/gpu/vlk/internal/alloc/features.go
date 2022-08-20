@@ -28,7 +28,7 @@ func (pf *pageFeatures) defaultBufferCapacity() uint32 {
 	case BufferTypeUniform:
 		return def.BufferUniformSizeBytes
 	default:
-		return 1 * 1024 * 512 // 512KB
+		return 1 * 1024 * 128 // 128KB
 	}
 }
 

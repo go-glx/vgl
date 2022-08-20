@@ -17,8 +17,9 @@ type Factory struct {
 	mainRenderPass *renderpass.Pass
 	cache          *Cache
 
-	defaultPipelineLayout vulkan.PipelineLayout
-	createdPipelines      []vulkan.Pipeline
+	defaultPipelineLayout       vulkan.PipelineLayout
+	defaultDescriptionSetLayout vulkan.DescriptorSetLayout
+	createdPipelines            []vulkan.Pipeline
 }
 
 func NewFactory(
@@ -36,12 +37,14 @@ func NewFactory(
 		cache:          cache,
 	}
 
+	factory.defaultDescriptionSetLayout = factory.newDefaultDescriptorSetLayout()
 	factory.defaultPipelineLayout = factory.newDefaultPipelineLayout()
 	logger.Debug("pipeline factory created")
 	return factory
 }
 
 func (f *Factory) Free() {
+	vulkan.DestroyDescriptorSetLayout(f.ld.Ref(), f.defaultDescriptionSetLayout, nil)
 	vulkan.DestroyPipelineLayout(f.ld.Ref(), f.defaultPipelineLayout, nil)
 
 	for _, pipeline := range f.createdPipelines {

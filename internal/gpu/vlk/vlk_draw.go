@@ -5,6 +5,7 @@ import (
 
 	"github.com/vulkan-go/vulkan"
 
+	"github.com/go-glx/vgl/glm"
 	"github.com/go-glx/vgl/internal/gpu/vlk/internal/alloc"
 	"github.com/go-glx/vgl/internal/gpu/vlk/internal/def"
 	"github.com/go-glx/vgl/internal/gpu/vlk/internal/pipeline"
@@ -89,15 +90,23 @@ func (vlk *VLK) drawAll() {
 		return
 	}
 
-	// prepare buffer
-	ts := time.Now()
-	drawChunks := vlk.prepareDrawingChunks()
-	vlk.stats.TimeFlushVertexBuffer = time.Since(ts)
-	vlk.stats.DrawChunks = len(drawChunks)
-
 	// render
 	vlk.stats.DrawCalls = 0
-	vlk.cont.frameManager().FrameApplyCommands(func(_ uint32, cb vulkan.CommandBuffer) {
+	vlk.cont.frameManager().FrameApplyCommands(func(imageID uint32, cb vulkan.CommandBuffer) {
+		// write global data to uniform buffers that need for every shader
+		model := glm.Mat4Identity()      // todo
+		view := glm.Mat4Identity()       // todo
+		projection := glm.Mat4Identity() // todo
+
+		vlk.cont.allocBuffers().UpdateUniformGlobalData(imageID, model, view, projection)
+
+		// split drawing queue to chunks
+		// and upload all required data for rendering into buffers
+		ts := time.Now()
+		drawChunks := vlk.prepareDrawingChunks(imageID)
+		vlk.stats.TimeFlushVertexBuffer = time.Since(ts)
+		vlk.stats.DrawChunks = len(drawChunks)
+
 		for _, drawChunk := range drawChunks {
 			vlk.stats.DrawCalls += vlk.drawChunk(cb, drawChunk)
 		}
@@ -106,6 +115,35 @@ func (vlk *VLK) drawAll() {
 	// reset
 	vlk.queue = make([]drawCall, 0, queueCapacity)
 	vlk.currentBatch = &drawCall{}
+}
+
+func (vlk *VLK) prepareDrawingChunks(imageID uint32) []drawCallChunk {
+	buff := vlk.cont.allocBuffers()
+
+	// clear all previously allocated vertex buffers owned by this frame
+	buff.ClearVertexBuffersOwnedBy(imageID)
+
+	// stage all shader data to buffers
+	drawChunks := make([]drawCallChunk, 0, len(vlk.queue))
+	uniqShaders := make(map[string]struct{}, 16)
+
+	for _, drawCall := range vlk.queue {
+		if len(drawCall.instances) == 0 {
+			continue
+		}
+
+		uniqShaders[drawCall.shader.Meta().ID()] = struct{}{}
+		drawChunks = append(drawChunks, drawCallChunk{
+			shader:      drawCall.shader,
+			chunks:      buff.WriteVertexBuffersFromInstances(imageID, drawCall.instances),
+			indexBuffer: vlk.indexBufferOf(drawCall.shader),
+			polygonMode: drawCall.polygonMode,
+		})
+	}
+
+	vlk.stats.DrawUniqueShaders = len(uniqShaders)
+
+	return drawChunks
 }
 
 func (vlk *VLK) drawChunk(cb vulkan.CommandBuffer, drawChunk drawCallChunk) int {
@@ -160,33 +198,6 @@ func (vlk *VLK) drawChunk(cb vulkan.CommandBuffer, drawChunk drawCallChunk) int 
 	}
 
 	return countDrawCalls
-}
-
-func (vlk *VLK) prepareDrawingChunks() []drawCallChunk {
-	buffs := vlk.cont.allocBuffers()
-
-	// stage all shader data to buffers
-	drawChunks := make([]drawCallChunk, 0, len(vlk.queue))
-
-	uniqShaders := make(map[string]struct{}, 16)
-
-	for _, drawCall := range vlk.queue {
-		if len(drawCall.instances) == 0 {
-			continue
-		}
-
-		uniqShaders[drawCall.shader.Meta().ID()] = struct{}{}
-		drawChunks = append(drawChunks, drawCallChunk{
-			shader:      drawCall.shader,
-			chunks:      buffs.WriteInstancesVertexes(drawCall.instances),
-			indexBuffer: vlk.indexBufferOf(drawCall.shader),
-			polygonMode: drawCall.polygonMode,
-		})
-	}
-
-	vlk.stats.DrawUniqueShaders = len(uniqShaders)
-
-	return drawChunks
 }
 
 func (vlk *VLK) createPipeline(call drawCallChunk) vulkan.Pipeline {

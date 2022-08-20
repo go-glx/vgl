@@ -33,11 +33,9 @@ func (f *Factory) withDefaultLayout() Initializer {
 
 func (f *Factory) newDefaultPipelineLayout() vulkan.PipelineLayout {
 	info := &vulkan.PipelineLayoutCreateInfo{
-		SType: vulkan.StructureTypePipelineLayoutCreateInfo,
-		// SetLayoutCount:         1,
-		// PSetLayouts:            []vulkan.DescriptorSetLayout{ubo},
-		SetLayoutCount:         0,   // todo ^
-		PSetLayouts:            nil, // todo ^
+		SType:                  vulkan.StructureTypePipelineLayoutCreateInfo,
+		SetLayoutCount:         1,
+		PSetLayouts:            []vulkan.DescriptorSetLayout{f.defaultDescriptionSetLayout},
 		PushConstantRangeCount: 0,
 		PPushConstantRanges:    nil,
 	}
@@ -46,4 +44,27 @@ func (f *Factory) newDefaultPipelineLayout() vulkan.PipelineLayout {
 	must.Work(vulkan.CreatePipelineLayout(f.ld.Ref(), info, nil, &pipelineLayout))
 
 	return pipelineLayout
+}
+
+func (f *Factory) newDefaultDescriptorSetLayout() vulkan.DescriptorSetLayout {
+	// 0 = global UBO matrix (model * view * projection)
+	bindingGlobal := vulkan.DescriptorSetLayoutBinding{
+		Binding:         0,
+		DescriptorType:  vulkan.DescriptorTypeUniformBuffer,
+		DescriptorCount: 1,
+		StageFlags:      vulkan.ShaderStageFlags(vulkan.ShaderStageVertexBit), // ubo used only in vert shaders
+	}
+
+	info := &vulkan.DescriptorSetLayoutCreateInfo{
+		SType:        vulkan.StructureTypeDescriptorSetLayoutCreateInfo,
+		BindingCount: 1,
+		PBindings: []vulkan.DescriptorSetLayoutBinding{
+			bindingGlobal,
+		},
+	}
+
+	var layout vulkan.DescriptorSetLayout
+	must.Work(vulkan.CreateDescriptorSetLayout(f.ld.Ref(), info, nil, &layout))
+
+	return layout
 }

@@ -10,11 +10,8 @@ import (
 	"github.com/go-glx/vgl/glm"
 )
 
-const appWidth = 640
-const appHeight = 480
-
 func main() {
-	wm := arch.NewGLFW("triangle", "triangle", false, appWidth, appHeight)
+	wm := arch.NewGLFW("triangle", "triangle", false, 640, 480)
 	app := vgl.NewRender(wm, config.NewConfig())
 
 	appAlive := true
@@ -33,11 +30,13 @@ func main() {
 	for appAlive {
 		app.FrameStart()
 
+		width, height := app.SurfaceSize()
+
 		app.Draw2dTriangle(&vgl.Params2dTriangle{
 			Pos: [3]glm.Local2D{ // in clock-wise order
-				{appWidth / 2, 100},               // center-top vertex
-				{appWidth - 100, appHeight - 100}, // right-bottom vertex
-				{100, appHeight - 100},            // left-bottom vertex
+				{int32(width) / 2, 100},                   // center-top vertex
+				{int32(width) - 100, int32(height) - 100}, // right-bottom vertex
+				{100, int32(height) - 100},                // left-bottom vertex
 			},
 			ColorGradient: [3]glm.Color{
 				glm.NewColor(255, 0, 0, 255),

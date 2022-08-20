@@ -2,6 +2,9 @@ package vlk
 
 import (
 	"github.com/vulkan-go/vulkan"
+
+	"github.com/go-glx/vgl/glm"
+	"github.com/go-glx/vgl/internal/gpu/vlk/internal/alloc"
 )
 
 // WarmUp will warm vlk renderer and create all needed
@@ -61,11 +64,36 @@ func (vlk *VLK) FrameEnd() {
 	// submit command buffers
 	vlk.cont.frameManager().FrameEnd()
 
-	// clean unused memory
+	// collect memory stats and then clean garbage
+	vlk.collectMemoryStats()
 	vlk.cont.allocHeap().GarbageCollect()
 
 	// send stats
 	for _, listener := range vlk.statsListeners {
 		listener(vlk.stats)
 	}
+}
+
+func (vlk *VLK) collectMemoryStats() {
+	memStats := vlk.cont.allocHeap().Stats()
+	vlk.stats.Memory.TotalCapacity = memStats.TotalCapacity
+	vlk.stats.Memory.TotalSize = memStats.TotalSize
+
+	for _, stats := range memStats.Grouped {
+		switch stats.BufferType {
+		case alloc.BufferTypeIndex:
+			vlk.collectMemoryGroupStats(stats, &vlk.stats.Memory.IndexBuffers)
+		case alloc.BufferTypeVertex:
+			vlk.collectMemoryGroupStats(stats, &vlk.stats.Memory.VertexBuffers)
+		case alloc.BufferTypeUniform:
+			vlk.collectMemoryGroupStats(stats, &vlk.stats.Memory.UniformBuffers)
+		}
+	}
+}
+
+func (vlk *VLK) collectMemoryGroupStats(in alloc.GroupedStats, out *glm.UsageStats) {
+	out.Capacity += in.Capacity
+	out.Size += in.Size
+	out.PagesCount += int(in.TotalPages)
+	out.AreasCount += int(in.TotalAreas)
 }

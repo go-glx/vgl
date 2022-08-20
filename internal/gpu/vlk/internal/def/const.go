@@ -89,9 +89,8 @@ const BufferVertexSizeBytes = 16 * 1024 * 1024
 //  - 4MB       = good in most cases
 const BufferIndexSizeBytes = 4 * 1024 * 1024
 
-// BufferUniformSizeBytes
-// todo: specify default value
-const BufferUniformSizeBytes = 1 * 1024 * 1024
+// BufferUniformSizeBytes only 256 bytes is guaranteed?
+const BufferUniformSizeBytes = 256
 
 // BufferIndexMaxInstances How many index data will be generated
 // and saved to fast-persistent GPU buffer memory

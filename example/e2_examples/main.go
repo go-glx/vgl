@@ -2,6 +2,9 @@ package main
 
 import (
 	"fmt"
+	"log"
+	"net/http"
+	_ "net/http/pprof"
 	"os"
 	"os/signal"
 	"time"
@@ -15,6 +18,9 @@ import (
 const appWidth = 960
 const appHeight = 480
 
+// todo: switch in demo UI and/or keyboard input
+const currentDemo = demoE1RectDrawOrder
+
 const (
 	demoE1RectDrawOrder = iota
 	demoE2Lines
@@ -22,8 +28,7 @@ const (
 	demoE4Circles
 )
 
-// todo: switch in demo UI and/or keyboard input
-const currentDemo = demoE4Circles
+const enablePprof = false
 
 var demos = map[int]func(rnd *vgl.Render){
 	demoE1RectDrawOrder: e1RectDrawOrder,
@@ -43,6 +48,7 @@ func main() {
 
 	appAlive := true
 	go listenSignals(&appAlive)
+	go pprof()
 
 	demo := demos[currentDemo]
 
@@ -72,6 +78,14 @@ func listenSignals(appAlive *bool) {
 	}
 }
 
+func pprof() {
+	if !enablePprof {
+		return
+	}
+
+	log.Println(http.ListenAndServe("localhost:47887", nil))
+}
+
 var startTime = time.Now()
 var combinedStats = glm.Stats{}
 
@@ -93,11 +107,19 @@ func onFrameEndStats(stats glm.Stats) {
 		avg = 0.0001
 	}
 
+	printMem := func(size uint32, capacity uint32) string {
+		return fmt.Sprintf("%.1fmb/%.1fmb",
+			float32(size)/1024/1024,
+			float32(capacity)/1024/1024,
+		)
+	}
+
 	// print AVG stats of each frame
 	elapsed := time.Since(startTime)
 	fmt.Printf(""+
 		"+%3.0fs | FPS=%-2d  drawCalls=%.0f \n"+
-		"  us> | Pipl=%-4.0f  WrtVert=%-4.0f  DrwInd=%-4.0f  Drw=%-4.0f\n",
+		"  us> | Pipl=%-4.0f  WrtVert=%-4.0f  DrwInd=%-4.0f  Drw=%-4.0f\n"+
+		"  mem | total=%s  vert=%s  ind=%s  ubo=%s\n",
 		elapsed.Seconds(),
 		stats.FPS,
 		float32(combinedStats.DrawCalls)/avg,
@@ -105,6 +127,10 @@ func onFrameEndStats(stats glm.Stats) {
 		float32(combinedStats.TimeFlushVertexBuffer.Microseconds())/avg,
 		float32(combinedStats.TimeRenderInstanced.Microseconds())/avg,
 		float32(combinedStats.TimeRenderFallback.Microseconds())/avg,
+		printMem(stats.Memory.TotalSize, stats.Memory.TotalCapacity),
+		printMem(stats.Memory.VertexBuffers.Size, stats.Memory.VertexBuffers.Capacity),
+		printMem(stats.Memory.IndexBuffers.Size, stats.Memory.IndexBuffers.Capacity),
+		printMem(stats.Memory.UniformBuffers.Size, stats.Memory.UniformBuffers.Capacity),
 	)
 
 	combinedStats.Reset()
