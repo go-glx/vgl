@@ -1,6 +1,8 @@
 package frame
 
 import (
+	"fmt"
+
 	"github.com/vulkan-go/vulkan"
 
 	"github.com/go-glx/vgl/config"
@@ -13,6 +15,9 @@ import (
 
 // todo: need some refactoring with available state management
 
+// how many continues errors is ok, before crash
+const maxWaitImageErrorsCount = 32
+
 type Manager struct {
 	logger         config.Logger
 	chain          *swapchain.Chain
@@ -20,10 +25,11 @@ type Manager struct {
 	ld             *logical.Device
 	onSuboptimal   func()
 
-	available *bool
-	frameID   uint32
-	imageID   uint32
-	count     uint32
+	available         *bool
+	frameID           uint32
+	imageID           uint32
+	count             uint32
+	waitImageErrCount uint32
 
 	semRenderAvailable  map[uint32]vulkan.Semaphore
 	semPresentAvailable map[uint32]vulkan.Semaphore
@@ -49,9 +55,10 @@ func NewManager(
 		onSuboptimal:   onSuboptimal,
 		available:      available,
 
-		frameID: 0,
-		imageID: 0,
-		count:   uint32(pool.MainBuffersCount()),
+		frameID:           0,
+		imageID:           0,
+		count:             uint32(pool.MainBuffersCount()),
+		waitImageErrCount: 0,
 
 		semRenderAvailable:  make(map[uint32]vulkan.Semaphore),
 		semPresentAvailable: make(map[uint32]vulkan.Semaphore),
@@ -107,8 +114,15 @@ func (m *Manager) prepareFrame() {
 	ok := m.notice(vulkan.WaitForFences(m.ld.Ref(), 1, []vulkan.Fence{renderDone}, vulkan.True, timeout))
 	if !ok {
 		*m.available = false
+		m.waitImageErrCount++
+
+		if m.waitImageErrCount > maxWaitImageErrorsCount {
+			panic(fmt.Errorf("render image not available after %d tries", maxWaitImageErrorsCount))
+		}
 		return
 	}
+
+	m.waitImageErrCount = 0
 
 	// acquire new image
 	var hasNextImage bool

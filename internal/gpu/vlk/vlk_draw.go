@@ -97,8 +97,12 @@ func (vlk *VLK) drawAll() {
 		// write global data to uniform buffers that need for every shader
 		view := glm.Mat4Identity()       // todo
 		projection := glm.Mat4Identity() // todo
+		surfaceSize := glm.Vec2{
+			X: float32(vlk.surfacesSize[vlk.surfaceInd][0]),
+			Y: float32(vlk.surfacesSize[vlk.surfaceInd][1]),
+		}
 
-		globalUbo := vlk.cont.descriptorsManager().UpdateGlobalUBO(uint8(imageID), view, projection)
+		globalUbo := vlk.cont.descriptorsManager().UpdateGlobalUBO(uint8(imageID), view, projection, surfaceSize)
 
 		// split drawing queue to chunks
 		// and upload all required data for rendering into buffers

@@ -17,8 +17,12 @@ func (vlk *VLK) WarmUp() {
 	_ = vlk.cont.shaderManager()
 
 	// preload shader indexes
-	for _, shaderID := range preloadIndexShaders {
-		vlk.preloadShaderIndexes(vlk.cont.shaderManager().ShaderByID(shaderID))
+	for _, shader := range vlk.cont.shaderManager().Shaders() {
+		if !shader.Meta().UseIndexBuffer() {
+			continue
+		}
+
+		vlk.preloadShaderIndexes(shader)
 	}
 }
 

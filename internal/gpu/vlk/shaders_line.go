@@ -21,6 +21,7 @@ func defaultShaderLine() *shader.Meta {
 		simple.Bindings(),
 		simple.Attributes(),
 		shaderLineVertexCount,
+		true,
 		[]uint16{0, 1},
 	)
 }

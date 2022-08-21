@@ -1,8 +1,6 @@
 package vlk
 
 import (
-	"math"
-
 	"github.com/go-glx/vgl/glm"
 )
 
@@ -54,26 +52,29 @@ func (vlk *VLK) DrawCircle(vertexes [4]glm.Vec2, colors [4]glm.Vec4, thickness g
 		return
 	}
 
-	width := float32(math.Abs(float64(vertexes[0].X - vertexes[1].X)))
-	height := float32(math.Abs(float64(vertexes[0].Y - vertexes[3].Y)))
+	centerX := (vertexes[0].X + vertexes[1].X + vertexes[2].X + vertexes[3].X) / 4
+	centerY := (vertexes[0].Y + vertexes[1].Y + vertexes[2].Y + vertexes[3].Y) / 4
 
 	center := glm.Vec2{
-		X: vertexes[0].X + width/2,
-		Y: vertexes[0].Y + height/2,
+		X: centerX,
+		Y: centerY,
 	}
 
 	vlk.drawQueue(
 		vlk.cont.shaderManager().ShaderByID(buildInShaderCircle),
 		&dataCircle{
-			center: center,
-			radius: glm.Vec2{
-				X: width / 2,
-				Y: height / 2,
+			[5]glm.Vec2{
+				vertexes[0],
+				vertexes[1],
+				vertexes[2],
+				vertexes[3],
+				center,
 			},
 		},
 	)
 
-	vlk.DrawRect(vertexes, colors, false) // todo: remove
+	// todo: remove:
+	vlk.DrawRect(vertexes, colors, false)
 	vlk.DrawPoint(center, colors[0])
 }
 

@@ -12,6 +12,7 @@ type Meta struct {
 	bindings        []vulkan.VertexInputBindingDescription
 	attributes      []vulkan.VertexInputAttributeDescription
 	vertexCount     uint32
+	useIndexBuffer  bool
 	indexes         []uint16
 }
 
@@ -24,6 +25,7 @@ func NewMeta(
 	bindings []vulkan.VertexInputBindingDescription,
 	attributes []vulkan.VertexInputAttributeDescription,
 	vertexCount uint32,
+	useIndexBuffer bool,
 	indexes []uint16,
 ) *Meta {
 	return &Meta{
@@ -35,6 +37,7 @@ func NewMeta(
 		bindings:        bindings,
 		attributes:      attributes,
 		vertexCount:     vertexCount,
+		useIndexBuffer:  useIndexBuffer,
 		indexes:         indexes,
 	}
 }
@@ -61,6 +64,10 @@ func (s *Meta) Attributes() []vulkan.VertexInputAttributeDescription {
 
 func (s *Meta) VertexCount() uint32 {
 	return s.vertexCount
+}
+
+func (s *Meta) UseIndexBuffer() bool {
+	return s.useIndexBuffer
 }
 
 func (s *Meta) Indexes() []uint16 {

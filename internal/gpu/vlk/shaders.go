@@ -17,15 +17,6 @@ const (
 	buildInShaderRect     = "rect"
 )
 
-// shaders that will preload indexes to fast-buffer
-// this allows instancing them in one draw call
-var preloadIndexShaders = []string{
-	buildInShaderPoint,
-	buildInShaderLine,
-	buildInShaderTriangle,
-	buildInShaderRect,
-}
-
 func (vlk *VLK) preloadShaderIndexes(shader *shader.Shader) {
 	shaderID := shader.Meta().ID()
 	heap := vlk.cont.allocBuffers()

@@ -9,11 +9,11 @@ import (
 
 type (
 	BlueprintLayout struct {
-		index          layoutIndex
-		title          string
-		usage          string
-		layout         vulkan.DescriptorSetLayout
-		layoutBindings layoutBindings
+		index    layoutIndex
+		title    string
+		usage    string
+		layout   vulkan.DescriptorSetLayout
+		bindings layoutBindings
 	}
 )
 
@@ -25,8 +25,8 @@ func (lay *BlueprintLayout) String() string {
 	return fmt.Sprintf("layout #%d (%s) with %d sets: %s",
 		lay.index,
 		lay.title,
-		len(lay.layoutBindings),
-		lay.layoutBindings.String(),
+		len(lay.bindings),
+		lay.bindings.String(),
 	)
 }
 

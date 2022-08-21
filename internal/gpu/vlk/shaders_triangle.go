@@ -21,6 +21,7 @@ func defaultShaderTriangle() *shader.Meta {
 		simple.Bindings(),
 		simple.Attributes(),
 		shaderTriangleVertexCount,
+		true,
 		[]uint16{0, 1, 2},
 	)
 }

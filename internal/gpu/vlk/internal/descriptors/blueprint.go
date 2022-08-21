@@ -17,8 +17,9 @@ const (
 
 const (
 	// # layout 0 (global)
-	bindingGlobalIndexUniforms     bindingIndex = 0
-	bindingGlobalLightDataUniforms bindingIndex = 1
+	bindingGlobalUniforms          bindingIndex = 0
+	bindingGlobalSurfaceSize       bindingIndex = 1
+	bindingGlobalLightDataUniforms bindingIndex = 2
 
 	// # layout 1 (material)
 	bindingMaterialDataStorage bindingIndex = 0

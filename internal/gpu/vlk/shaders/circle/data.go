@@ -9,14 +9,13 @@ import (
 )
 
 const (
-	shaderBindingMainID               = 0
-	shaderBindingMainIDLocationCenter = 0
-	shaderBindingMainIDLocationRadius = 1
+	shaderBindingMainID            = 0
+	shaderBindingMainIDLocationPos = 0
 )
 
 const (
-	// VertexSize =  center(xy) + radius(xy)
-	VertexSize = glm.SizeOfVec2 + glm.SizeOfVec2
+	// VertexSize =  pos(xy)
+	VertexSize = glm.SizeOfVec2
 )
 
 var (
@@ -47,16 +46,10 @@ func Bindings() []vulkan.VertexInputBindingDescription {
 func Attributes() []vulkan.VertexInputAttributeDescription {
 	return []vulkan.VertexInputAttributeDescription{
 		{
-			Location: shaderBindingMainIDLocationCenter,
+			Location: shaderBindingMainIDLocationPos,
 			Binding:  shaderBindingMainID,
 			Format:   vulkan.FormatR32g32Sfloat, // x, y
 			Offset:   0,
-		},
-		{
-			Location: shaderBindingMainIDLocationRadius,
-			Binding:  shaderBindingMainID,
-			Format:   vulkan.FormatR32g32Sfloat, // x, y
-			Offset:   glm.SizeOfVec2,
 		},
 	}
 }

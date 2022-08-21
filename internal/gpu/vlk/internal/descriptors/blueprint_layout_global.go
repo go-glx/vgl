@@ -7,24 +7,30 @@ import (
 )
 
 func layoutGlobal(ld vulkan.Device) BlueprintLayout {
-	globalLayout, globalBindings := createLayoutGlobal(ld)
+	layout, bindings := createLayoutGlobal(ld)
 
 	return BlueprintLayout{
-		index:          layoutIndexGlobal,
-		title:          "Global UBO Layout",
-		usage:          "Has one binding for [view, projection] matrix, used in every frame as global UBO",
-		layout:         globalLayout,
-		layoutBindings: globalBindings,
+		index:    layoutIndexGlobal,
+		title:    "Global UBO Layout",
+		usage:    "Has two binding for vert={[view, projection] matrix} flag={surface.size.xy}, used in every frame as global UBO",
+		layout:   layout,
+		bindings: bindings,
 	}
 }
 
 func createLayoutGlobal(ld vulkan.Device) (vulkan.DescriptorSetLayout, layoutBindings) {
 	bindings := layoutBindings{
-		bindingGlobalIndexUniforms: {
-			Binding:         uint32(bindingGlobalIndexUniforms),
+		bindingGlobalUniforms: {
+			Binding:         uint32(bindingGlobalUniforms),
 			DescriptorType:  vulkan.DescriptorTypeUniformBuffer,
 			DescriptorCount: 1,
 			StageFlags:      vulkan.ShaderStageFlags(vulkan.ShaderStageVertexBit), // ubo used only in vert shaders
+		},
+		bindingGlobalSurfaceSize: {
+			Binding:         uint32(bindingGlobalSurfaceSize),
+			DescriptorType:  vulkan.DescriptorTypeUniformBuffer,
+			DescriptorCount: 1,
+			StageFlags:      vulkan.ShaderStageFlags(vulkan.ShaderStageFragmentBit), // ubo used only in frag shaders
 		},
 	}
 
@@ -32,7 +38,8 @@ func createLayoutGlobal(ld vulkan.Device) (vulkan.DescriptorSetLayout, layoutBin
 		SType:        vulkan.StructureTypeDescriptorSetLayoutCreateInfo,
 		BindingCount: uint32(len(bindings)),
 		PBindings: []vulkan.DescriptorSetLayoutBinding{
-			bindings[bindingGlobalIndexUniforms],
+			bindings[bindingGlobalUniforms],
+			bindings[bindingGlobalSurfaceSize],
 		},
 	}
 

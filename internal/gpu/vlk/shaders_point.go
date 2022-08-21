@@ -17,6 +17,7 @@ func defaultShaderPoint() *shader.Meta {
 		simple.Bindings(),
 		simple.Attributes(),
 		1,
+		true,
 		[]uint16{0},
 	)
 }

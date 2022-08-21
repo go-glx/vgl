@@ -48,16 +48,20 @@ func NewManager(
 	}
 }
 
-func (m *Manager) UpdateGlobalUBO(frameID uint8, view, projection glm.Mat4) Data {
+func (m *Manager) UpdateGlobalUBO(frameID uint8, view, projection glm.Mat4, surfaceSize glm.Vec2) Data {
 	// clear previously allocated buffer for this frame (if exist)
 	if m.frameAllocationGlobalUBO[frameID].Valid {
 		m.heap.Free(m.frameAllocationGlobalUBO[frameID])
 	}
 
 	// write new data to same buffer
-	staging := make([]byte, 0, glm.SizeOfMat4*2)
-	staging = append(staging, view.Data()...)
-	staging = append(staging, projection.Data()...)
+	const sizeUBO = glm.SizeOfMat4 * 2
+	const sizeSurface = glm.SizeOfVec2
+
+	staging := make([]byte, 0, sizeUBO+sizeSurface)
+	staging = append(staging, view.Data()...)        //  ubo mat4
+	staging = append(staging, projection.Data()...)  //  ubo mat4
+	staging = append(staging, surfaceSize.Data()...) // surf vec2
 
 	// write data to memory
 	allocUBO := m.heap.Write(
@@ -71,20 +75,26 @@ func (m *Manager) UpdateGlobalUBO(frameID uint8, view, projection glm.Mat4) Data
 
 	// take info from alloc
 	bufferInfos := []vulkan.DescriptorBufferInfo{
-		// 0 = UBO
+		// 0 = vert UBO (view + projection)
 		{
 			Buffer: allocUBO.Buffer,
 			Offset: allocUBO.Offset,
 			Range:  allocUBO.Size,
+		},
+		// 1 = frag UBO (surface size)
+		{
+			Buffer: allocUBO.Buffer, // todo: offset for second binding (but it panic)
+			Offset: allocUBO.Offset, // todo: offset for second binding (but it panic)
+			Range:  allocUBO.Size,   // todo: offset for second binding (but it panic)
 		},
 	}
 
 	// prepare descriptor write
 	descriptorSet := m.allocatedSets[frameID][layoutIndexGlobal]
 	blueprint := m.blueprint.LayoutGlobal()
-	writeSets := make([]vulkan.WriteDescriptorSet, 0, len(blueprint.layoutBindings))
+	writeSets := make([]vulkan.WriteDescriptorSet, 0, len(blueprint.bindings))
 
-	for _, binding := range blueprint.layoutBindings {
+	for _, binding := range blueprint.bindings {
 		writeSets = append(writeSets, vulkan.WriteDescriptorSet{
 			SType:           vulkan.StructureTypeWriteDescriptorSet,
 			DstSet:          descriptorSet,

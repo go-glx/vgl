@@ -37,6 +37,16 @@ func (m *Manager) Free() {
 	m.logger.Debug("freed: shaders")
 }
 
+func (m *Manager) Shaders() []*Shader {
+	list := make([]*Shader, 0, len(m.shaders))
+
+	for _, shader := range m.shaders {
+		list = append(list, shader)
+	}
+
+	return list
+}
+
 func (m *Manager) ShaderByID(id string) *Shader {
 	if shader, exist := m.shaders[id]; exist {
 		return shader

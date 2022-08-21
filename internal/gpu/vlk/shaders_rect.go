@@ -21,6 +21,7 @@ func defaultShaderRect() *shader.Meta {
 		simple.Bindings(),
 		simple.Attributes(),
 		shaderRectVertexCount,
+		true,
 		[]uint16{0, 1, 2, 3, 0, 0xffff},
 	)
 }

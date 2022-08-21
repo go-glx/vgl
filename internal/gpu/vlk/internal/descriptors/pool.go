@@ -40,7 +40,7 @@ func createPool(ld *logical.Device, blueprint *Blueprint) vulkan.DescriptorPool 
 	sizes := make([]vulkan.DescriptorPoolSize, 0)
 
 	for _, layout := range blueprint.layouts {
-		for _, binding := range layout.layoutBindings {
+		for _, binding := range layout.bindings {
 			sizes = append(sizes, vulkan.DescriptorPoolSize{
 				Type:            binding.DescriptorType,
 				DescriptorCount: binding.DescriptorCount,
