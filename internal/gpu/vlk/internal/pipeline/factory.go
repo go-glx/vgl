@@ -4,6 +4,7 @@ import (
 	"github.com/vulkan-go/vulkan"
 
 	"github.com/go-glx/vgl/config"
+	"github.com/go-glx/vgl/internal/gpu/vlk/internal/descriptors"
 	"github.com/go-glx/vgl/internal/gpu/vlk/internal/logical"
 	"github.com/go-glx/vgl/internal/gpu/vlk/internal/must"
 	"github.com/go-glx/vgl/internal/gpu/vlk/internal/renderpass"
@@ -15,11 +16,16 @@ type Factory struct {
 	ld             *logical.Device
 	swapChain      *swapchain.Chain
 	mainRenderPass *renderpass.Pass
+	blueprint      *descriptors.Blueprint
 	cache          *Cache
 
-	defaultPipelineLayout       vulkan.PipelineLayout
-	defaultDescriptionSetLayout vulkan.DescriptorSetLayout
-	createdPipelines            []vulkan.Pipeline
+	pipelineLayoutOnlyGlobal vulkan.PipelineLayout
+	createdPipelines         []vulkan.Pipeline
+}
+
+type Info struct {
+	Pipeline vulkan.Pipeline
+	Layout   vulkan.PipelineLayout
 }
 
 func NewFactory(
@@ -27,6 +33,7 @@ func NewFactory(
 	ld *logical.Device,
 	swapChain *swapchain.Chain,
 	mainRenderPass *renderpass.Pass,
+	blueprint *descriptors.Blueprint,
 	cache *Cache,
 ) *Factory {
 	factory := &Factory{
@@ -34,18 +41,18 @@ func NewFactory(
 		ld:             ld,
 		swapChain:      swapChain,
 		mainRenderPass: mainRenderPass,
+		blueprint:      blueprint,
 		cache:          cache,
 	}
 
-	factory.defaultDescriptionSetLayout = factory.newDefaultDescriptorSetLayout()
-	factory.defaultPipelineLayout = factory.newDefaultPipelineLayout()
+	factory.pipelineLayoutOnlyGlobal = factory.newPipelineLayoutOnlyGlobal()
+
 	logger.Debug("pipeline factory created")
 	return factory
 }
 
 func (f *Factory) Free() {
-	vulkan.DestroyDescriptorSetLayout(f.ld.Ref(), f.defaultDescriptionSetLayout, nil)
-	vulkan.DestroyPipelineLayout(f.ld.Ref(), f.defaultPipelineLayout, nil)
+	vulkan.DestroyPipelineLayout(f.ld.Ref(), f.pipelineLayoutOnlyGlobal, nil)
 
 	for _, pipeline := range f.createdPipelines {
 		vulkan.DestroyPipeline(f.ld.Ref(), pipeline, nil)
@@ -54,19 +61,18 @@ func (f *Factory) Free() {
 	f.logger.Debug("freed: pipeline factory")
 }
 
-func (f *Factory) NewPipeline(opts ...Initializer) vulkan.Pipeline {
+func (f *Factory) NewPipeline(opts ...Initializer) Info {
 	info := vulkan.GraphicsPipelineCreateInfo{
 		SType: vulkan.StructureTypeGraphicsPipelineCreateInfo,
 	}
 
 	// default opts
-	opts = append(opts, f.withDefaultViewport())
-	opts = append(opts, f.withDefaultMainRenderPass())
-	opts = append(opts, f.withDefaultLayout())
+	opts = append(opts, withDefaultViewport())
+	opts = append(opts, withDefaultMainRenderPass())
 
 	// build pipeline info
 	for _, applyOpt := range opts {
-		applyOpt(&info)
+		applyOpt(&info, f)
 	}
 
 	// create pipeline from it
@@ -84,5 +90,26 @@ func (f *Factory) NewPipeline(opts ...Initializer) vulkan.Pipeline {
 
 	pipeline := pipelines[0]
 	f.createdPipelines = append(f.createdPipelines, pipeline)
-	return pipeline
+
+	return Info{
+		Pipeline: pipeline,
+		Layout:   info.Layout,
+	}
+}
+
+func (f *Factory) newPipelineLayoutOnlyGlobal() vulkan.PipelineLayout {
+	blueprint := f.blueprint.LayoutGlobal()
+
+	info := &vulkan.PipelineLayoutCreateInfo{
+		SType:                  vulkan.StructureTypePipelineLayoutCreateInfo,
+		SetLayoutCount:         1,
+		PSetLayouts:            []vulkan.DescriptorSetLayout{blueprint.Ref()},
+		PushConstantRangeCount: 0,
+		PPushConstantRanges:    nil,
+	}
+
+	var pipelineLayout vulkan.PipelineLayout
+	must.Work(vulkan.CreatePipelineLayout(f.ld.Ref(), info, nil, &pipelineLayout))
+
+	return pipelineLayout
 }

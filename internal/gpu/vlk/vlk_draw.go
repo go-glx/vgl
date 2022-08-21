@@ -8,6 +8,7 @@ import (
 	"github.com/go-glx/vgl/glm"
 	"github.com/go-glx/vgl/internal/gpu/vlk/internal/alloc"
 	"github.com/go-glx/vgl/internal/gpu/vlk/internal/def"
+	"github.com/go-glx/vgl/internal/gpu/vlk/internal/descriptors"
 	"github.com/go-glx/vgl/internal/gpu/vlk/internal/pipeline"
 	"github.com/go-glx/vgl/internal/gpu/vlk/internal/shader"
 )
@@ -94,11 +95,10 @@ func (vlk *VLK) drawAll() {
 	vlk.stats.DrawCalls = 0
 	vlk.cont.frameManager().FrameApplyCommands(func(imageID uint32, cb vulkan.CommandBuffer) {
 		// write global data to uniform buffers that need for every shader
-		model := glm.Mat4Identity()      // todo
 		view := glm.Mat4Identity()       // todo
 		projection := glm.Mat4Identity() // todo
 
-		vlk.cont.allocBuffers().UpdateUniformGlobalData(imageID, model, view, projection)
+		globalUbo := vlk.cont.descriptorsManager().UpdateGlobalUBO(uint8(imageID), view, projection)
 
 		// split drawing queue to chunks
 		// and upload all required data for rendering into buffers
@@ -108,7 +108,7 @@ func (vlk *VLK) drawAll() {
 		vlk.stats.DrawChunks = len(drawChunks)
 
 		for _, drawChunk := range drawChunks {
-			vlk.stats.DrawCalls += vlk.drawChunk(cb, drawChunk)
+			vlk.stats.DrawCalls += vlk.drawChunk(cb, globalUbo, drawChunk)
 		}
 	})
 
@@ -146,12 +146,24 @@ func (vlk *VLK) prepareDrawingChunks(imageID uint32) []drawCallChunk {
 	return drawChunks
 }
 
-func (vlk *VLK) drawChunk(cb vulkan.CommandBuffer, drawChunk drawCallChunk) int {
+func (vlk *VLK) drawChunk(cb vulkan.CommandBuffer, globalUBO descriptors.Data, drawChunk drawCallChunk) int {
 	// bind pipe with current shader and options
 	ts := time.Now()
-	pipe := vlk.createPipeline(drawChunk)
+	pipeInfo := vlk.createPipeline(drawChunk)
 	vlk.stats.TimeCreatePipeline = time.Since(ts)
-	vulkan.CmdBindPipeline(cb, vulkan.PipelineBindPointGraphics, pipe)
+	vulkan.CmdBindPipeline(cb, vulkan.PipelineBindPointGraphics, pipeInfo.Pipeline)
+
+	descriptorSets := []vulkan.DescriptorSet{
+		globalUBO.DescriptorSet,
+	}
+
+	// todo: not rebind sets, if [pipelineLayout and descriptorSets] not changed from previous call
+	vulkan.CmdBindDescriptorSets(
+		cb, vulkan.PipelineBindPointGraphics,
+		pipeInfo.Layout, 0,
+		uint32(len(descriptorSets)), descriptorSets,
+		0, nil,
+	)
 
 	// bind index buffer
 	if drawChunk.indexBuffer.Valid {
@@ -200,8 +212,9 @@ func (vlk *VLK) drawChunk(cb vulkan.CommandBuffer, drawChunk drawCallChunk) int 
 	return countDrawCalls
 }
 
-func (vlk *VLK) createPipeline(call drawCallChunk) vulkan.Pipeline {
+func (vlk *VLK) createPipeline(call drawCallChunk) pipeline.Info {
 	return vlk.cont.pipelineFactory().NewPipeline(
+		pipeline.WithLayout(pipeline.LayoutTypeOnlyGlobal),
 		pipeline.WithStages([]vulkan.PipelineShaderStageCreateInfo{
 			call.shader.ModuleVert().Stage(),
 			call.shader.ModuleFrag().Stage(),

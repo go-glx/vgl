@@ -1,18 +1,38 @@
 package pipeline
 
-import "github.com/vulkan-go/vulkan"
+import (
+	"fmt"
 
-type Initializer = func(*vulkan.GraphicsPipelineCreateInfo)
+	"github.com/vulkan-go/vulkan"
+)
+
+type Initializer = func(*vulkan.GraphicsPipelineCreateInfo, *Factory)
+type LayoutType uint8
+
+const (
+	LayoutTypeOnlyGlobal LayoutType = iota
+)
+
+func WithLayout(layout LayoutType) Initializer {
+	return func(info *vulkan.GraphicsPipelineCreateInfo, f *Factory) {
+		switch layout {
+		case LayoutTypeOnlyGlobal:
+			info.Layout = f.pipelineLayoutOnlyGlobal
+		default:
+			panic(fmt.Errorf("unknown pipeline layout %d", layout))
+		}
+	}
+}
 
 func WithStages(stages []vulkan.PipelineShaderStageCreateInfo) Initializer {
-	return func(info *vulkan.GraphicsPipelineCreateInfo) {
+	return func(info *vulkan.GraphicsPipelineCreateInfo, _ *Factory) {
 		info.StageCount = uint32(len(stages))
 		info.PStages = stages
 	}
 }
 
 func WithTopology(topology vulkan.PrimitiveTopology, restartEnable bool) Initializer {
-	return func(info *vulkan.GraphicsPipelineCreateInfo) {
+	return func(info *vulkan.GraphicsPipelineCreateInfo, _ *Factory) {
 		info.PInputAssemblyState = &vulkan.PipelineInputAssemblyStateCreateInfo{
 			SType:                  vulkan.StructureTypePipelineInputAssemblyStateCreateInfo,
 			Topology:               topology,
@@ -25,7 +45,7 @@ func WithVertexInput(
 	bindings []vulkan.VertexInputBindingDescription,
 	attributes []vulkan.VertexInputAttributeDescription,
 ) Initializer {
-	return func(info *vulkan.GraphicsPipelineCreateInfo) {
+	return func(info *vulkan.GraphicsPipelineCreateInfo, _ *Factory) {
 		info.PVertexInputState = &vulkan.PipelineVertexInputStateCreateInfo{
 			SType:                           vulkan.StructureTypePipelineVertexInputStateCreateInfo,
 			VertexBindingDescriptionCount:   uint32(len(bindings)),
@@ -37,7 +57,7 @@ func WithVertexInput(
 }
 
 func WithRasterization(mode vulkan.PolygonMode) Initializer {
-	return func(info *vulkan.GraphicsPipelineCreateInfo) {
+	return func(info *vulkan.GraphicsPipelineCreateInfo, _ *Factory) {
 		info.PRasterizationState = &vulkan.PipelineRasterizationStateCreateInfo{
 			SType:                   vulkan.StructureTypePipelineRasterizationStateCreateInfo,
 			DepthClampEnable:        vulkan.False,
@@ -55,7 +75,7 @@ func WithRasterization(mode vulkan.PolygonMode) Initializer {
 }
 
 func WithMultisampling() Initializer {
-	return func(info *vulkan.GraphicsPipelineCreateInfo) {
+	return func(info *vulkan.GraphicsPipelineCreateInfo, _ *Factory) {
 		info.PMultisampleState = &vulkan.PipelineMultisampleStateCreateInfo{
 			SType:                 vulkan.StructureTypePipelineMultisampleStateCreateInfo,
 			RasterizationSamples:  vulkan.SampleCount1Bit,
@@ -69,7 +89,7 @@ func WithMultisampling() Initializer {
 }
 
 func WithColorBlend() Initializer {
-	return func(info *vulkan.GraphicsPipelineCreateInfo) {
+	return func(info *vulkan.GraphicsPipelineCreateInfo, _ *Factory) {
 		info.PColorBlendState = &vulkan.PipelineColorBlendStateCreateInfo{
 			SType:           vulkan.StructureTypePipelineColorBlendStateCreateInfo,
 			LogicOpEnable:   vulkan.False,

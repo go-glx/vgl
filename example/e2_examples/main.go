@@ -19,7 +19,7 @@ const appWidth = 960
 const appHeight = 480
 
 // todo: switch in demo UI and/or keyboard input
-const currentDemo = demoE1RectDrawOrder
+const currentDemo = demoE4Circles
 
 const (
 	demoE1RectDrawOrder = iota

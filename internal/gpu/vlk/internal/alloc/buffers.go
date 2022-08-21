@@ -1,11 +1,8 @@
 package alloc
 
 import (
-	"fmt"
-
 	"github.com/vulkan-go/vulkan"
 
-	"github.com/go-glx/vgl/glm"
 	"github.com/go-glx/vgl/internal/gpu/vlk/internal/def"
 	"github.com/go-glx/vgl/internal/gpu/vlk/internal/shader"
 )
@@ -19,14 +16,12 @@ type Chunk struct {
 type Buffers struct {
 	heap                   *Heap
 	frameVertexAllocations [def.OptimalSwapChainBuffersCount][]Allocation
-	frameUniformAllocation [def.OptimalSwapChainBuffersCount]Allocation
 }
 
 func NewBuffers(heap *Heap) *Buffers {
 	return &Buffers{
 		heap:                   heap,
 		frameVertexAllocations: [def.OptimalSwapChainBuffersCount][]Allocation{},
-		frameUniformAllocation: [def.OptimalSwapChainBuffersCount]Allocation{},
 	}
 }
 
@@ -112,28 +107,4 @@ func (b *Buffers) WriteVertexBuffersFromInstances(frameID uint32, instances []sh
 	}
 
 	return chunks
-}
-
-func (b *Buffers) UpdateUniformGlobalData(frameID uint32, model glm.Mat4, view glm.Mat4, projection glm.Mat4) {
-	// clear previously allocated buffer for this frame (if exist)
-	if b.frameUniformAllocation[frameID].Valid {
-		b.heap.Free(b.frameUniformAllocation[frameID])
-	}
-
-	// write new data to same buffer
-	staging := make([]byte, 0, glm.SizeOfMat4*3)
-	staging = append(staging, model.Data()...)
-	staging = append(staging, view.Data()...)
-	staging = append(staging, projection.Data()...)
-
-	// we always want this UBO data at offset=0
-	// because of vulkan layout scheme, so not need to return anything here
-	alloc := b.heap.Write(
-		staging,
-		BufferTypeUniform,
-		StorageTargetCoherent,
-		FlagsNone,
-	)
-	b.frameUniformAllocation[frameID] = alloc
-	fmt.Printf("ubo offset=%d size=%d buffID=%d allocID=%d\n", alloc.Offset, alloc.Size, alloc.buffID, alloc.allocID)
 }
