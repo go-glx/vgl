@@ -15,14 +15,15 @@ import (
 	"github.com/go-glx/vgl/glm"
 )
 
-const appWidth = 960
+const appWidth = 720
 const appHeight = 480
 
 // todo: switch in demo UI and/or keyboard input
 const currentDemo = demoE4Circles
 
 const (
-	demoE1RectDrawOrder = iota
+	demoE0HelloTriangle = iota
+	demoE1RectDrawOrder
 	demoE2Lines
 	demoE3Points
 	demoE4Circles
@@ -31,6 +32,7 @@ const (
 const enablePprof = false
 
 var demos = map[int]func(rnd *vgl.Render){
+	demoE0HelloTriangle: e0HelloTriangle,
 	demoE1RectDrawOrder: e1RectDrawOrder,
 	demoE2Lines:         e2Lines,
 	demoE3Points:        e3Points,
@@ -56,6 +58,15 @@ func main() {
 		rnd.FrameStart()
 		gui.frameStart()
 
+		// draw bg
+		w, h := rnd.SurfaceSize()
+		rnd.Draw2dRect(&vgl.Params2dRect{
+			Pos:    [4]glm.Local2D{{0, 0}, {w, 0}, {w, h}, {0, h}},
+			Color:  colBackground,
+			Filled: true,
+		})
+
+		// draw demo scene
 		demo(rnd)
 
 		gui.frameEnd()

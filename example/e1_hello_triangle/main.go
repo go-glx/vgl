@@ -34,9 +34,9 @@ func main() {
 
 		app.Draw2dTriangle(&vgl.Params2dTriangle{
 			Pos: [3]glm.Local2D{ // in clock-wise order
-				{int32(width) / 2, 100},                   // center-top vertex
-				{int32(width) - 100, int32(height) - 100}, // right-bottom vertex
-				{100, int32(height) - 100},                // left-bottom vertex
+				{width / 2, 100},            // center-top vertex
+				{width - 100, height - 100}, // right-bottom vertex
+				{100, height - 100},         // left-bottom vertex
 			},
 			ColorGradient: [3]glm.Color{
 				glm.NewColor(255, 0, 0, 255),

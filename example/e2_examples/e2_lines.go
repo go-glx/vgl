@@ -6,8 +6,8 @@ import (
 )
 
 func e2Lines(rnd *vgl.Render) {
-	const unitSize = 24          // each character size
-	const offsetY = unitSize * 5 // offset between features
+	const unitSize = 18          // each character size
+	const offsetY = unitSize * 4 // offset between features
 
 	// Drawing "VGL" word with lines
 	chars := [][]glm.Local2D{
@@ -37,31 +37,31 @@ func e2Lines(rnd *vgl.Render) {
 	features := []vgl.Params2dLine{
 		{
 			// simple line
-			Color: glm.NewColor(255, 255, 0, 255),
+			Color: colGrayDark,
 		},
 		{
 			// same as first, because default width=1
-			Color: glm.NewColor(255, 255, 0, 255),
+			Color: colGrayDark,
 			Width: 1,
 		},
 		{
 			// gradient line
 			ColorGradient: [2]glm.Color{
-				glm.NewColor(255, 0, 0, 255),
-				glm.NewColor(0, 0, 255, 255),
+				colMain,
+				colAccent,
 			},
 			ColorUseGradient: true,
 		},
 		{
 			// bold line
-			Color: glm.NewColor(255, 255, 0, 255),
+			Color: colGrayDark,
 			Width: 10,
 		},
 		{
 			// bold + gradient line
 			ColorGradient: [2]glm.Color{
-				glm.NewColor(255, 0, 0, 255),
-				glm.NewColor(0, 0, 255, 255),
+				colMain,
+				colAccent,
 			},
 			ColorUseGradient: true,
 			Width:            10,

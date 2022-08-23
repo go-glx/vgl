@@ -57,14 +57,8 @@ func e1RectDrawOrder(rnd *vgl.Render) {
 					{x + rectSize, y + rectSize},
 					{x, y + rectSize},
 				},
-				ColorGradient: [4]glm.Color{
-					glm.NewColor(255, 0, 0, 255),
-					glm.NewColor(0, 255, 0, 255),
-					glm.NewColor(0, 0, 255, 255),
-					glm.NewColor(128, 0, 128, 255),
-				},
-				ColorUseGradient: true,
-				Filled:           filled,
+				Color:  colMain,
+				Filled: filled,
 			})
 
 		}

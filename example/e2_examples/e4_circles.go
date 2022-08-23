@@ -14,7 +14,7 @@ type animTransformY struct{}
 
 func e4Circles(rnd *vgl.Render) {
 	w, h := rnd.SurfaceSize()
-	centerX, centerY := int32(w/2), int32(h/2)
+	centerX, centerY := w/2, h/2
 
 	radiusW := int32(anim(animRadiusX{}, time.Second*5, 50, 150))
 	radiusH := int32(anim(animRadiusY{}, time.Second*30, 100, 200))

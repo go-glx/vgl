@@ -13,6 +13,7 @@ func (d *Device) assembleGPU(logger config.Logger, pd vulkan.PhysicalDevice) *GP
 	var props vulkan.PhysicalDeviceProperties
 	vulkan.GetPhysicalDeviceProperties(pd, &props)
 	props.Deref()
+	props.Limits.Deref()
 
 	var features vulkan.PhysicalDeviceFeatures
 	vulkan.GetPhysicalDeviceFeatures(pd, &features)

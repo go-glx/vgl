@@ -1,6 +1,10 @@
 package descriptors
 
 import (
+	"bytes"
+	"fmt"
+	"math"
+
 	"github.com/vulkan-go/vulkan"
 
 	"github.com/go-glx/vgl/config"
@@ -9,6 +13,7 @@ import (
 	"github.com/go-glx/vgl/internal/gpu/vlk/internal/def"
 	"github.com/go-glx/vgl/internal/gpu/vlk/internal/logical"
 	"github.com/go-glx/vgl/internal/gpu/vlk/internal/must"
+	"github.com/go-glx/vgl/internal/gpu/vlk/internal/physical"
 )
 
 const framesCount = def.OptimalSwapChainBuffersCount
@@ -20,6 +25,7 @@ type (
 		pool   *Pool
 		heap   *alloc.Heap
 
+		uniformBufferAlignSize   uint32
 		blueprint                *Blueprint
 		allocatedSets            allocatedSets
 		frameAllocationGlobalUBO [framesCount]alloc.Allocation
@@ -28,11 +34,21 @@ type (
 	frameID       = uint8
 	allocatedSets map[frameID]layoutSet
 	layoutSet     map[layoutIndex]vulkan.DescriptorSet
+
+	uniformData interface {
+		Data() []byte
+	}
+
+	uniformBlock struct {
+		uniforms     []uniformData
+		expectedSize int
+	}
 )
 
 func NewManager(
 	logger config.Logger,
 	ld *logical.Device,
+	pd *physical.Device,
 	pool *Pool,
 	heap *alloc.Heap,
 	blueprint *Blueprint,
@@ -43,8 +59,9 @@ func NewManager(
 		pool:   pool,
 		heap:   heap,
 
-		blueprint:     blueprint,
-		allocatedSets: allocateSets(ld, pool, blueprint),
+		uniformBufferAlignSize: uint32(pd.PrimaryGPU().Props.Limits.MinUniformBufferOffsetAlignment),
+		blueprint:              blueprint,
+		allocatedSets:          allocateSets(ld, pool, blueprint),
 	}
 }
 
@@ -54,14 +71,18 @@ func (m *Manager) UpdateGlobalUBO(frameID uint8, view, projection glm.Mat4, surf
 		m.heap.Free(m.frameAllocationGlobalUBO[frameID])
 	}
 
-	// write new data to same buffer
-	const sizeUBO = glm.SizeOfMat4 * 2
-	const sizeSurface = glm.SizeOfVec2
+	uniforms := []uniformBlock{
+		{
+			uniforms:     []uniformData{&view, &projection},
+			expectedSize: glm.SizeOfMat4 * 2,
+		},
+		{
+			uniforms:     []uniformData{&surfaceSize},
+			expectedSize: glm.SizeOfVec2,
+		},
+	}
 
-	staging := make([]byte, 0, sizeUBO+sizeSurface)
-	staging = append(staging, view.Data()...)        //  ubo mat4
-	staging = append(staging, projection.Data()...)  //  ubo mat4
-	staging = append(staging, surfaceSize.Data()...) // surf vec2
+	staging, offsets := m.prepareUniformBuffer(uniforms)
 
 	// write data to memory
 	allocUBO := m.heap.Write(
@@ -73,20 +94,13 @@ func (m *Manager) UpdateGlobalUBO(frameID uint8, view, projection glm.Mat4, surf
 
 	m.frameAllocationGlobalUBO[frameID] = allocUBO
 
-	// take info from alloc
-	bufferInfos := []vulkan.DescriptorBufferInfo{
-		// 0 = vert UBO (view + projection)
-		{
+	bufferBindingInfo := make([]vulkan.DescriptorBufferInfo, 0, len(uniforms))
+	for index, uniform := range uniforms {
+		bufferBindingInfo = append(bufferBindingInfo, vulkan.DescriptorBufferInfo{
 			Buffer: allocUBO.Buffer,
-			Offset: allocUBO.Offset,
-			Range:  allocUBO.Size,
-		},
-		// 1 = frag UBO (surface size)
-		{
-			Buffer: allocUBO.Buffer, // todo: offset for second binding (but it panic)
-			Offset: allocUBO.Offset, // todo: offset for second binding (but it panic)
-			Range:  allocUBO.Size,   // todo: offset for second binding (but it panic)
-		},
+			Offset: allocUBO.Offset + offsets[index],
+			Range:  vulkan.DeviceSize(uniform.expectedSize),
+		})
 	}
 
 	// prepare descriptor write
@@ -98,12 +112,12 @@ func (m *Manager) UpdateGlobalUBO(frameID uint8, view, projection glm.Mat4, surf
 		writeSets = append(writeSets, vulkan.WriteDescriptorSet{
 			SType:           vulkan.StructureTypeWriteDescriptorSet,
 			DstSet:          descriptorSet,
-			DstArrayElement: 0,
 			DstBinding:      binding.Binding,
+			DstArrayElement: 0,
 			DescriptorCount: binding.DescriptorCount,
 			DescriptorType:  binding.DescriptorType,
 			PBufferInfo: []vulkan.DescriptorBufferInfo{
-				bufferInfos[binding.Binding],
+				bufferBindingInfo[binding.Binding],
 			},
 		})
 	}
@@ -114,6 +128,51 @@ func (m *Manager) UpdateGlobalUBO(frameID uint8, view, projection glm.Mat4, surf
 	return Data{
 		DescriptorSet: descriptorSet,
 	}
+}
+
+// prepareUniformBuffer will write all block bytes data to single slice
+// and align bytes in each block of zeroed space if needed
+// function return result bytes slice and offset of each block start
+func (m *Manager) prepareUniformBuffer(blocks []uniformBlock) ([]byte, []vulkan.DeviceSize) {
+	totalSize := 0
+	for _, block := range blocks {
+		totalSize += m.alignUniformSize(block.expectedSize)
+	}
+
+	buffer := make([]byte, 0, totalSize)
+	offsets := make([]vulkan.DeviceSize, 0, len(blocks))
+
+	for _, block := range blocks {
+		data := make([]byte, 0, block.expectedSize)
+		for _, uniform := range block.uniforms {
+			data = append(data, uniform.Data()...)
+		}
+
+		if len(data) != block.expectedSize {
+			panic(fmt.Errorf("uniform block size miss calculated. expected=%dB, actual=%dB",
+				block.expectedSize,
+				len(data),
+			))
+		}
+
+		alignedSize := m.alignUniformSize(block.expectedSize)
+		uselessSize := alignedSize - block.expectedSize
+
+		// write actual data
+		offsets = append(offsets, vulkan.DeviceSize(len(buffer))) // current buffer len = offset of next block
+		buffer = append(buffer, data...)
+
+		// write trash data if needed, we need match device aligned size exactly
+		if uselessSize > 0 {
+			buffer = append(buffer, bytes.Repeat([]byte{0}, uselessSize)...)
+		}
+	}
+
+	return buffer, offsets
+}
+
+func (m *Manager) alignUniformSize(realSize int) int {
+	return int(math.Ceil(float64(realSize)/float64(m.uniformBufferAlignSize)) * float64(m.uniformBufferAlignSize))
 }
 
 func allocateSets(ld *logical.Device, pool *Pool, blueprint *Blueprint) allocatedSets {

@@ -47,7 +47,7 @@ const OptimalSwapChainBuffersCount = 3
 // If GPU not support this formats, render will panic
 // on initialization.
 const (
-	SurfaceFormat     = vulkan.FormatB8g8r8a8Srgb
+	SurfaceFormat     = vulkan.FormatB8g8r8a8Unorm
 	SurfaceColorSpace = vulkan.ColorSpaceSrgbNonlinear
 )
 
@@ -89,8 +89,12 @@ const BufferVertexSizeBytes = 16 * 1024 * 1024
 //  - 4MB       = good in most cases
 const BufferIndexSizeBytes = 4 * 1024 * 1024
 
-// BufferUniformSizeBytes only 256 bytes is guaranteed?
-const BufferUniformSizeBytes = 256
+// BufferUniformSizeBytes
+// 16KB is minimum guaranteed on any device
+// Recommended value:
+// - <16KB
+// - equal of real buffer usage * 2
+const BufferUniformSizeBytes = 1024
 
 // BufferIndexMaxInstances How many index data will be generated
 // and saved to fast-persistent GPU buffer memory

@@ -161,6 +161,7 @@ func (c *Container) descriptorsManager() *descriptors.Manager {
 			return descriptors.NewManager(
 				c.logger,
 				c.logicalDevice(),
+				c.physicalDevice(),
 				c.descriptorsPool(),
 				c.allocHeap(),
 				c.descriptorsBlueprint(),

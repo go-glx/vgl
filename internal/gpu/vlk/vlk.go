@@ -9,11 +9,9 @@ import (
 	"github.com/go-glx/vgl/internal/gpu/vlk/internal/alloc"
 )
 
-// todo: vertex buffers is override in swapChain (can have multiple frames in-fly)
 // todo: panic in rect scene after few seconds
 // todo: multisampling "vulkan.SampleCount4Bit" can be used for test "ErrorDeviceLost"
 // todo: set swapChain images count=1 (index out of range [1] with length 1) imageID > 0 can be created
-// todo: slow vertex buffer copy speed to coherent memory
 
 type VLK struct {
 	isReady bool
