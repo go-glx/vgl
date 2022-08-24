@@ -1,21 +1,44 @@
 package vlk
 
 import (
-	_ "embed"
 	"fmt"
+
+	"github.com/vulkan-go/vulkan"
 
 	"github.com/go-glx/vgl/internal/gpu/vlk/internal/alloc"
 	"github.com/go-glx/vgl/internal/gpu/vlk/internal/def"
 	"github.com/go-glx/vgl/internal/gpu/vlk/internal/shader"
 )
 
-const (
-	buildInShaderPoint    = "point"
-	buildInShaderLine     = "line"
-	buildInShaderTriangle = "triangle"
-	buildInShaderCircle   = "circle"
-	buildInShaderRect     = "rect"
-)
+func (vlk *VLK) RegisterShader(
+	uniqueName string,
+	cgProgramVert []byte,
+	cgProgramFrag []byte,
+	topology vulkan.PrimitiveTopology,
+	topologyRestart bool,
+	bindings []vulkan.VertexInputBindingDescription,
+	attributes []vulkan.VertexInputAttributeDescription,
+	vertexCount uint32,
+	indexes []uint16,
+) {
+	vlk.cont.shaderManager().RegisterShader(shader.NewMeta(
+		uniqueName,
+		cgProgramVert,
+		cgProgramFrag,
+		topology,
+		topologyRestart,
+		bindings,
+		attributes,
+		vertexCount,
+		indexes,
+	))
+
+	if len(indexes) > 0 {
+		vlk.preloadShaderIndexes(
+			vlk.cont.shaderManager().ShaderByID(uniqueName),
+		)
+	}
+}
 
 func (vlk *VLK) preloadShaderIndexes(shader *shader.Shader) {
 	shaderID := shader.Meta().ID()

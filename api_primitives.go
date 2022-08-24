@@ -3,6 +3,8 @@ package vgl
 import (
 	"math"
 
+	"github.com/vulkan-go/vulkan"
+
 	"github.com/go-glx/vgl/glm"
 )
 
@@ -39,7 +41,15 @@ func (r *Render) Draw2dPoint(p *Params2dPoint) {
 		return
 	}
 
-	r.api.DrawPoint(pos, p.Color.VecRGBA())
+	r.api.Draw(buildInShaderPoint, &shaderInputUniversal2d{
+		mode: vulkan.PolygonModeFill,
+		vertexes: []shaderInputUniversal2dVertex{
+			{
+				pos:   pos,
+				color: p.Color.VecRGBA(),
+			},
+		},
+	})
 }
 
 // -----------------------------------------------------------------------------
@@ -83,7 +93,19 @@ func (r *Render) Draw2dLine(p *Params2dLine) {
 			return
 		}
 
-		r.api.DrawLine(pos, color)
+		r.api.Draw(buildInShaderLine, &shaderInputUniversal2d{
+			mode: vulkan.PolygonModeLine,
+			vertexes: []shaderInputUniversal2dVertex{
+				{
+					pos:   pos[0],
+					color: color[0],
+				},
+				{
+					pos:   pos[1],
+					color: color[1],
+				},
+			},
+		})
 		return
 	}
 
@@ -101,7 +123,22 @@ func (r *Render) Draw2dLine(p *Params2dLine) {
 		return
 	}
 
-	r.api.DrawRect(rectPos, [4]glm.Vec4{color[0], color[1], color[1], color[0]}, true)
+	r.api.Draw(buildInShaderTriangle, &shaderInputUniversal2d{
+		mode: vulkan.PolygonModeFill,
+		vertexes: []shaderInputUniversal2dVertex{
+			{pos: rectPos[0], color: color[0]}, // tl
+			{pos: rectPos[1], color: color[1]}, // tr
+			{pos: rectPos[2], color: color[1]}, // br
+		},
+	})
+	r.api.Draw(buildInShaderTriangle, &shaderInputUniversal2d{
+		mode: vulkan.PolygonModeFill,
+		vertexes: []shaderInputUniversal2dVertex{
+			{pos: rectPos[2], color: color[1]}, // br
+			{pos: rectPos[3], color: color[0]}, // bl
+			{pos: rectPos[0], color: color[0]}, // tl
+		},
+	})
 }
 
 // -----------------------------------------------------------------------------
@@ -140,7 +177,21 @@ func (r *Render) Draw2dTriangle(p *Params2dTriangle) {
 		color[2] = color[0]
 	}
 
-	r.api.DrawTriangle(pos, color, p.Filled)
+	var mode vulkan.PolygonMode
+	if p.Filled {
+		mode = vulkan.PolygonModeFill
+	} else {
+		mode = vulkan.PolygonModeLine
+	}
+
+	r.api.Draw(buildInShaderTriangle, &shaderInputUniversal2d{
+		mode: mode,
+		vertexes: []shaderInputUniversal2dVertex{
+			{pos: pos[0], color: color[0]},
+			{pos: pos[1], color: color[1]},
+			{pos: pos[2], color: color[2]},
+		},
+	})
 }
 
 // -----------------------------------------------------------------------------
@@ -186,7 +237,40 @@ func (r *Render) Draw2dRect(p *Params2dRect) {
 		color[3] = color[0]
 	}
 
-	r.api.DrawRect(pos, color, p.Filled)
+	if !p.Filled {
+		r.api.Draw(buildInShaderRect, &shaderInputUniversal2d{
+			mode: vulkan.PolygonModeLine,
+			vertexes: []shaderInputUniversal2dVertex{
+				{pos: pos[0], color: color[0]},
+				{pos: pos[1], color: color[1]},
+				{pos: pos[2], color: color[2]},
+				{pos: pos[3], color: color[3]},
+			},
+		})
+
+		return
+	}
+
+	// drawing two triangles faster, that outlined rect
+	// with custom polygon mode
+	// when rect is filled, two triangles visually looks same as rect
+
+	r.api.Draw(buildInShaderTriangle, &shaderInputUniversal2d{
+		mode: vulkan.PolygonModeFill,
+		vertexes: []shaderInputUniversal2dVertex{
+			{pos: pos[0], color: color[0]}, // tl
+			{pos: pos[1], color: color[1]}, // tr
+			{pos: pos[2], color: color[2]}, // br
+		},
+	})
+	r.api.Draw(buildInShaderTriangle, &shaderInputUniversal2d{
+		mode: vulkan.PolygonModeFill,
+		vertexes: []shaderInputUniversal2dVertex{
+			{pos: pos[2], color: color[2]}, // br
+			{pos: pos[3], color: color[3]}, // bl
+			{pos: pos[0], color: color[0]}, // tl
+		},
+	})
 }
 
 // -----------------------------------------------------------------------------
@@ -253,12 +337,23 @@ func (r *Render) Draw2dCircle(p *Params2dCircle) {
 		color[3] = color[0]
 	}
 
-	r.api.DrawCircle(
-		pos,
-		color,
-		glm.Vec1{X: 1.0 - glm.Clamp(p.HoleRadius, 0, 1)},
-		glm.Vec1{X: glm.Clamp(p.Smooth, 0, 1)},
-	)
+	// todo: move center, thickness and smooth to uniform buffer params
+	center := glm.Vec2{
+		X: (pos[0].X + pos[1].X + pos[2].X + pos[3].X) / 4,
+		Y: (pos[0].Y + pos[1].Y + pos[2].Y + pos[3].Y) / 4,
+	}
+	// thickness := glm.Vec1{X: 1.0 - glm.Clamp(p.HoleRadius, 0, 1)}
+	// smooth := glm.Vec1{X: glm.Clamp(p.Smooth, 0, 1)}
+
+	r.api.Draw(buildInShaderCircle, &shaderInputCircle2d{
+		vertexes: []shaderInputCircle2dVertex{
+			{pos: pos[0]},
+			{pos: pos[1]},
+			{pos: pos[2]},
+			{pos: pos[3]},
+			{pos: center},
+		},
+	})
 }
 
 // -----------------------------------------------------------------------------

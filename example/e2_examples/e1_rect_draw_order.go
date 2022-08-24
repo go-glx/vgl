@@ -1,6 +1,8 @@
 package main
 
 import (
+	"math"
+
 	"github.com/go-glx/vgl"
 	"github.com/go-glx/vgl/glm"
 )
@@ -9,8 +11,8 @@ var e1RenderOrderInv = false
 var e1SubscribeSwitch = false
 
 func e1RectDrawOrder(rnd *vgl.Render) {
-	const rectSize = 50
-	const padding = 10
+	const slotsCount = 10
+	const slotPaddingPercent = 1
 
 	// this demonstrates how much order of drawing
 	// affect draw-calls instancing
@@ -38,24 +40,31 @@ func e1RectDrawOrder(rnd *vgl.Render) {
 		})
 	}
 
-	for x := int32(padding); x < appWidth-padding; x += rectSize + padding {
-		for y := int32(padding); y < appHeight-padding; y += rectSize + padding {
+	width, height := rnd.SurfaceSize()
+	slotWidth := int32(math.Floor(float64(width / slotsCount)))
+	slotHeight := int32(math.Floor(float64(height / slotsCount)))
+	paddingX := width / 100 * slotPaddingPercent
+	paddingY := height / 100 * slotPaddingPercent
+
+	for x := int32(0); x < width; x += slotWidth {
+		for y := int32(0); y < height; y += slotHeight {
+
 			var filled bool
 
 			if e1RenderOrderInv {
 				// 2 draw-calls
-				filled = x > appWidth/2
+				filled = x >= width/2
 			} else {
 				// 8 draw-calls
-				filled = y > appHeight/2
+				filled = y >= height/2
 			}
 
 			rnd.Draw2dRect(&vgl.Params2dRect{
 				Pos: [4]glm.Local2D{
-					{x, y},
-					{x + rectSize, y},
-					{x + rectSize, y + rectSize},
-					{x, y + rectSize},
+					{x + paddingX, y + paddingY},
+					{(x + slotWidth) - paddingX, y + paddingY},
+					{(x + slotWidth) - paddingX, (y + slotHeight) - paddingY},
+					{x + paddingX, (y + slotHeight) - paddingY},
 				},
 				Color:  colMain,
 				Filled: filled,
@@ -63,4 +72,5 @@ func e1RectDrawOrder(rnd *vgl.Render) {
 
 		}
 	}
+
 }

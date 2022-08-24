@@ -45,6 +45,7 @@ Basic triangles rendering:
 - [x] shaders rendering
 - [x] instancing, optimizations
 - [ ] buildIn shaders libs: point(+), line(+), circle, triangle(+), rect(+), polygon
+- [ ] move arch package to separate go module (go.mod deps split)
 - [ ] blend modes
 - [ ] 2d textures
 - [ ] bunnies stress test

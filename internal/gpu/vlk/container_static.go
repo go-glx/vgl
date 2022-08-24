@@ -99,20 +99,10 @@ func (c *Container) shaderManager() *shader.Manager {
 	return static(c, &c.vlkShaderManager,
 		func(x *shader.Manager) { x.Free() },
 		func() *shader.Manager {
-			mng := shader.NewManager(
+			return shader.NewManager(
 				c.logger,
 				c.logicalDevice(),
 			)
-
-			// register build-in shaders
-			mng.RegisterShader(defaultShaderPoint())
-			mng.RegisterShader(defaultShaderLine())
-			mng.RegisterShader(defaultShaderTriangle())
-			mng.RegisterShader(defaultShaderCircle())
-			mng.RegisterShader(defaultShaderRect())
-
-			//
-			return mng
 		},
 	)
 }

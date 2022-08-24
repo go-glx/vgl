@@ -20,10 +20,13 @@ func NewRender(wm arch.WindowManager, cfg *config.Config) *Render {
 	renderer.WarmUp()
 	renderer.GPUWait()
 
-	return &Render{
+	api := &Render{
 		closer: closer,
 		api:    renderer,
 	}
+
+	registerStdShaders(api)
+	return api
 }
 
 // Close SHOULD BE called on application exit
@@ -33,4 +36,10 @@ func (r *Render) Close() error {
 	r.api.GPUWait()
 	r.closer.close()
 	return nil
+}
+
+func registerStdShaders(api *Render) {
+	for _, buildInShader := range stdShaders {
+		api.RegisterShader(&buildInShader)
+	}
 }
