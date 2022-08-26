@@ -82,6 +82,8 @@ func (vlk *VLK) collectMemoryStats() {
 			vlk.collectMemoryGroupStats(stats, &vlk.stats.Memory.VertexBuffers)
 		case alloc.BufferTypeUniform:
 			vlk.collectMemoryGroupStats(stats, &vlk.stats.Memory.UniformBuffers)
+		case alloc.BufferTypeStorage:
+			vlk.collectMemoryGroupStats(stats, &vlk.stats.Memory.StorageBuffers)
 		}
 	}
 }

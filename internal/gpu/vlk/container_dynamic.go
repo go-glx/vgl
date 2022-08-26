@@ -79,7 +79,7 @@ func (c *Container) pipelineFactory() *pipeline.Factory {
 				c.logicalDevice(),
 				c.swapChain(),
 				c.renderPassMain(),
-				c.descriptorsBlueprint(),
+				c.descriptorsManager(),
 				c.pipelineCache(),
 			)
 		},

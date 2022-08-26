@@ -8,7 +8,7 @@ import (
 	"github.com/go-glx/vgl/glm"
 	"github.com/go-glx/vgl/internal/gpu/vlk/internal/alloc"
 	"github.com/go-glx/vgl/internal/gpu/vlk/internal/def"
-	"github.com/go-glx/vgl/internal/gpu/vlk/internal/descriptors"
+	"github.com/go-glx/vgl/internal/gpu/vlk/internal/dscptr"
 	"github.com/go-glx/vgl/internal/gpu/vlk/internal/pipeline"
 	"github.com/go-glx/vgl/internal/gpu/vlk/internal/shader"
 )
@@ -94,15 +94,8 @@ func (vlk *VLK) drawAll() {
 	// render
 	vlk.stats.DrawCalls = 0
 	vlk.cont.frameManager().FrameApplyCommands(func(imageID uint32, cb vulkan.CommandBuffer) {
-		// write global data to uniform buffers that need for every shader
-		view := glm.Mat4Identity()       // todo
-		projection := glm.Mat4Identity() // todo
-		surfaceSize := glm.Vec2{
-			X: float32(vlk.surfacesSize[vlk.surfaceInd][0]),
-			Y: float32(vlk.surfacesSize[vlk.surfaceInd][1]),
-		}
-
-		globalUbo := vlk.cont.descriptorsManager().UpdateGlobalUBO(uint8(imageID), view, projection, surfaceSize)
+		// update global uniforms
+		globalUBO := vlk.updateGlobalUniforms(imageID)
 
 		// split drawing queue to chunks
 		// and upload all required data for rendering into buffers
@@ -111,14 +104,34 @@ func (vlk *VLK) drawAll() {
 		vlk.stats.TimeFlushVertexBuffer = time.Since(ts)
 		vlk.stats.DrawChunks = len(drawChunks)
 
+		// draw all chunks
 		for _, drawChunk := range drawChunks {
-			vlk.stats.DrawCalls += vlk.drawChunk(cb, globalUbo, drawChunk)
+			vlk.stats.DrawCalls += vlk.drawChunk(cb, globalUBO, drawChunk)
 		}
 	})
 
 	// reset
 	vlk.queue = make([]drawCall, 0, queueCapacity)
 	vlk.currentBatch = &drawCall{}
+}
+
+func (vlk *VLK) updateGlobalUniforms(imageID uint32) vulkan.DescriptorSet {
+	// write global data to uniform buffers that need for every shader
+	view := glm.Mat4Identity()       // todo
+	projection := glm.Mat4Identity() // todo
+	surfaceSize := glm.Vec2{
+		X: float32(vlk.surfacesSize[vlk.surfaceInd][0]),
+		Y: float32(vlk.surfacesSize[vlk.surfaceInd][1]),
+	}
+
+	uboData := make([]byte, 0, glm.SizeOfMat4*2)
+	uboData = append(uboData, view.Data()...)
+	uboData = append(uboData, projection.Data()...)
+
+	return vlk.cont.descriptorsManager().UpdateSet(imageID, dscptr.LayoutIndexGlobal, map[uint32][]byte{
+		0: uboData,            // layout=0, binding=0 (vert shader only)
+		1: surfaceSize.Data(), // layout=0, binding=1 (frag shader only)
+	})
 }
 
 func (vlk *VLK) prepareDrawingChunks(imageID uint32) []drawCallChunk {
@@ -150,16 +163,15 @@ func (vlk *VLK) prepareDrawingChunks(imageID uint32) []drawCallChunk {
 	return drawChunks
 }
 
-func (vlk *VLK) drawChunk(cb vulkan.CommandBuffer, globalUBO descriptors.Data, drawChunk drawCallChunk) int {
+func (vlk *VLK) drawChunk(cb vulkan.CommandBuffer, globalUBO vulkan.DescriptorSet, drawChunk drawCallChunk) int {
 	// bind pipe with current shader and options
 	ts := time.Now()
 	pipeInfo := vlk.createPipeline(drawChunk)
 	vlk.stats.TimeCreatePipeline = time.Since(ts)
 	vulkan.CmdBindPipeline(cb, vulkan.PipelineBindPointGraphics, pipeInfo.Pipeline)
 
-	descriptorSets := []vulkan.DescriptorSet{
-		globalUBO.DescriptorSet,
-	}
+	// todo: bind shader descriptor sets (object and local levels)
+	descriptorSets := []vulkan.DescriptorSet{globalUBO}
 
 	// todo: not rebind sets, if [pipelineLayout and descriptorSets] not changed from previous call
 	vulkan.CmdBindDescriptorSets(
@@ -218,7 +230,6 @@ func (vlk *VLK) drawChunk(cb vulkan.CommandBuffer, globalUBO descriptors.Data, d
 
 func (vlk *VLK) createPipeline(call drawCallChunk) pipeline.Info {
 	return vlk.cont.pipelineFactory().NewPipeline(
-		pipeline.WithLayout(pipeline.LayoutTypeOnlyGlobal),
 		pipeline.WithStages([]vulkan.PipelineShaderStageCreateInfo{
 			call.shader.ModuleVert().Stage(),
 			call.shader.ModuleFrag().Stage(),

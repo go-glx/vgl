@@ -62,14 +62,14 @@ var (
 
 type (
 	shaderInputCircle2d struct {
-		vertexes []shaderInputCircle2dVertex
+		vertexes  []shaderInputCircle2dVertex
+		center    glm.Vec2
+		thickness glm.Vec1
+		smooth    glm.Vec1
 	}
 
 	shaderInputCircle2dVertex struct {
 		pos glm.Vec2
-		// color     glm.Vec4
-		// thickness glm.Vec1
-		// smooth    glm.Vec1
 	}
 )
 

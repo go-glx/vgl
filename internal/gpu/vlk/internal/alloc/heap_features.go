@@ -27,6 +27,8 @@ func (pf *pageFeatures) defaultBufferCapacity() uint32 {
 		return def.BufferVertexSizeBytes
 	case BufferTypeUniform:
 		return def.BufferUniformSizeBytes
+	case BufferTypeStorage:
+		return def.BufferStorageSizeBytes
 	default:
 		return 1 * 1024 * 128 // 128KB
 	}
@@ -69,6 +71,8 @@ func (pf *pageFeatures) vulkanUsageType() vulkan.BufferUsageFlagBits {
 		return vulkan.BufferUsageVertexBufferBit
 	case BufferTypeUniform:
 		return vulkan.BufferUsageUniformBufferBit
+	case BufferTypeStorage:
+		return vulkan.BufferUsageStorageBufferBit
 	default:
 		panic(fmt.Errorf("unknown buffer type %d", pf.bufferType))
 	}

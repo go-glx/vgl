@@ -1,48 +1,6 @@
-package descriptors
+package dscptr
 
-import (
-	"fmt"
-	"strings"
-
-	"github.com/vulkan-go/vulkan"
-)
-
-type (
-	BlueprintLayout struct {
-		index    layoutIndex
-		title    string
-		usage    string
-		layout   vulkan.DescriptorSetLayout
-		bindings layoutBindings
-	}
-)
-
-func (lay *BlueprintLayout) Ref() vulkan.DescriptorSetLayout {
-	return lay.layout
-}
-
-func (lay *BlueprintLayout) String() string {
-	return fmt.Sprintf("layout #%d (%s) with %d sets: %s",
-		lay.index,
-		lay.title,
-		len(lay.bindings),
-		lay.bindings.String(),
-	)
-}
-
-func (lb layoutBindings) String() string {
-	dst := make([]string, 0, len(lb))
-
-	for _, bindingSet := range lb {
-		dst = append(dst, fmt.Sprintf("[set#%d descriptors=%d type=%s]",
-			bindingSet.Binding,
-			bindingSet.DescriptorCount,
-			nameOfDescriptorType(bindingSet.DescriptorType),
-		))
-	}
-
-	return strings.Join(dst, ", ")
-}
+import "github.com/vulkan-go/vulkan"
 
 func nameOfDescriptorType(dt vulkan.DescriptorType) string {
 	switch dt {

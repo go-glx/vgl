@@ -5,7 +5,7 @@ import (
 	"github.com/go-glx/vgl/config"
 	"github.com/go-glx/vgl/internal/gpu/vlk/internal/alloc"
 	"github.com/go-glx/vgl/internal/gpu/vlk/internal/command"
-	"github.com/go-glx/vgl/internal/gpu/vlk/internal/descriptors"
+	"github.com/go-glx/vgl/internal/gpu/vlk/internal/dscptr"
 	"github.com/go-glx/vgl/internal/gpu/vlk/internal/frame"
 	"github.com/go-glx/vgl/internal/gpu/vlk/internal/instance"
 	"github.com/go-glx/vgl/internal/gpu/vlk/internal/logical"
@@ -38,19 +38,18 @@ type Container struct {
 
 	// static
 
-	vlkRef                  *VLK
-	vlkInstance             *instance.Instance
-	vlkSurface              *surface.Surface
-	vlkPhysicalDevice       *physical.Device
-	vlkLogicalDevice        *logical.Device
-	vlkPipelineCache        *pipeline.Cache
-	vlkShaderManager        *shader.Manager
-	vlkMemoryAllocator      *alloc.Allocator
-	vlkAllocBuffers         *alloc.Buffers
-	vlkAllocHeap            *alloc.Heap
-	vlkDescriptorsManager   *descriptors.Manager
-	vlkDescriptorsBlueprint *descriptors.Blueprint
-	vlkDescriptorsPool      *descriptors.Pool
+	vlkRef                *VLK
+	vlkInstance           *instance.Instance
+	vlkSurface            *surface.Surface
+	vlkPhysicalDevice     *physical.Device
+	vlkLogicalDevice      *logical.Device
+	vlkPipelineCache      *pipeline.Cache
+	vlkShaderManager      *shader.Manager
+	vlkMemoryAllocator    *alloc.Allocator
+	vlkAllocBuffers       *alloc.Buffers
+	vlkAllocHeap          *alloc.Heap
+	vlkDescriptorsPool    *dscptr.Pool
+	vlkDescriptorsManager *dscptr.Manager
 
 	// dynamic
 

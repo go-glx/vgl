@@ -96,6 +96,13 @@ const BufferIndexSizeBytes = 4 * 1024 * 1024
 // - equal of real buffer usage * 2
 const BufferUniformSizeBytes = 1024
 
+// BufferStorageSizeBytes
+// Common use storage buffer for shaders
+// Recommended value:
+// - big enough to store good chunk of random common use data
+// - 32MB good in most cases
+const BufferStorageSizeBytes = 32 * 1024 * 1024
+
 // BufferIndexMaxInstances How many index data will be generated
 // and saved to fast-persistent GPU buffer memory
 // bufferSize = BufferIndexMaxInstances * instanceSize

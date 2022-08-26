@@ -25,6 +25,7 @@ type MemoryStats struct {
 	IndexBuffers   UsageStats
 	VertexBuffers  UsageStats
 	UniformBuffers UsageStats
+	StorageBuffers UsageStats
 }
 
 type UsageStats struct {

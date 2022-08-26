@@ -50,6 +50,7 @@ var (
 			UseGlobalUniforms: true,
 		},
 	}
+
 	stdShaderTriangle = ParamsRegisterShader{
 		ShaderName:       buildInShaderTriangle,
 		ProgramVert:      shaders.Universal2DVertSpv(),

@@ -4,6 +4,12 @@ import (
 	"github.com/vulkan-go/vulkan"
 )
 
+func withDefaultLayout() Initializer {
+	return func(info *vulkan.GraphicsPipelineCreateInfo, f *Factory) {
+		info.Layout = f.defaultPipelineLayout
+	}
+}
+
 func withDefaultViewport() Initializer {
 	return func(info *vulkan.GraphicsPipelineCreateInfo, f *Factory) {
 		info.PViewportState = &vulkan.PipelineViewportStateCreateInfo{

@@ -1,28 +1,10 @@
 package pipeline
 
 import (
-	"fmt"
-
 	"github.com/vulkan-go/vulkan"
 )
 
 type Initializer = func(*vulkan.GraphicsPipelineCreateInfo, *Factory)
-type LayoutType uint8
-
-const (
-	LayoutTypeOnlyGlobal LayoutType = iota
-)
-
-func WithLayout(layout LayoutType) Initializer {
-	return func(info *vulkan.GraphicsPipelineCreateInfo, f *Factory) {
-		switch layout {
-		case LayoutTypeOnlyGlobal:
-			info.Layout = f.pipelineLayoutOnlyGlobal
-		default:
-			panic(fmt.Errorf("unknown pipeline layout %d", layout))
-		}
-	}
-}
 
 func WithStages(stages []vulkan.PipelineShaderStageCreateInfo) Initializer {
 	return func(info *vulkan.GraphicsPipelineCreateInfo, _ *Factory) {

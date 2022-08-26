@@ -6,7 +6,7 @@ import (
 	"github.com/vulkan-go/vulkan"
 
 	"github.com/go-glx/vgl/internal/gpu/vlk/internal/alloc"
-	"github.com/go-glx/vgl/internal/gpu/vlk/internal/descriptors"
+	"github.com/go-glx/vgl/internal/gpu/vlk/internal/dscptr"
 	"github.com/go-glx/vgl/internal/gpu/vlk/internal/instance"
 	"github.com/go-glx/vgl/internal/gpu/vlk/internal/logical"
 	"github.com/go-glx/vgl/internal/gpu/vlk/internal/physical"
@@ -144,42 +144,28 @@ func (c *Container) allocHeap() *alloc.Heap {
 	)
 }
 
-func (c *Container) descriptorsManager() *descriptors.Manager {
+func (c *Container) descriptorsPool() *dscptr.Pool {
+	return static(c, &c.vlkDescriptorsPool,
+		func(x *dscptr.Pool) { x.Free() },
+		func() *dscptr.Pool {
+			return dscptr.NewPool(
+				c.logger,
+				c.logicalDevice(),
+			)
+		},
+	)
+}
+
+func (c *Container) descriptorsManager() *dscptr.Manager {
 	return static(c, &c.vlkDescriptorsManager,
-		func(x *descriptors.Manager) {},
-		func() *descriptors.Manager {
-			return descriptors.NewManager(
+		func(x *dscptr.Manager) {},
+		func() *dscptr.Manager {
+			return dscptr.NewManager(
 				c.logger,
 				c.logicalDevice(),
 				c.physicalDevice(),
-				c.descriptorsPool(),
 				c.allocHeap(),
-				c.descriptorsBlueprint(),
-			)
-		},
-	)
-}
-
-func (c *Container) descriptorsPool() *descriptors.Pool {
-	return static(c, &c.vlkDescriptorsPool,
-		func(x *descriptors.Pool) { x.Free() },
-		func() *descriptors.Pool {
-			return descriptors.NewPool(
-				c.logger,
-				c.logicalDevice(),
-				c.descriptorsBlueprint(),
-			)
-		},
-	)
-}
-
-func (c *Container) descriptorsBlueprint() *descriptors.Blueprint {
-	return static(c, &c.vlkDescriptorsBlueprint,
-		func(x *descriptors.Blueprint) { x.Free() },
-		func() *descriptors.Blueprint {
-			return descriptors.NewBlueprint(
-				c.logger,
-				c.logicalDevice(),
+				c.descriptorsPool(),
 			)
 		},
 	)

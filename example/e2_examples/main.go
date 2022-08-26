@@ -130,7 +130,7 @@ func onFrameEndStats(stats glm.Stats) {
 	fmt.Printf(""+
 		"+%3.0fs | FPS=%-2d  drawCalls=%.0f \n"+
 		"  us> | Pipl=%-4.0f  WrtVert=%-4.0f  DrwInd=%-4.0f  Drw=%-4.0f\n"+
-		"  mem | total=%s  vert=%s  ind=%s  ubo=%s\n",
+		"  mem | total=%s  vert=%s  ind=%s  ubo=%s  ssbo=%s\n",
 		elapsed.Seconds(),
 		stats.FPS,
 		float32(combinedStats.DrawCalls)/avg,
@@ -142,6 +142,7 @@ func onFrameEndStats(stats glm.Stats) {
 		printMem(stats.Memory.VertexBuffers.Size, stats.Memory.VertexBuffers.Capacity),
 		printMem(stats.Memory.IndexBuffers.Size, stats.Memory.IndexBuffers.Capacity),
 		printMem(stats.Memory.UniformBuffers.Size, stats.Memory.UniformBuffers.Capacity),
+		printMem(stats.Memory.StorageBuffers.Size, stats.Memory.StorageBuffers.Capacity),
 	)
 
 	combinedStats.Reset()

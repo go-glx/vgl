@@ -7,9 +7,10 @@ import (
 )
 
 const (
-	BufferTypeVertex  BufferType = iota // will be mapped to GPU with vertex buffer specifications
-	BufferTypeIndex                     // will be mapped to GPU with vertex index specifications
-	BufferTypeUniform                   // will be mapped to GPU with vertex uniform specifications
+	BufferTypeVertex  BufferType = iota // special vertex buffer for vert shaders, contain 2D/3D per vertex information
+	BufferTypeIndex                     // index buffer (similar to []uint16 slice), can store precomputed indexes for all shaders
+	BufferTypeUniform                   // uniform buffer, will store global UBO data and fast push constant updates for 3D models (local->world space matrices)
+	BufferTypeStorage                   // common use data storage, good for any other types of data
 )
 
 const (
