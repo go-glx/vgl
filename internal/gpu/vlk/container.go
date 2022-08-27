@@ -3,18 +3,6 @@ package vlk
 import (
 	"github.com/go-glx/vgl/arch"
 	"github.com/go-glx/vgl/config"
-	"github.com/go-glx/vgl/internal/gpu/vlk/internal/alloc"
-	"github.com/go-glx/vgl/internal/gpu/vlk/internal/command"
-	"github.com/go-glx/vgl/internal/gpu/vlk/internal/dscptr"
-	"github.com/go-glx/vgl/internal/gpu/vlk/internal/frame"
-	"github.com/go-glx/vgl/internal/gpu/vlk/internal/instance"
-	"github.com/go-glx/vgl/internal/gpu/vlk/internal/logical"
-	"github.com/go-glx/vgl/internal/gpu/vlk/internal/physical"
-	"github.com/go-glx/vgl/internal/gpu/vlk/internal/pipeline"
-	"github.com/go-glx/vgl/internal/gpu/vlk/internal/renderpass"
-	"github.com/go-glx/vgl/internal/gpu/vlk/internal/shader"
-	"github.com/go-glx/vgl/internal/gpu/vlk/internal/surface"
-	"github.com/go-glx/vgl/internal/gpu/vlk/internal/swapchain"
 )
 
 type closer interface {
@@ -35,29 +23,6 @@ type Container struct {
 	// it cannot be part of fm struct, because FM
 	// will be recreated every time, when GPU suboptimal (window resize)
 	vlkFrameRenderingAvailable bool
-
-	// static
-
-	vlkRef                *VLK
-	vlkInstance           *instance.Instance
-	vlkSurface            *surface.Surface
-	vlkPhysicalDevice     *physical.Device
-	vlkLogicalDevice      *logical.Device
-	vlkPipelineCache      *pipeline.Cache
-	vlkShaderManager      *shader.Manager
-	vlkMemoryAllocator    *alloc.Allocator
-	vlkAllocBuffers       *alloc.Buffers
-	vlkAllocHeap          *alloc.Heap
-	vlkDescriptorsPool    *dscptr.Pool
-	vlkDescriptorsManager *dscptr.Manager
-
-	// dynamic
-
-	vlkCommandPool     *command.Pool
-	vlkSwapChain       *swapchain.Chain
-	vlkFrameManager    *frame.Manager
-	vlkRenderPassMain  *renderpass.Pass
-	vlkPipelineFactory *pipeline.Factory
 }
 
 func NewContainer(
@@ -91,15 +56,12 @@ func (c *Container) rebuild() {
 		// lazy recreated when needed by graphic pipeline
 
 		wWidth, wHeight := c.wm.GetFramebufferSize()
-		c.vlkRef.surfacesSize[0] = [2]uint32{uint32(wWidth), uint32(wHeight)}
+		c.VulkanRenderer().surfacesSize[0] = [2]uint32{uint32(wWidth), uint32(wHeight)}
 	})
 }
 
 func (c *Container) VulkanRenderer() *VLK {
-	return static(c, &c.vlkRef,
-		func(x *VLK) {},
-		func() *VLK {
-			return newVLK(c)
-		},
-	)
+	return static(c, func() *VLK {
+		return newVLK(c)
+	})
 }

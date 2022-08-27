@@ -1,44 +1,51 @@
 package vlk
 
-func static[T any](c *Container, target **T, down func(*T), up func() *T) *T {
-	// already created
-	if *target != nil {
-		return *target
+import (
+	"fmt"
+)
+
+type (
+	resource interface {
+		Free()
 	}
 
-	// up
-	*target = up()
+	resourceQueueCloser interface {
+		EnqueueFree(fn func())
+	}
 
-	// down
-	c.closer.EnqueueFree(func() {
-		down(*target)
-		*target = nil
+	resourcesDict map[string]any
+)
+
+var knownResources = resourcesDict{}
+
+func resolver[T any](c resourceQueueCloser, factory func() *T) *T {
+	// take unique ptr to golang function
+	// all static function (defined in compile time), always has
+	// same memory pointers. So this is unique identify for factory
+	// that create this resource
+	ptr := fmt.Sprintf("%p", factory)
+
+	if target, exist := knownResources[ptr]; exist {
+		return target.(*T)
+	}
+
+	knownResources[ptr] = factory()
+
+	c.EnqueueFree(func() {
+		if res, ok := knownResources[ptr].(resource); ok {
+			res.Free()
+		}
+
+		delete(knownResources, ptr)
 	})
 
-	// return created
-	return *target
+	return knownResources[ptr].(*T)
 }
 
-// dynamic is same as static, but down function enqueued to rebuilder
-// instead of global closer. Rebuilder can be called many times
-// in engine run, for example on window resize event. This will
-// break and free all dynamic resources, like graphics pipelines
-// and next lazy call should rebuild this from scratch
-func dynamic[T any](c *Container, target **T, down func(*T), up func() *T) *T {
-	// already created
-	if *target != nil {
-		return *target
-	}
+func static[T any](c *Container, factory func() *T) *T {
+	return resolver(c.closer, factory)
+}
 
-	// up
-	*target = up()
-
-	// down
-	c.rebuilder.enqueue(func() {
-		down(*target)
-		*target = nil
-	})
-
-	// return created
-	return *target
+func dynamic[T any](c *Container, factory func() *T) *T {
+	return resolver(c.rebuilder, factory)
 }

@@ -62,14 +62,20 @@ func NewManager(
 	}
 }
 
-func (m *Manager) Layouts() []vulkan.DescriptorSetLayout {
-	layouts := make([]vulkan.DescriptorSetLayout, 0, len(m.layouts))
-
+func (m *Manager) Free() {
 	for _, layout := range m.layouts {
-		layouts = append(layouts, layout)
+		vulkan.DestroyDescriptorSetLayout(m.ld.Ref(), layout, nil)
+	}
+}
+
+func (m *Manager) Layouts() []vulkan.DescriptorSetLayout {
+	ordered := [totalLayouts]vulkan.DescriptorSetLayout{}
+
+	for index, layout := range m.layouts {
+		ordered[index] = layout
 	}
 
-	return layouts
+	return ordered[:]
 }
 
 func (m *Manager) UpdateSet(

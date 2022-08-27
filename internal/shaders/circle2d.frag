@@ -33,10 +33,10 @@ layout(location = 0) out vec4 outColor;
 void main() {
     vec2 viewport = vec2(ubo.surfaceSize.x, ubo.surfaceSize.y);
     vec2 uv = (gl_FragCoord.xy / viewport) * 2 -1;
-//
-//    float len = length(uv - inPos);
 
-    outColor = vec4(uv, 0, 1);
+    float len = length(uv - props.center);
+
+    outColor = vec4(vec3(len), 1);
 }
 
 //void main() {

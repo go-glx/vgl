@@ -30,6 +30,8 @@ type (
 	blueprintBindingsMap = map[bindingIndex]blueprintBinding
 )
 
+const totalLayouts = 3 // should match count elements in blueprint
+
 var blueprint = blueprintLayoutMap{
 	LayoutIndexGlobal: {
 		title:       "Global",
@@ -45,36 +47,36 @@ var blueprint = blueprintLayoutMap{
 			},
 		},
 	},
-	// LayoutIndexObject: {
-	// 	title:       "Object",
-	// 	description: "general purpose custom object buffers",
-	// 	bindings: blueprintBindingsMap{
-	// 		0: {
-	// 			descriptorType: vulkan.DescriptorTypeStorageBuffer,
-	// 			flags:          vulkan.ShaderStageVertexBit | vulkan.ShaderStageFragmentBit,
-	// 		},
-	// 		1: {
-	// 			descriptorType: vulkan.DescriptorTypeStorageBuffer,
-	// 			flags:          vulkan.ShaderStageVertexBit | vulkan.ShaderStageFragmentBit,
-	// 		},
-	// 		2: {
-	// 			descriptorType: vulkan.DescriptorTypeStorageBuffer,
-	// 			flags:          vulkan.ShaderStageVertexBit | vulkan.ShaderStageFragmentBit,
-	// 		},
-	// 		3: {
-	// 			descriptorType: vulkan.DescriptorTypeStorageBuffer,
-	// 			flags:          vulkan.ShaderStageVertexBit | vulkan.ShaderStageFragmentBit,
-	// 		},
-	// 	},
-	// },
-	// LayoutIndexLocal: {
-	// 	title:       "Local",
-	// 	description: "Small uniform with object transform matrix, used only for 3D objects",
-	// 	bindings: blueprintBindingsMap{
-	// 		0: {
-	// 			descriptorType: vulkan.DescriptorTypeUniformBuffer,
-	// 			flags:          vulkan.ShaderStageVertexBit,
-	// 		},
-	// 	},
-	// },
+	LayoutIndexObject: {
+		title:       "Object",
+		description: "general purpose custom object buffers",
+		bindings: blueprintBindingsMap{
+			0: {
+				descriptorType: vulkan.DescriptorTypeStorageBuffer,
+				flags:          vulkan.ShaderStageAllGraphics,
+			},
+			1: {
+				descriptorType: vulkan.DescriptorTypeStorageBuffer,
+				flags:          vulkan.ShaderStageAllGraphics,
+			},
+			2: {
+				descriptorType: vulkan.DescriptorTypeStorageBuffer,
+				flags:          vulkan.ShaderStageAllGraphics,
+			},
+			3: {
+				descriptorType: vulkan.DescriptorTypeStorageBuffer,
+				flags:          vulkan.ShaderStageAllGraphics,
+			},
+		},
+	},
+	LayoutIndexLocal: {
+		title:       "Local",
+		description: "Small uniform with object transform matrix, used only for 3D objects",
+		bindings: blueprintBindingsMap{
+			0: {
+				descriptorType: vulkan.DescriptorTypeUniformBuffer,
+				flags:          vulkan.ShaderStageVertexBit,
+			},
+		},
+	},
 }

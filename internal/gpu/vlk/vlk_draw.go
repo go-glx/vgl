@@ -106,7 +106,7 @@ func (vlk *VLK) drawAll() {
 
 		// draw all chunks
 		for _, drawChunk := range drawChunks {
-			vlk.stats.DrawCalls += vlk.drawChunk(cb, globalUBO, drawChunk)
+			vlk.stats.DrawCalls += vlk.drawChunk(cb, imageID, globalUBO, drawChunk)
 		}
 	})
 
@@ -163,15 +163,21 @@ func (vlk *VLK) prepareDrawingChunks(imageID uint32) []drawCallChunk {
 	return drawChunks
 }
 
-func (vlk *VLK) drawChunk(cb vulkan.CommandBuffer, globalUBO vulkan.DescriptorSet, drawChunk drawCallChunk) int {
+func (vlk *VLK) drawChunk(cb vulkan.CommandBuffer, imageID uint32, globalUBO vulkan.DescriptorSet, drawChunk drawCallChunk) int {
 	// bind pipe with current shader and options
 	ts := time.Now()
 	pipeInfo := vlk.createPipeline(drawChunk)
 	vlk.stats.TimeCreatePipeline = time.Since(ts)
 	vulkan.CmdBindPipeline(cb, vulkan.PipelineBindPointGraphics, pipeInfo.Pipeline)
 
+	// todo: test data write (remove this)
+	testCenter := glm.Vec2{X: 0.25, Y: 0.25}
+	objectSet := vlk.cont.descriptorsManager().UpdateSet(imageID, dscptr.LayoutIndexObject, map[uint32][]byte{
+		0: testCenter.Data(),
+	})
+
 	// todo: bind shader descriptor sets (object and local levels)
-	descriptorSets := []vulkan.DescriptorSet{globalUBO}
+	descriptorSets := []vulkan.DescriptorSet{globalUBO, objectSet}
 
 	// todo: not rebind sets, if [pipelineLayout and descriptorSets] not changed from previous call
 	vulkan.CmdBindDescriptorSets(

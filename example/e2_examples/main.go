@@ -42,7 +42,7 @@ var demos = map[int]func(rnd *vgl.Render){
 func main() {
 	wm := arch.NewGLFW("examples", "VGL", false, appWidth, appHeight)
 	rnd := vgl.NewRender(wm, config.NewConfig(
-		config.WithDebug(false),
+		config.WithDebug(true),
 		config.WithMobileFriendly(true),
 	))
 	rnd.ListenStats(onFrameEndStats)

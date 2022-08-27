@@ -10,7 +10,7 @@ func newRebuilder() *rebuilder {
 	}
 }
 
-func (c *rebuilder) enqueue(fn func()) {
+func (c *rebuilder) EnqueueFree(fn func()) {
 	c.queue = append(c.queue, fn)
 }
 
