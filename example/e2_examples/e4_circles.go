@@ -7,29 +7,25 @@ import (
 	"github.com/go-glx/vgl/glm"
 )
 
-type animRadiusX struct{}
-type animRadiusY struct{}
+type animRadius struct{}
 type animTransformX struct{}
 type animTransformY struct{}
+type animHoleSize struct{}
+type animSmooth struct{}
 
 func e4Circles(rnd *vgl.Render) {
 	w, h := rnd.SurfaceSize()
 	centerX, centerY := w/2, h/2
 
-	radiusW := int32(anim(animRadiusX{}, time.Second*5, 50, 150))
-	radiusH := int32(anim(animRadiusY{}, time.Second*30, 100, 200))
-
-	transformX := int32(anim(animTransformX{}, time.Second*10, -100, 100))
+	radius := int32(anim(animRadius{}, time.Second*5, 150, 300))
+	transformX := int32(anim(animTransformX{}, time.Second*10, -200, 200))
 	transformY := int32(anim(animTransformY{}, time.Second*15, -50, 50))
+	holeSize := anim(animHoleSize{}, time.Second*25, 0, 0.99)
+	smooth := anim(animSmooth{}, time.Second*5, 0.005, 0.01)
 
 	rnd.Draw2dCircle(&vgl.Params2dCircle{
-		PosArea: [4]glm.Local2D{
-			{transformX + (centerX - radiusW), transformY + (centerY - radiusH)},
-			{transformX + (centerX + (radiusW * 2)), transformY + (centerY - radiusH)},
-			{transformX + (centerX + radiusW), transformY + (centerY + radiusH)},
-			{transformX + (centerX - (radiusW * 2)), transformY + (centerY + radiusH)},
-		},
-		PosUseArea: true,
+		Center: [2]int32{centerX + transformX, centerY + transformY},
+		Radius: radius,
 		ColorGradient: [4]glm.Color{
 			glm.NewColor(255, 0, 0, 255),
 			glm.NewColor(0, 255, 0, 255),
@@ -37,5 +33,21 @@ func e4Circles(rnd *vgl.Render) {
 			glm.NewColor(255, 128, 0, 255),
 		},
 		ColorUseGradient: true,
+		HoleRadius:       holeSize,
+		Smooth:           smooth,
+	})
+
+	rnd.Draw2dCircle(&vgl.Params2dCircle{
+		Center: [2]int32{centerX - transformX, centerY + transformY},
+		Radius: radius,
+		ColorGradient: [4]glm.Color{
+			glm.NewColor(255, 0, 0, 255),
+			glm.NewColor(0, 255, 0, 255),
+			glm.NewColor(0, 0, 255, 255),
+			glm.NewColor(255, 128, 0, 255),
+		},
+		ColorUseGradient: true,
+		HoleRadius:       holeSize,
+		Smooth:           smooth,
 	})
 }

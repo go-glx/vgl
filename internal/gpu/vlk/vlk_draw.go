@@ -18,10 +18,12 @@ import (
 const queueCapacity = 32
 
 type drawCallChunk struct {
-	shader      *shader.Shader
-	chunks      []alloc.Chunk
-	indexBuffer alloc.Allocation
-	polygonMode vulkan.PolygonMode
+	shader            *shader.Shader
+	chunks            []alloc.Chunk
+	indexBuffer       alloc.Allocation
+	storageBuffer     vulkan.DescriptorSet
+	storageBufferUsed bool
+	polygonMode       vulkan.PolygonMode
 }
 
 type drawCall struct {
@@ -106,7 +108,7 @@ func (vlk *VLK) drawAll() {
 
 		// draw all chunks
 		for _, drawChunk := range drawChunks {
-			vlk.stats.DrawCalls += vlk.drawChunk(cb, imageID, globalUBO, drawChunk)
+			vlk.stats.DrawCalls += vlk.drawChunk(cb, globalUBO, drawChunk)
 		}
 	})
 
@@ -149,12 +151,16 @@ func (vlk *VLK) prepareDrawingChunks(imageID uint32) []drawCallChunk {
 			continue
 		}
 
+		storageDSet, storageUsed := vlk.prepareStorageBuffer(imageID, drawCall.instances)
+
 		uniqShaders[drawCall.shader.Meta().ID()] = struct{}{}
 		drawChunks = append(drawChunks, drawCallChunk{
-			shader:      drawCall.shader,
-			chunks:      buff.WriteVertexBuffersFromInstances(imageID, drawCall.instances),
-			indexBuffer: vlk.indexBufferOf(drawCall.shader),
-			polygonMode: drawCall.polygonMode,
+			shader:            drawCall.shader,
+			chunks:            buff.WriteVertexBuffersFromInstances(imageID, drawCall.instances),
+			indexBuffer:       vlk.indexBufferOf(drawCall.shader),
+			storageBuffer:     storageDSet,
+			storageBufferUsed: storageUsed,
+			polygonMode:       drawCall.polygonMode,
 		})
 	}
 
@@ -163,23 +169,43 @@ func (vlk *VLK) prepareDrawingChunks(imageID uint32) []drawCallChunk {
 	return drawChunks
 }
 
-func (vlk *VLK) drawChunk(cb vulkan.CommandBuffer, imageID uint32, globalUBO vulkan.DescriptorSet, drawChunk drawCallChunk) int {
+func (vlk *VLK) prepareStorageBuffer(imageID uint32, instances []shader.InstanceData) (vulkan.DescriptorSet, bool) {
+	data := make([]byte, 0, 256)
+
+	for _, inst := range instances {
+		instData := inst.StorageData()
+
+		if len(instData) == 0 {
+			continue
+		}
+
+		data = append(data, instData...)
+	}
+
+	if len(data) == 0 {
+		return nil, false
+	}
+
+	return vlk.cont.descriptorsManager().UpdateSet(imageID, dscptr.LayoutIndexObject, map[uint32][]byte{
+		0: data, // layout=1, binding=0 (all shaders)
+	}), true
+}
+
+func (vlk *VLK) drawChunk(cb vulkan.CommandBuffer, globalUBO vulkan.DescriptorSet, drawChunk drawCallChunk) int {
 	// bind pipe with current shader and options
 	ts := time.Now()
 	pipeInfo := vlk.createPipeline(drawChunk)
 	vlk.stats.TimeCreatePipeline = time.Since(ts)
 	vulkan.CmdBindPipeline(cb, vulkan.PipelineBindPointGraphics, pipeInfo.Pipeline)
 
-	// todo: test data write (remove this)
-	testCenter := glm.Vec2{X: 0.25, Y: 0.25}
-	objectSet := vlk.cont.descriptorsManager().UpdateSet(imageID, dscptr.LayoutIndexObject, map[uint32][]byte{
-		0: testCenter.Data(),
-	})
+	// layout = 0, global data
+	descriptorSets := []vulkan.DescriptorSet{globalUBO}
 
-	// todo: bind shader descriptor sets (object and local levels)
-	descriptorSets := []vulkan.DescriptorSet{globalUBO, objectSet}
+	// layout = 1, object data
+	if drawChunk.storageBufferUsed {
+		descriptorSets = append(descriptorSets, drawChunk.storageBuffer)
+	}
 
-	// todo: not rebind sets, if [pipelineLayout and descriptorSets] not changed from previous call
 	vulkan.CmdBindDescriptorSets(
 		cb, vulkan.PipelineBindPointGraphics,
 		pipeInfo.Layout, 0,
@@ -201,13 +227,13 @@ func (vlk *VLK) drawChunk(cb vulkan.CommandBuffer, imageID uint32, globalUBO vul
 	for _, chunk := range drawChunk.chunks {
 		// bind vertex buffer
 		buffers := []vulkan.Buffer{chunk.Buffer}
-		offsets := []vulkan.DeviceSize{chunk.BufferOffset}
+		offsets := []vulkan.DeviceSize{chunk.Offset}
 		vulkan.CmdBindVertexBuffers(cb, 0, uint32(len(buffers)), buffers, offsets)
 
 		// Drawing Type: 1 (optimized indexed draw - instancing)
 		if drawChunk.indexBuffer.Valid {
-			instPerCall := min(chunk.InstancesCount, def.BufferIndexMaxInstances)
-			for firstInst := uint32(0); firstInst < chunk.InstancesCount; firstInst += instPerCall {
+			instPerCall := min(chunk.InstanceCount, def.BufferIndexMaxInstances)
+			for firstInst := uint32(0); firstInst < chunk.InstanceCount; firstInst += instPerCall {
 				// if we try to draw more instances, that fit in warm index cache (>65536)
 				// we split it into chunks of def.BufferIndexMaxInstances size each
 
@@ -222,7 +248,7 @@ func (vlk *VLK) drawChunk(cb vulkan.CommandBuffer, imageID uint32, globalUBO vul
 		}
 
 		// Drawing Type: 2 (default fallback)
-		for i := uint32(0); i < chunk.InstancesCount; i++ {
+		for i := uint32(0); i < chunk.InstanceCount; i++ {
 			ts := time.Now()
 			vulkan.CmdDraw(cb, indexCount, 1, i*indexCount, 0)
 			vlk.stats.TimeRenderFallback += time.Since(ts)

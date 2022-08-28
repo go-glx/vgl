@@ -8,9 +8,9 @@ import (
 )
 
 type Chunk struct {
-	Buffer         vulkan.Buffer
-	BufferOffset   vulkan.DeviceSize
-	InstancesCount uint32
+	InstanceCount uint32
+	Buffer        vulkan.Buffer
+	Offset        vulkan.DeviceSize
 }
 
 type Buffers struct {
@@ -84,14 +84,14 @@ func (b *Buffers) WriteVertexBuffersFromInstances(frameID uint32, instances []sh
 
 		// add chunk with GPU ptr
 		chunks = append(chunks, Chunk{
-			Buffer:         alloc.Buffer,
-			BufferOffset:   alloc.Offset,
-			InstancesCount: uint32(len(instances)),
+			Buffer:        alloc.Buffer,
+			Offset:        alloc.Offset,
+			InstanceCount: uint32(len(instances)),
 		})
 	}
 
 	for _, instance := range instances {
-		data := instance.BindingData()
+		data := instance.VertexData()
 		size := len(data)
 
 		if size > spaceLeft {

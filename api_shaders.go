@@ -46,22 +46,6 @@ type (
 		//   * ----- *
 		//   3       2
 		Indexes []uint16
-
-		// will allow usage of global UBO layer=0
-		// this UBO object contain global application values:
-		//    vertex shader:
-		//      set=0, binding = 0
-		//        - view matrix (mat4)
-		//        - projection matrix (mat4)
-		//    index shader:
-		//      set=0, binding = 1
-		//        - surfaceSize (vec2) - current surface size (usually screen) in pixels (width/height)
-		UseGlobalUniforms bool
-
-		// additional layout for shader-wide local uniforms
-		// provided input values for shader, will be written to
-		// special uniform/storage buffer and auto bind to shader set with layout=1
-		LocalUniforms []ParamsRegisterShaderInputLocalUniform
 	}
 
 	ParamsRegisterShaderInputVertexBinding struct {
@@ -92,10 +76,6 @@ type (
 		//   vec3 = vulkan.FormatR32g32b32Sfloat
 		//   vec4 = vulkan.FormatR32g32b32a32Sfloat
 		Format vulkan.Format
-	}
-
-	ParamsRegisterShaderInputLocalUniform struct {
-		// todo
 	}
 )
 

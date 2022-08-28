@@ -277,16 +277,14 @@ func (r *Render) Draw2dRect(p *Params2dRect) {
 
 // Params2dCircle is input for Draw2dCircle
 type Params2dCircle struct {
-	PosCenter        glm.Local2D    // pos: v1: circle center pos
-	PosCenterRadius  int32          // pos: v1: radius of circle in px
-	PosArea          [4]glm.Local2D // pos: v2: circle bounding box (allow drawing ellipses)
-	PosUseArea       bool           // will use PosArea instead of PosCenter+PosCenterRadius
-	HoleRadius       float32        // value [0 .. 1]. 0=without hole, 0.1=90% circle is visible, 1=invisible circle
-	Smooth           float32        // value [-1, 0 .. 1]. -1=no smooth, 0.005=default, 1=full blur (default value will be used, if no value (0) specified)
-	Color            glm.Color      // color for circle body/border
-	ColorGradient    [4]glm.Color   // color for circle part (tl, tr, br, bl)
-	ColorUseGradient bool           // will use ColorGradient instead of Color
-	NoCulling        bool           // will send render command to GPU, even if all vertexes outside of visible screen
+	Center           glm.Local2D  // pos: v1: circle center pos
+	Radius           int32        // pos: v1: radius of circle in px
+	HoleRadius       float32      // value [0 .. 1]. 0=without hole, 0.1=90% circle is visible, 1=invisible circle
+	Smooth           float32      // value [-1, 0 .. 1]. -1=no smooth, 0.005=default, 1=full blur (default value will be used, if no value (0) specified)
+	Color            glm.Color    // color for circle body/border
+	ColorGradient    [4]glm.Color // color for circle part (tl, tr, br, bl)
+	ColorUseGradient bool         // will use ColorGradient instead of Color
+	NoCulling        bool         // will send render command to GPU, even if all vertexes outside of visible screen
 }
 
 // Draw2dCircle will draw circle on current surface with current blend mode
@@ -295,19 +293,12 @@ func (r *Render) Draw2dCircle(p *Params2dCircle) {
 		return
 	}
 
-	pos := [4]glm.Vec2{}
-	if p.PosUseArea {
-		pos[0] = r.toLocalSpace2d(p.PosArea[0])
-		pos[1] = r.toLocalSpace2d(p.PosArea[1])
-		pos[2] = r.toLocalSpace2d(p.PosArea[2])
-		pos[3] = r.toLocalSpace2d(p.PosArea[3])
-	} else {
-		radiusX := r.toLocalAspectRationX(p.PosCenterRadius)
-		radiusY := r.toLocalAspectRationY(p.PosCenterRadius)
-		pos[0] = r.toLocalSpace2d(p.PosCenter).Add(-radiusX, -radiusY) // tl
-		pos[1] = r.toLocalSpace2d(p.PosCenter).Add(radiusX, -radiusY)  // tr
-		pos[2] = r.toLocalSpace2d(p.PosCenter).Add(radiusX, radiusY)   // br
-		pos[3] = r.toLocalSpace2d(p.PosCenter).Add(-radiusX, radiusY)  // bl
+	radius := r.toLocalAspectRation(p.Radius)
+	pos := [4]glm.Vec2{
+		r.toLocalSpace2d(glm.Local2D{p.Center[0] - p.Radius, p.Center[1] - p.Radius}), // tl
+		r.toLocalSpace2d(glm.Local2D{p.Center[0] + p.Radius, p.Center[1] - p.Radius}), // tr
+		r.toLocalSpace2d(glm.Local2D{p.Center[0] + p.Radius, p.Center[1] + p.Radius}), // br
+		r.toLocalSpace2d(glm.Local2D{p.Center[0] - p.Radius, p.Center[1] + p.Radius}), // bl
 	}
 
 	if !p.NoCulling && !r.cullingRect(pos) {
@@ -337,21 +328,30 @@ func (r *Render) Draw2dCircle(p *Params2dCircle) {
 		color[3] = color[0]
 	}
 
-	// todo: move center, thickness and smooth to uniform buffer params
-	center := glm.Vec2{
-		X: (pos[0].X + pos[1].X + pos[2].X + pos[3].X) / 4,
-		Y: (pos[0].Y + pos[1].Y + pos[2].Y + pos[3].Y) / 4,
-	}
-	// thickness := glm.Vec1{X: 1.0 - glm.Clamp(p.HoleRadius, 0, 1)}
-	// smooth := glm.Vec1{X: glm.Clamp(p.Smooth, 0, 1)}
-
 	r.api.Draw(buildInShaderCircle, &shaderInputCircle2d{
 		vertexes: []shaderInputCircle2dVertex{
-			{pos: pos[0]},
-			{pos: pos[1]},
-			{pos: pos[2]},
-			{pos: pos[3]},
-			{pos: center},
+			{pos: pos[0], color: color[0]},
+			{pos: pos[1], color: color[1]},
+			{pos: pos[2], color: color[2]},
+			{pos: pos[3], color: color[3]},
+		},
+		center: glm.Vec2{
+			X: (pos[0].X + pos[1].X + pos[2].X + pos[3].X) / 4,
+			Y: (pos[0].Y + pos[1].Y + pos[2].Y + pos[3].Y) / 4,
+		},
+		radius:    glm.Vec1{X: radius},
+		thickness: glm.Vec1{X: glm.Clamp(p.HoleRadius, 0, 1)},
+		smooth:    glm.Vec1{X: glm.Clamp(p.Smooth, 0, 1)},
+	})
+
+	// todo: remove
+	r.api.Draw(buildInShaderRect, &shaderInputUniversal2d{
+		mode: vulkan.PolygonModeLine,
+		vertexes: []shaderInputUniversal2dVertex{
+			{pos: pos[0], color: color[0]},
+			{pos: pos[1], color: color[1]},
+			{pos: pos[2], color: color[2]},
+			{pos: pos[3], color: color[3]},
 		},
 	})
 }

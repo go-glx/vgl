@@ -36,10 +36,10 @@ func (r *Render) toLocalAspectRation(n int32) float32 {
 	}
 
 	if w > h {
-		return float32(n) / float32(h)
+		return float32(n) / float32(w)
 	}
 
-	return float32(n) / float32(w)
+	return float32(n) / float32(h)
 }
 
 func (r *Render) toLocalAspectRationX(n int32) float32 {

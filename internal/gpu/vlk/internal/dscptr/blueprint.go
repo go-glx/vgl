@@ -55,18 +55,6 @@ var blueprint = blueprintLayoutMap{
 				descriptorType: vulkan.DescriptorTypeStorageBuffer,
 				flags:          vulkan.ShaderStageAllGraphics,
 			},
-			1: {
-				descriptorType: vulkan.DescriptorTypeStorageBuffer,
-				flags:          vulkan.ShaderStageAllGraphics,
-			},
-			2: {
-				descriptorType: vulkan.DescriptorTypeStorageBuffer,
-				flags:          vulkan.ShaderStageAllGraphics,
-			},
-			3: {
-				descriptorType: vulkan.DescriptorTypeStorageBuffer,
-				flags:          vulkan.ShaderStageAllGraphics,
-			},
 		},
 	},
 	LayoutIndexLocal: {

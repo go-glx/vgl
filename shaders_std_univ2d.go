@@ -30,10 +30,9 @@ var (
 		Topology:         vulkan.PrimitiveTopologyPointList,
 		TopologyRestarts: false,
 		InputLayout: ParamsRegisterShaderInputLayout{
-			VertexCount:       1,
-			VertexBinding:     universal2dBindings,
-			Indexes:           []uint16{0},
-			UseGlobalUniforms: true,
+			VertexCount:   1,
+			VertexBinding: universal2dBindings,
+			Indexes:       []uint16{0},
 		},
 	}
 
@@ -44,10 +43,9 @@ var (
 		Topology:         vulkan.PrimitiveTopologyLineList,
 		TopologyRestarts: false,
 		InputLayout: ParamsRegisterShaderInputLayout{
-			VertexCount:       2,
-			VertexBinding:     universal2dBindings,
-			Indexes:           []uint16{0, 1},
-			UseGlobalUniforms: true,
+			VertexCount:   2,
+			VertexBinding: universal2dBindings,
+			Indexes:       []uint16{0, 1},
 		},
 	}
 
@@ -58,10 +56,9 @@ var (
 		Topology:         vulkan.PrimitiveTopologyTriangleList,
 		TopologyRestarts: false,
 		InputLayout: ParamsRegisterShaderInputLayout{
-			VertexCount:       3,
-			VertexBinding:     universal2dBindings,
-			Indexes:           []uint16{0, 1, 2},
-			UseGlobalUniforms: true,
+			VertexCount:   3,
+			VertexBinding: universal2dBindings,
+			Indexes:       []uint16{0, 1, 2},
 		},
 	}
 
@@ -72,10 +69,9 @@ var (
 		Topology:         vulkan.PrimitiveTopologyLineStrip,
 		TopologyRestarts: true,
 		InputLayout: ParamsRegisterShaderInputLayout{
-			VertexCount:       4,
-			VertexBinding:     universal2dBindings,
-			Indexes:           []uint16{0, 1, 2, 3, 0, 0xffff},
-			UseGlobalUniforms: true,
+			VertexCount:   4,
+			VertexBinding: universal2dBindings,
+			Indexes:       []uint16{0, 1, 2, 3, 0, 0xffff},
 		},
 	}
 )
@@ -92,7 +88,7 @@ type (
 	}
 )
 
-func (d *shaderInputUniversal2d) BindingData() []byte {
+func (d *shaderInputUniversal2d) VertexData() []byte {
 	const vertSize = glm.SizeOfVec2 + glm.SizeOfVec4
 	buff := make([]byte, 0, len(d.vertexes)*vertSize)
 
@@ -102,6 +98,10 @@ func (d *shaderInputUniversal2d) BindingData() []byte {
 	}
 
 	return buff
+}
+
+func (d *shaderInputUniversal2d) StorageData() []byte {
+	return nil
 }
 
 func (d *shaderInputUniversal2d) PolygonMode() vulkan.PolygonMode {

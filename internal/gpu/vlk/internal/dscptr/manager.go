@@ -23,6 +23,7 @@ type (
 		layouts                layoutsMap
 		descriptorSets         descriptorSetsMap
 		uniformBufferAlignSize uint32
+		storageBufferAlignSize uint32
 		frameAllocations       frameAllocationsMap
 	}
 
@@ -58,6 +59,7 @@ func NewManager(
 		layouts:                layouts,
 		descriptorSets:         sets,
 		uniformBufferAlignSize: uint32(pd.PrimaryGPU().Props.Limits.MinUniformBufferOffsetAlignment),
+		storageBufferAlignSize: uint32(pd.PrimaryGPU().Props.Limits.MinStorageBufferOffsetAlignment),
 		frameAllocations:       make(frameAllocationsMap),
 	}
 }
@@ -105,7 +107,7 @@ func (m *Manager) UpdateSet(
 		// - staging is united slice of bytes for all bindings
 		// - sizes - size in bytes for each update (in same order)
 		// - offsets - local offset in bytes for each update (in same order)
-		staging, sizes, offsets := m.prepareStaging(bindingUpdates)
+		staging, sizes, offsets := m.prepareStaging(bufferType, bindingUpdates)
 
 		// copy staging data to device
 		allocation := m.heap.Write(staging, bufferType, alloc.StorageTargetCoherent, alloc.FlagsNone)
@@ -175,10 +177,10 @@ func (m *Manager) bufferTypeOfDescriptor(dType vulkan.DescriptorType) alloc.Buff
 // prepareStaging will write all block bytes data to single slice
 // and align bytes in each block of zeroed space if needed
 // function return result bytes slice and offset of each block start
-func (m *Manager) prepareStaging(updates [][]byte) ([]byte, []vulkan.DeviceSize, []vulkan.DeviceSize) {
+func (m *Manager) prepareStaging(bufferType alloc.BufferType, updates [][]byte) ([]byte, []vulkan.DeviceSize, []vulkan.DeviceSize) {
 	totalSize := 0
 	for _, update := range updates {
-		totalSize += m.alignSize(len(update))
+		totalSize += m.alignBufferSize(bufferType, len(update))
 	}
 
 	staging := make([]byte, 0, totalSize)
@@ -187,7 +189,7 @@ func (m *Manager) prepareStaging(updates [][]byte) ([]byte, []vulkan.DeviceSize,
 
 	for _, data := range updates {
 		size := len(data)
-		alignedSize := m.alignSize(size)
+		alignedSize := m.alignBufferSize(bufferType, size)
 		uselessSize := alignedSize - size
 
 		// write actual data
@@ -204,8 +206,20 @@ func (m *Manager) prepareStaging(updates [][]byte) ([]byte, []vulkan.DeviceSize,
 	return staging, sizes, offsets
 }
 
-func (m *Manager) alignSize(realSize int) int {
-	return int(math.Ceil(float64(realSize)/float64(m.uniformBufferAlignSize)) * float64(m.uniformBufferAlignSize))
+func (m *Manager) alignBufferSize(bufferType alloc.BufferType, realSize int) int {
+	if bufferType == alloc.BufferTypeUniform {
+		return m.alignSize(realSize, m.uniformBufferAlignSize)
+	}
+
+	if bufferType == alloc.BufferTypeStorage {
+		return m.alignSize(realSize, m.storageBufferAlignSize)
+	}
+
+	return realSize
+}
+
+func (m *Manager) alignSize(realSize int, align uint32) int {
+	return int(math.Ceil(float64(realSize)/float64(align)) * float64(align))
 }
 
 func (m *Manager) freeMemory(frameID frameID, index layoutIndex) {
