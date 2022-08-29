@@ -5,7 +5,7 @@ import (
 
 	"github.com/vulkan-go/vulkan"
 
-	"github.com/go-glx/vgl/glm"
+	"github.com/go-glx/glx"
 	"github.com/go-glx/vgl/internal/gpu/vlk/internal/alloc"
 	"github.com/go-glx/vgl/internal/gpu/vlk/internal/def"
 	"github.com/go-glx/vgl/internal/gpu/vlk/internal/dscptr"
@@ -119,14 +119,14 @@ func (vlk *VLK) drawAll() {
 
 func (vlk *VLK) updateGlobalUniforms(imageID uint32) vulkan.DescriptorSet {
 	// write global data to uniform buffers that need for every shader
-	view := glm.Mat4Identity()       // todo
-	projection := glm.Mat4Identity() // todo
-	surfaceSize := glm.Vec2{
-		X: float32(vlk.surfacesSize[vlk.surfaceInd][0]),
-		Y: float32(vlk.surfacesSize[vlk.surfaceInd][1]),
+	view := glx.Mat4Identity()       // todo
+	projection := glx.Mat4Identity() // todo
+	surfaceSize := glx.Vec2{
+		X: vlk.surfacesSize[vlk.surfaceInd][0],
+		Y: vlk.surfacesSize[vlk.surfaceInd][1],
 	}
 
-	uboData := make([]byte, 0, glm.SizeOfMat4*2)
+	uboData := make([]byte, 0, glx.SizeOfMat4*2)
 	uboData = append(uboData, view.Data()...)
 	uboData = append(uboData, projection.Data()...)
 

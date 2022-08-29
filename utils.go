@@ -1,7 +1,7 @@
 package vgl
 
 import (
-	"github.com/go-glx/vgl/glm"
+	"github.com/go-glx/glx"
 )
 
 // transform pos in pixel screen space
@@ -19,16 +19,16 @@ import (
 //
 // This is fast function, can be called thousands times
 // per frame, surface w/h is cached in renderer
-func (r *Render) toLocalSpace2d(pos glm.Local2D) glm.Vec2 {
+func (r *Render) toLocalSpace2d(pos glx.Vec2) glx.Vec2 {
 	w, h := r.api.GetSurfaceSize()
 
-	return glm.Vec2{
-		X: 2*(float32(pos[0])/float32(w)) - 1,
-		Y: 2*(float32(pos[1])/float32(h)) - 1,
+	return glx.Vec2{
+		X: 2*(pos.X/w) - 1,
+		Y: 2*(pos.Y/h) - 1,
 	}
 }
 
-func (r *Render) toLocalAspectRation(n int32) float32 {
+func (r *Render) toLocalAspectRation(n float32) float32 {
 	w, h := r.api.GetSurfaceSize()
 
 	if w <= 0 || h <= 0 {
@@ -36,37 +36,37 @@ func (r *Render) toLocalAspectRation(n int32) float32 {
 	}
 
 	if w > h {
-		return float32(n) / float32(w)
+		return n / w
 	}
 
-	return float32(n) / float32(h)
+	return n / h
 }
 
-func (r *Render) toLocalAspectRationX(n int32) float32 {
+func (r *Render) toLocalAspectRationX(n float32) float32 {
 	w, _ := r.api.GetSurfaceSize()
-	return float32(n) / float32(w)
+	return n / w
 }
 
-func (r *Render) toLocalAspectRationY(n int32) float32 {
+func (r *Render) toLocalAspectRationY(n float32) float32 {
 	_, h := r.api.GetSurfaceSize()
-	return float32(n) / float32(h)
+	return n / h
 }
 
-func (r *Render) cullingPoint(vert glm.Vec2) bool {
+func (r *Render) cullingPoint(vert glx.Vec2) bool {
 	return vert.X >= -1 && vert.X <= 1 && vert.Y >= -1 && vert.Y <= 1
 }
 
-func (r *Render) cullingLine(vert [2]glm.Vec2) bool {
+func (r *Render) cullingLine(vert [2]glx.Vec2) bool {
 	// todo
 	return true
 }
 
-func (r *Render) cullingTriangle(vert [3]glm.Vec2) bool {
+func (r *Render) cullingTriangle(vert [3]glx.Vec2) bool {
 	// todo
 	return true
 }
 
-func (r *Render) cullingRect(vert [4]glm.Vec2) bool {
+func (r *Render) cullingRect(vert [4]glx.Vec2) bool {
 	// todo
 	return true
 }

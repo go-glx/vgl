@@ -3,7 +3,7 @@ package vgl
 import (
 	"github.com/vulkan-go/vulkan"
 
-	"github.com/go-glx/vgl/glm"
+	"github.com/go-glx/glx"
 	"github.com/go-glx/vgl/internal/shaders"
 )
 
@@ -11,13 +11,13 @@ var universal2dBindings = []ParamsRegisterShaderInputVertexBinding{
 	{
 		// position vec2 x,y
 		Location: 0,
-		Size:     glm.SizeOfVec2,
+		Size:     glx.SizeOfVec2,
 		Format:   vulkan.FormatR32g32Sfloat,
 	},
 	{
 		// color vec4 r,g,b,a
 		Location: 1,
-		Size:     glm.SizeOfVec4,
+		Size:     glx.SizeOfVec4,
 		Format:   vulkan.FormatR32g32b32a32Sfloat,
 	},
 }
@@ -83,13 +83,13 @@ type (
 	}
 
 	shaderInputUniversal2dVertex struct {
-		pos   glm.Vec2
-		color glm.Vec4
+		pos   glx.Vec2
+		color glx.Vec4
 	}
 )
 
 func (d *shaderInputUniversal2d) VertexData() []byte {
-	const vertSize = glm.SizeOfVec2 + glm.SizeOfVec4
+	const vertSize = glx.SizeOfVec2 + glx.SizeOfVec4
 	buff := make([]byte, 0, len(d.vertexes)*vertSize)
 
 	for _, vertex := range d.vertexes {

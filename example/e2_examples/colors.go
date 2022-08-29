@@ -1,11 +1,11 @@
 package main
 
-import "github.com/go-glx/vgl/glm"
+import "github.com/go-glx/glx"
 
 // https://coolors.co/palette/000814-001d3d-003566-ffc300-ffd60a
 
-var colBackground = glm.NewColor(0, 8, 20, 255)
-var colGrayLight = glm.NewColor(0, 53, 102, 255)
-var colGrayDark = glm.NewColor(0, 29, 61, 255)
-var colMain = glm.NewColor(255, 195, 0, 255)
-var colAccent = glm.NewColor(128, 235, 35, 255)
+var colBackground = glx.ColorFromHex(0x000814ff)
+var colGrayLight = glx.ColorFromHex(0x001d3dff)
+var colGrayDark = glx.ColorFromHex(0x003566ff)
+var colMain = glx.ColorFromHex(0xffc300ff)
+var colAccent = glx.ColorFromHex(0xd6ff0aff)

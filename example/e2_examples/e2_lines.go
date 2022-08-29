@@ -1,8 +1,8 @@
 package main
 
 import (
+	"github.com/go-glx/glx"
 	"github.com/go-glx/vgl"
-	"github.com/go-glx/vgl/glm"
 )
 
 func e2Lines(rnd *vgl.Render) {
@@ -10,7 +10,7 @@ func e2Lines(rnd *vgl.Render) {
 	const offsetY = unitSize * 4 // offset between features
 
 	// Drawing "VGL" word with lines
-	chars := [][]glm.Local2D{
+	chars := [][]glx.Vec2{
 		{
 			// V
 			{2, 1},
@@ -46,9 +46,9 @@ func e2Lines(rnd *vgl.Render) {
 		},
 		{
 			// gradient line
-			ColorGradient: [2]glm.Color{
-				colMain,
-				colAccent,
+			ColorGradient: [2]glx.Color{
+				glx.ColorRed,
+				glx.ColorGreen,
 			},
 			ColorUseGradient: true,
 		},
@@ -59,9 +59,9 @@ func e2Lines(rnd *vgl.Render) {
 		},
 		{
 			// bold + gradient line
-			ColorGradient: [2]glm.Color{
-				colMain,
-				colAccent,
+			ColorGradient: [2]glx.Color{
+				glx.ColorRed,
+				glx.ColorGreen,
 			},
 			ColorUseGradient: true,
 			Width:            10,
@@ -78,16 +78,14 @@ func e2Lines(rnd *vgl.Render) {
 				next := points[pointInd+1]
 
 				// abstractPos -> realPos
-				curr[0] *= unitSize
-				curr[1] *= unitSize
-				next[0] *= unitSize
-				next[1] *= unitSize
+				curr = curr.Scale(unitSize)
+				next = next.Scale(unitSize)
 
 				// add feature Y offset
-				curr[1] += int32(featInd * offsetY)
-				next[1] += int32(featInd * offsetY)
+				curr.Y += float32(featInd * offsetY)
+				next.Y += float32(featInd * offsetY)
 
-				feature.Pos = [2]glm.Local2D{curr, next}
+				feature.Pos = [2]glx.Vec2{curr, next}
 
 				rnd.Draw2dLine(&feature)
 			}

@@ -5,25 +5,26 @@ import (
 
 	"github.com/vulkan-go/vulkan"
 
-	"github.com/go-glx/vgl/glm"
 	"github.com/go-glx/vgl/internal/gpu/vlk/internal/alloc"
+	"github.com/go-glx/vgl/internal/gpu/vlk/metrics"
 )
 
 // todo: multisampling "vulkan.SampleCount4Bit" can be used for test "ErrorDeviceLost"
 // todo: set swapChain images count=1 (index out of range [1] with length 1) imageID > 0 can be created
+// todo: panic after 10-15 sec in circle demo at (result := vulkan.CreateGraphicsPipelines() in internal/pipeline/factory.go)
 
 type VLK struct {
 	isReady bool
 	cont    *Container
 
 	// stats
-	stats            glm.Stats
-	statsListeners   []func(glm.Stats)
+	stats            metrics.Stats
+	statsListeners   []func(metrics.Stats)
 	statsResetQueued bool
 
 	// surfaces
-	surfaceInd   uint8          // 0 - default (Screen, window); 1-255 reserved for user needs
-	surfacesSize [255][2]uint32 // width, height for each surface
+	surfaceInd   uint8           // 0 - default (Screen, window); 1-255 reserved for user needs
+	surfacesSize [255][2]float32 // width, height for each surface
 
 	// drawing
 	shaderIndexPtr map[string]alloc.Allocation // shaderID -> allocation (is pointer to index buffer for this shader)
@@ -37,13 +38,13 @@ func newVLK(cont *Container) *VLK {
 		cont:    cont,
 
 		// stats
-		stats:            glm.Stats{},
-		statsListeners:   make([]func(glm.Stats), 0),
+		stats:            metrics.Stats{},
+		statsListeners:   make([]func(metrics.Stats), 0),
 		statsResetQueued: false,
 
 		// surface
 		surfaceInd:   0, // default - screen
-		surfacesSize: [255][2]uint32{},
+		surfacesSize: [255][2]float32{},
 
 		// drawing
 		shaderIndexPtr: make(map[string]alloc.Allocation),
@@ -53,7 +54,7 @@ func newVLK(cont *Container) *VLK {
 
 	// set default screen size
 	wWidth, wHeight := cont.wm.GetFramebufferSize()
-	vlk.surfacesSize[0] = [2]uint32{uint32(wWidth), uint32(wHeight)}
+	vlk.surfacesSize[0] = [2]float32{float32(wWidth), float32(wHeight)}
 
 	go vlk.countFPS()
 	return vlk
@@ -80,7 +81,7 @@ func (vlk *VLK) maintenance(mutate func()) {
 
 // ListenStats will subscribe listener to frame stats
 // listener will be executed every frame with last frame Stats
-func (vlk *VLK) ListenStats(listener func(stats glm.Stats)) {
+func (vlk *VLK) ListenStats(listener func(stats metrics.Stats)) {
 	vlk.statsListeners = append(vlk.statsListeners, listener)
 }
 

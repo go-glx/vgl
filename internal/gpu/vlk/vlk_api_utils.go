@@ -3,8 +3,8 @@ package vlk
 import (
 	"github.com/vulkan-go/vulkan"
 
-	"github.com/go-glx/vgl/glm"
 	"github.com/go-glx/vgl/internal/gpu/vlk/internal/alloc"
+	"github.com/go-glx/vgl/internal/gpu/vlk/metrics"
 )
 
 // WarmUp will warm vlk renderer and create all needed
@@ -25,7 +25,7 @@ func (vlk *VLK) GPUWait() {
 // for default surface (screen) is window width and height
 // this very fast function, will always return cached values
 // and can be called thousands times per frame
-func (vlk *VLK) GetSurfaceSize() (w uint32, h uint32) {
+func (vlk *VLK) GetSurfaceSize() (w float32, h float32) {
 	return vlk.surfacesSize[vlk.surfaceInd][0],
 		vlk.surfacesSize[vlk.surfaceInd][1]
 }
@@ -88,7 +88,7 @@ func (vlk *VLK) collectMemoryStats() {
 	}
 }
 
-func (vlk *VLK) collectMemoryGroupStats(in alloc.GroupedStats, out *glm.UsageStats) {
+func (vlk *VLK) collectMemoryGroupStats(in alloc.GroupedStats, out *metrics.UsageStats) {
 	out.Capacity += in.Capacity
 	out.Size += in.Size
 	out.PagesCount += int(in.TotalPages)

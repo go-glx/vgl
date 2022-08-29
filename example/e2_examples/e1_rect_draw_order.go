@@ -1,10 +1,8 @@
 package main
 
 import (
-	"math"
-
+	"github.com/go-glx/glx"
 	"github.com/go-glx/vgl"
-	"github.com/go-glx/vgl/glm"
 )
 
 var e1RenderOrderInv = false
@@ -33,7 +31,7 @@ func e1RectDrawOrder(rnd *vgl.Render) {
 
 	if !e1SubscribeSwitch {
 		e1SubscribeSwitch = true
-		rnd.ListenStats(func(stats glm.Stats) {
+		rnd.ListenStats(func(stats vgl.Stats) {
 			if stats.FrameIndex == 0 {
 				e1RenderOrderInv = !e1RenderOrderInv
 			}
@@ -41,13 +39,13 @@ func e1RectDrawOrder(rnd *vgl.Render) {
 	}
 
 	width, height := rnd.SurfaceSize()
-	slotWidth := int32(math.Floor(float64(width / slotsCount)))
-	slotHeight := int32(math.Floor(float64(height / slotsCount)))
+	slotWidth := glx.Floor(width / slotsCount)
+	slotHeight := glx.Floor(height / slotsCount)
 	paddingX := width / 100 * slotPaddingPercent
 	paddingY := height / 100 * slotPaddingPercent
 
-	for x := int32(0); x < width; x += slotWidth {
-		for y := int32(0); y < height; y += slotHeight {
+	for x := float32(0); x < width; x += slotWidth {
+		for y := float32(0); y < height; y += slotHeight {
 
 			var filled bool
 
@@ -60,7 +58,7 @@ func e1RectDrawOrder(rnd *vgl.Render) {
 			}
 
 			rnd.Draw2dRect(&vgl.Params2dRect{
-				Pos: [4]glm.Local2D{
+				Pos: [4]glx.Vec2{
 					{x + paddingX, y + paddingY},
 					{(x + slotWidth) - paddingX, y + paddingY},
 					{(x + slotWidth) - paddingX, (y + slotHeight) - paddingY},

@@ -4,10 +4,10 @@ import (
 	"os"
 	"os/signal"
 
+	"github.com/go-glx/glx"
 	"github.com/go-glx/vgl"
 	"github.com/go-glx/vgl/arch"
 	"github.com/go-glx/vgl/config"
-	"github.com/go-glx/vgl/glm"
 )
 
 func main() {
@@ -33,15 +33,15 @@ func main() {
 		width, height := app.SurfaceSize()
 
 		app.Draw2dTriangle(&vgl.Params2dTriangle{
-			Pos: [3]glm.Local2D{ // in clock-wise order
-				{width / 2, 100},            // center-top vertex
-				{width - 100, height - 100}, // right-bottom vertex
-				{100, height - 100},         // left-bottom vertex
+			Pos: [3]glx.Vec2{ // in clock-wise order
+				{X: width / 2, Y: 100},            // center-top vertex
+				{X: width - 100, Y: height - 100}, // right-bottom vertex
+				{X: 100, Y: height - 100},         // left-bottom vertex
 			},
-			ColorGradient: [3]glm.Color{
-				glm.NewColor(255, 0, 0, 255),
-				glm.NewColor(0, 255, 0, 255),
-				glm.NewColor(0, 0, 255, 255),
+			ColorGradient: [3]glx.Color{
+				glx.ColorRed,
+				glx.ColorGreen,
+				glx.ColorBlue,
 			},
 			ColorUseGradient: true,
 			Filled:           true,

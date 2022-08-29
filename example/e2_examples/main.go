@@ -9,17 +9,24 @@ import (
 	"os/signal"
 	"time"
 
+	"github.com/go-glx/glx"
 	"github.com/go-glx/vgl"
 	"github.com/go-glx/vgl/arch"
 	"github.com/go-glx/vgl/config"
-	"github.com/go-glx/vgl/glm"
 )
+
+// --------------------------
+// Settings
+// --------------------------
 
 const appWidth = 720
 const appHeight = 480
-
-// todo: switch in demo UI and/or keyboard input
 const currentDemo = demoE4Circles
+const enablePprof = false
+
+// --------------------------
+// Internal setup
+// --------------------------
 
 const (
 	demoE0HelloTriangle = iota
@@ -28,8 +35,6 @@ const (
 	demoE3Points
 	demoE4Circles
 )
-
-const enablePprof = false
 
 var demos = map[int]func(rnd *vgl.Render){
 	demoE0HelloTriangle: e0HelloTriangle,
@@ -52,22 +57,14 @@ func main() {
 	go listenSignals(&appAlive)
 	go pprof()
 
-	demo := demos[currentDemo]
+	drawDemo := demos[currentDemo]
 
 	for appAlive {
 		rnd.FrameStart()
 		gui.frameStart()
 
-		// draw bg
-		w, h := rnd.SurfaceSize()
-		rnd.Draw2dRect(&vgl.Params2dRect{
-			Pos:    [4]glm.Local2D{{0, 0}, {w, 0}, {w, h}, {0, h}},
-			Color:  colBackground,
-			Filled: true,
-		})
-
-		// draw demo scene
-		demo(rnd)
+		clearScreen(rnd)
+		drawDemo(rnd)
 
 		gui.frameEnd()
 		rnd.FrameEnd()
@@ -75,8 +72,24 @@ func main() {
 
 	// always should be closed on exit
 	// this will clean vulkan resources in GPU/system
-	_ = rnd.Close()
+	err := rnd.Close()
+	if err != nil {
+		fmt.Printf("VLK close error: %s\n", err.Error())
+	}
 }
+
+func clearScreen(rnd *vgl.Render) {
+	w, h := rnd.SurfaceSize()
+	rnd.Draw2dRect(&vgl.Params2dRect{
+		Pos:    [4]glx.Vec2{{0, 0}, {w, 0}, {w, h}, {0, h}},
+		Color:  colBackground,
+		Filled: true,
+	})
+}
+
+// --------------------------
+// Internal demo functions
+// --------------------------
 
 func listenSignals(appAlive *bool) {
 	sigCh := make(chan os.Signal)
@@ -98,9 +111,9 @@ func pprof() {
 }
 
 var startTime = time.Now()
-var combinedStats = glm.Stats{}
+var combinedStats = vgl.Stats{}
 
-func onFrameEndStats(stats glm.Stats) {
+func onFrameEndStats(stats vgl.Stats) {
 	if stats.FrameIndex != 0 {
 		// print one time per second
 		combinedStats.DrawCalls += stats.DrawCalls
@@ -145,5 +158,18 @@ func onFrameEndStats(stats glm.Stats) {
 		printMem(stats.Memory.StorageBuffers.Size, stats.Memory.StorageBuffers.Capacity),
 	)
 
-	combinedStats.Reset()
+	resetCombinedStats(&combinedStats)
+}
+
+func resetCombinedStats(s *vgl.Stats) {
+	s.DrawCalls = 0
+	s.DrawChunks = 0
+	s.DrawUniqueShaders = 0
+
+	s.TimeCreatePipeline = 0
+	s.TimeFlushVertexBuffer = 0
+	s.TimeRenderInstanced = 0
+	s.TimeRenderFallback = 0
+
+	s.Memory = vgl.MemoryStats{}
 }

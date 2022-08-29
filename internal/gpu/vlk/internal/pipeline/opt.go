@@ -43,7 +43,7 @@ func WithRasterization(mode vulkan.PolygonMode) Initializer {
 		info.PRasterizationState = &vulkan.PipelineRasterizationStateCreateInfo{
 			SType:                   vulkan.StructureTypePipelineRasterizationStateCreateInfo,
 			DepthClampEnable:        vulkan.False,
-			RasterizerDiscardEnable: vulkan.False,
+			RasterizerDiscardEnable: vulkan.False, // todo: on and check on all apis
 			PolygonMode:             mode,
 			CullMode:                vulkan.CullModeFlags(vulkan.CullModeBackBit),
 			FrontFace:               vulkan.FrontFaceClockwise,

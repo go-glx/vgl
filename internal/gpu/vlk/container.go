@@ -56,7 +56,7 @@ func (c *Container) rebuild() {
 		// lazy recreated when needed by graphic pipeline
 
 		wWidth, wHeight := c.wm.GetFramebufferSize()
-		c.VulkanRenderer().surfacesSize[0] = [2]uint32{uint32(wWidth), uint32(wHeight)}
+		c.VulkanRenderer().surfacesSize[0] = [2]float32{float32(wWidth), float32(wHeight)}
 	})
 }
 
