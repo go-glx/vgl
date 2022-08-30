@@ -21,7 +21,7 @@ import (
 
 const appWidth = 720
 const appHeight = 480
-const currentDemo = demoE4Circles
+const currentDemo = demoE5DefaultBlending
 const enablePprof = false
 
 // --------------------------
@@ -34,14 +34,16 @@ const (
 	demoE2Lines
 	demoE3Points
 	demoE4Circles
+	demoE5DefaultBlending
 )
 
 var demos = map[int]func(rnd *vgl.Render){
-	demoE0HelloTriangle: e0HelloTriangle,
-	demoE1RectDrawOrder: e1RectDrawOrder,
-	demoE2Lines:         e2Lines,
-	demoE3Points:        e3Points,
-	demoE4Circles:       e4Circles,
+	demoE0HelloTriangle:   e0HelloTriangle,
+	demoE1RectDrawOrder:   e1RectDrawOrder,
+	demoE2Lines:           e2Lines,
+	demoE3Points:          e3Points,
+	demoE4Circles:         e4Circles,
+	demoE5DefaultBlending: e5DefaultBlending,
 }
 
 func main() {

@@ -1,4 +1,4 @@
-#version 460
+#version 450
 
 // fix float calculations
 const float epsilon = 0.0001;
@@ -9,7 +9,7 @@ layout(set=0, binding = 1) uniform UniformBufferObject {
     vec2 surfaceSize;
 } ubo;
 
-layout(set=1, binding = 0) readonly buffer Props {
+struct Circle {
     // center of circle
     vec2 center;
 
@@ -25,18 +25,23 @@ layout(set=1, binding = 0) readonly buffer Props {
     // 0.005 - default value (minimum smooth)
     // 0.0   - without smooth
     float smoothness;
-} c;
+};
+
+layout(set=1, binding = 0) readonly buffer Props {
+    Circle[] circles;
+} props;
 
 // -----------------
 
 layout(location = 0) in vec4 fragColor;
+layout(location = 1) flat in uint instanceID;
 
 layout(location = 0) out vec4 outColor;
 
 // -----------------
 
 void main() {
-    // todo: refactor this mess
+    Circle c = props.circles[instanceID];
 
     vec2 viewport = vec2(ubo.surfaceSize.x, ubo.surfaceSize.y);
     float aspectRatio = ubo.surfaceSize.x / ubo.surfaceSize.y;

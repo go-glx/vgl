@@ -151,6 +151,10 @@ func (vlk *VLK) prepareDrawingChunks(imageID uint32) []drawCallChunk {
 			continue
 		}
 
+		// todo: rewrite all Draw pipeline
+		//       this storage buffer will be overridden for every drawCall
+		//       but layout=0, binding=0 is same for all drawCalls
+		//       so only last update will be used in draw
 		storageDSet, storageUsed := vlk.prepareStorageBuffer(imageID, drawCall.instances)
 
 		uniqShaders[drawCall.shader.Meta().ID()] = struct{}{}
@@ -238,7 +242,7 @@ func (vlk *VLK) drawChunk(cb vulkan.CommandBuffer, globalUBO vulkan.DescriptorSe
 				// we split it into chunks of def.BufferIndexMaxInstances size each
 
 				ts := time.Now()
-				vulkan.CmdDrawIndexed(cb, indexCount*instPerCall, 1, 0, int32(firstInst*vertexCount), 0)
+				vulkan.CmdDrawIndexed(cb, indexCount*instPerCall, instPerCall, 0, int32(firstInst*vertexCount), firstInst)
 				vlk.stats.TimeRenderInstanced += time.Since(ts)
 
 				countDrawCalls++
@@ -250,7 +254,7 @@ func (vlk *VLK) drawChunk(cb vulkan.CommandBuffer, globalUBO vulkan.DescriptorSe
 		// Drawing Type: 2 (default fallback)
 		for i := uint32(0); i < chunk.InstanceCount; i++ {
 			ts := time.Now()
-			vulkan.CmdDraw(cb, indexCount, 1, i*indexCount, 0)
+			vulkan.CmdDraw(cb, indexCount, 1, i*indexCount, i)
 			vlk.stats.TimeRenderFallback += time.Since(ts)
 
 			countDrawCalls++

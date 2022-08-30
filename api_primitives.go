@@ -343,15 +343,4 @@ func (r *Render) Draw2dCircle(p *Params2dCircle) {
 		thickness: glx.Vec1{X: glx.Clamp(p.HoleRadius, 0, 1)},
 		smooth:    glx.Vec1{X: glx.Clamp(p.Smooth, 0, 1)},
 	})
-
-	// todo: remove
-	r.api.Draw(buildInShaderRect, &shaderInputUniversal2d{
-		mode: vulkan.PolygonModeLine,
-		vertexes: []shaderInputUniversal2dVertex{
-			{pos: localPos[0], color: localColor[0]},
-			{pos: localPos[1], color: localColor[1]},
-			{pos: localPos[2], color: localColor[2]},
-			{pos: localPos[3], color: localColor[3]},
-		},
-	})
 }
