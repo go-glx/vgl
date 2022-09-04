@@ -41,11 +41,8 @@ func (vlk *VLK) FrameStart() {
 		vlk.statsResetQueued = false
 	}
 
-	// clear stats from prev frame
-	vlk.stats.Reset()
-
 	// start command buffers
-	vlk.cont.frameManager().FrameBegin()
+	vlk.drawImageID, vlk.drawAvailable = vlk.cont.frameManager().FrameBegin()
 }
 
 func (vlk *VLK) FrameEnd() {
@@ -54,7 +51,7 @@ func (vlk *VLK) FrameEnd() {
 	}
 
 	// draw queued shaders
-	vlk.drawAll()
+	vlk.draw()
 
 	// submit command buffers
 	vlk.cont.frameManager().FrameEnd()

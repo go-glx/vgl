@@ -88,11 +88,11 @@ func (m *Manager) Free() {
 	m.logger.Debug("freed: frames manager")
 }
 
-func (m *Manager) FrameBegin() {
+func (m *Manager) FrameBegin() (uint32, bool) {
 	m.prepareFrame()
 	if !*m.available {
 		m.nextFrame()
-		return
+		return 0, false
 	}
 
 	// start buffer
@@ -102,6 +102,9 @@ func (m *Manager) FrameBegin() {
 	m.FrameApplyCommands(func(imageID uint32, cb vulkan.CommandBuffer) {
 		m.renderPassMainBegin(imageID, cb)
 	})
+
+	// return current image
+	return m.imageID, true
 }
 
 func (m *Manager) prepareFrame() {

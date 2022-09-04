@@ -9,9 +9,27 @@ import (
 	"github.com/go-glx/vgl/internal/gpu/vlk/metrics"
 )
 
+// todo: api for view,projection mat4
 // todo: multisampling "vulkan.SampleCount4Bit" can be used for test "ErrorDeviceLost"
 // todo: set swapChain images count=1 (index out of range [1] with length 1) imageID > 0 can be created
 // todo: panic after 10-15 sec in circle demo at (result := vulkan.CreateGraphicsPipelines() in internal/pipeline/factory.go)
+// todo: slow points API (x500)
+// todo: validation warn, in e5_blending when switch screen resolution:
+//         UNASSIGNED-CoreValidation-DrawState-InvalidCommandBuffer-VkDescriptorSet(ERROR / SPEC):
+//         msgNum: -396268558 - Validation Error: [
+//         UNASSIGNED-CoreValidation-DrawState-InvalidCommandBuffer-VkDescriptorSet ]
+//         Object 0: handle = 0x1ea2518, type = VK_OBJECT_TYPE_COMMAND_BUFFER;
+//         Object 1: handle = 0x310000000031, type = VK_OBJECT_TYPE_DESCRIPTOR_SET;
+//         | MessageID = 0xe8616bf2 |
+//         You are adding vkCmdBindVertexBuffers() to VkCommandBuffer 0x1ea2518[]
+//         that is invalid because bound VkDescriptorSet 0x310000000031[] was destroyed or updated.
+// todo: new metrics api for timing groups
+
+type (
+	surfaceID uint8
+)
+
+const surfaceIdMainWindow = 0
 
 type VLK struct {
 	isReady bool
@@ -23,13 +41,15 @@ type VLK struct {
 	statsResetQueued bool
 
 	// surfaces
-	surfaceInd   uint8           // 0 - default (Screen, window); 1-255 reserved for user needs
+	surfaceInd   surfaceID       // 0 - default (Screen, window); 1-255 reserved for user needs
 	surfacesSize [255][2]float32 // width, height for each surface
 
 	// drawing
-	shaderIndexPtr map[string]alloc.Allocation // shaderID -> allocation (is pointer to index buffer for this shader)
-	currentBatch   *drawCall
-	queue          []drawCall
+	drawAvailable        bool
+	drawImageID          uint32
+	drawContext          *drawContext
+	drawExecution        drawCtxFn
+	drawShaderIndexesMap map[string]alloc.Allocation // shaderID -> allocation (is pointer to index buffer for this shader)'
 }
 
 func newVLK(cont *Container) *VLK {
@@ -43,20 +63,24 @@ func newVLK(cont *Container) *VLK {
 		statsResetQueued: false,
 
 		// surface
-		surfaceInd:   0, // default - screen
+		surfaceInd:   surfaceIdMainWindow,
 		surfacesSize: [255][2]float32{},
 
-		// drawing
-		shaderIndexPtr: make(map[string]alloc.Allocation),
-		currentBatch:   &drawCall{},
-		queue:          make([]drawCall, 0, queueCapacity),
+		// deprecated
+		drawShaderIndexesMap: make(map[string]alloc.Allocation),
 	}
 
 	// set default screen size
 	wWidth, wHeight := cont.wm.GetFramebufferSize()
-	vlk.surfacesSize[0] = [2]float32{float32(wWidth), float32(wHeight)}
+	vlk.surfacesSize[surfaceIdMainWindow] = [2]float32{float32(wWidth), float32(wHeight)}
 
+	// build drawing pipeline
+	vlk.initDrawingPipeline()
+
+	// run background workers
 	go vlk.countFPS()
+
+	// return
 	return vlk
 }
 

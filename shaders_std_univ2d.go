@@ -78,7 +78,6 @@ var (
 
 type (
 	shaderInputUniversal2d struct {
-		mode     vulkan.PolygonMode
 		vertexes []shaderInputUniversal2dVertex
 	}
 
@@ -102,8 +101,4 @@ func (d *shaderInputUniversal2d) VertexData() []byte {
 
 func (d *shaderInputUniversal2d) StorageData() []byte {
 	return nil
-}
-
-func (d *shaderInputUniversal2d) PolygonMode() vulkan.PolygonMode {
-	return d.mode
 }

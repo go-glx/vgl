@@ -76,7 +76,7 @@ func (vlk *VLK) preloadShaderIndexes(shader *shader.Shader) {
 	// this command will write indexes to GPU fast memory,
 	// and later we will reuse this many times, because
 	// indexes is not changed later in runtime
-	vlk.shaderIndexPtr[shaderID] = heap.WriteIndexData(indexes)
+	vlk.drawShaderIndexesMap[shaderID] = heap.WriteIndexData(indexes)
 }
 
 func (vlk *VLK) indexBufferOf(shader *shader.Shader) alloc.Allocation {
@@ -84,7 +84,7 @@ func (vlk *VLK) indexBufferOf(shader *shader.Shader) alloc.Allocation {
 
 	// return ptr for shader index buffer
 	// with pre-generated data for N instances
-	if allocation, exist := vlk.shaderIndexPtr[shaderID]; exist {
+	if allocation, exist := vlk.drawShaderIndexesMap[shaderID]; exist {
 		return allocation
 	}
 

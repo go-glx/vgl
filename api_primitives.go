@@ -6,6 +6,7 @@ import (
 	"github.com/vulkan-go/vulkan"
 
 	"github.com/go-glx/glx"
+	"github.com/go-glx/vgl/internal/gpu/vlk"
 )
 
 // Api design
@@ -41,8 +42,11 @@ func (r *Render) Draw2dPoint(p *Params2dPoint) {
 		return
 	}
 
-	r.api.Draw(buildInShaderPoint, &shaderInputUniversal2d{
-		mode: vulkan.PolygonModeFill,
+	mode := vlk.DrawOptions{
+		PolygonMode: vulkan.PolygonModeFill,
+	}
+
+	r.api.Draw(buildInShaderPoint, mode, &shaderInputUniversal2d{
 		vertexes: []shaderInputUniversal2dVertex{
 			{
 				pos:   localPos,
@@ -93,8 +97,11 @@ func (r *Render) Draw2dLine(p *Params2dLine) {
 			return
 		}
 
-		r.api.Draw(buildInShaderLine, &shaderInputUniversal2d{
-			mode: vulkan.PolygonModeLine,
+		mode := vlk.DrawOptions{
+			PolygonMode: vulkan.PolygonModeLine,
+		}
+
+		r.api.Draw(buildInShaderLine, mode, &shaderInputUniversal2d{
 			vertexes: []shaderInputUniversal2dVertex{
 				{
 					pos:   localPos[0],
@@ -123,16 +130,18 @@ func (r *Render) Draw2dLine(p *Params2dLine) {
 		return
 	}
 
-	r.api.Draw(buildInShaderTriangle, &shaderInputUniversal2d{
-		mode: vulkan.PolygonModeFill,
+	mode := vlk.DrawOptions{
+		PolygonMode: vulkan.PolygonModeFill,
+	}
+
+	r.api.Draw(buildInShaderTriangle, mode, &shaderInputUniversal2d{
 		vertexes: []shaderInputUniversal2dVertex{
 			{pos: rectPos[0], color: localColor[0]}, // tl
 			{pos: rectPos[1], color: localColor[1]}, // tr
 			{pos: rectPos[2], color: localColor[1]}, // br
 		},
 	})
-	r.api.Draw(buildInShaderTriangle, &shaderInputUniversal2d{
-		mode: vulkan.PolygonModeFill,
+	r.api.Draw(buildInShaderTriangle, mode, &shaderInputUniversal2d{
 		vertexes: []shaderInputUniversal2dVertex{
 			{pos: rectPos[2], color: localColor[1]}, // br
 			{pos: rectPos[3], color: localColor[0]}, // bl
@@ -177,15 +186,15 @@ func (r *Render) Draw2dTriangle(p *Params2dTriangle) {
 		localColor[2] = localColor[0]
 	}
 
-	var mode vulkan.PolygonMode
-	if p.Filled {
-		mode = vulkan.PolygonModeFill
-	} else {
-		mode = vulkan.PolygonModeLine
+	mode := vlk.DrawOptions{
+		PolygonMode: vulkan.PolygonModeLine,
 	}
 
-	r.api.Draw(buildInShaderTriangle, &shaderInputUniversal2d{
-		mode: mode,
+	if p.Filled {
+		mode.PolygonMode = vulkan.PolygonModeFill
+	}
+
+	r.api.Draw(buildInShaderTriangle, mode, &shaderInputUniversal2d{
 		vertexes: []shaderInputUniversal2dVertex{
 			{pos: localPos[0], color: localColor[0]},
 			{pos: localPos[1], color: localColor[1]},
@@ -238,8 +247,11 @@ func (r *Render) Draw2dRect(p *Params2dRect) {
 	}
 
 	if !p.Filled {
-		r.api.Draw(buildInShaderRect, &shaderInputUniversal2d{
-			mode: vulkan.PolygonModeLine,
+		mode := vlk.DrawOptions{
+			PolygonMode: vulkan.PolygonModeLine,
+		}
+
+		r.api.Draw(buildInShaderRect, mode, &shaderInputUniversal2d{
 			vertexes: []shaderInputUniversal2dVertex{
 				{pos: localPos[0], color: localColor[0]},
 				{pos: localPos[1], color: localColor[1]},
@@ -255,16 +267,18 @@ func (r *Render) Draw2dRect(p *Params2dRect) {
 	// with custom polygon mode
 	// when rect is filled, two triangles visually looks same as rect
 
-	r.api.Draw(buildInShaderTriangle, &shaderInputUniversal2d{
-		mode: vulkan.PolygonModeFill,
+	mode := vlk.DrawOptions{
+		PolygonMode: vulkan.PolygonModeFill,
+	}
+
+	r.api.Draw(buildInShaderTriangle, mode, &shaderInputUniversal2d{
 		vertexes: []shaderInputUniversal2dVertex{
 			{pos: localPos[0], color: localColor[0]}, // tl
 			{pos: localPos[1], color: localColor[1]}, // tr
 			{pos: localPos[2], color: localColor[2]}, // br
 		},
 	})
-	r.api.Draw(buildInShaderTriangle, &shaderInputUniversal2d{
-		mode: vulkan.PolygonModeFill,
+	r.api.Draw(buildInShaderTriangle, mode, &shaderInputUniversal2d{
 		vertexes: []shaderInputUniversal2dVertex{
 			{pos: localPos[2], color: localColor[2]}, // br
 			{pos: localPos[3], color: localColor[3]}, // bl
@@ -328,7 +342,11 @@ func (r *Render) Draw2dCircle(p *Params2dCircle) {
 		localColor[3] = localColor[0]
 	}
 
-	r.api.Draw(buildInShaderCircle, &shaderInputCircle2d{
+	mode := vlk.DrawOptions{
+		PolygonMode: vulkan.PolygonModeFill,
+	}
+
+	r.api.Draw(buildInShaderCircle, mode, &shaderInputCircle2d{
 		vertexes: []shaderInputCircle2dVertex{
 			{pos: localPos[0], color: localColor[0]},
 			{pos: localPos[1], color: localColor[1]},

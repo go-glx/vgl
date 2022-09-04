@@ -80,7 +80,3 @@ func (d *shaderInputCircle2d) StorageData() []byte {
 
 	return buff
 }
-
-func (d *shaderInputCircle2d) PolygonMode() vulkan.PolygonMode {
-	return vulkan.PolygonModeFill
-}
