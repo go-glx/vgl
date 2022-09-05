@@ -5,9 +5,9 @@ import (
 
 	"github.com/vulkan-go/vulkan"
 
-	"github.com/go-glx/vgl/config"
 	"github.com/go-glx/vgl/internal/gpu/vlk/internal/logical"
 	"github.com/go-glx/vgl/internal/gpu/vlk/internal/must"
+	"github.com/go-glx/vgl/shared/vlkext"
 )
 
 type Pass struct {
@@ -32,7 +32,7 @@ func (p *Pass) Ref() vulkan.RenderPass {
 	return p.ref
 }
 
-func createPass(name string, logger config.Logger, ld *logical.Device, attachments []vulkan.AttachmentDescription, subPasses []vulkan.SubpassDescription, dependencies []vulkan.SubpassDependency) vulkan.RenderPass {
+func createPass(name string, logger vlkext.Logger, ld *logical.Device, attachments []vulkan.AttachmentDescription, subPasses []vulkan.SubpassDescription, dependencies []vulkan.SubpassDependency) vulkan.RenderPass {
 	info := &vulkan.RenderPassCreateInfo{
 		SType:           vulkan.StructureTypeRenderPassCreateInfo,
 		AttachmentCount: uint32(len(attachments)),

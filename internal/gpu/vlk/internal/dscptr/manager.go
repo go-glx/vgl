@@ -7,15 +7,15 @@ import (
 
 	"github.com/vulkan-go/vulkan"
 
-	"github.com/go-glx/vgl/config"
 	"github.com/go-glx/vgl/internal/gpu/vlk/internal/alloc"
 	"github.com/go-glx/vgl/internal/gpu/vlk/internal/logical"
 	"github.com/go-glx/vgl/internal/gpu/vlk/internal/physical"
+	"github.com/go-glx/vgl/shared/vlkext"
 )
 
 type (
 	Manager struct {
-		logger config.Logger
+		logger vlkext.Logger
 		ld     *logical.Device
 		heap   *alloc.Heap
 		pool   *Pool
@@ -37,7 +37,7 @@ type (
 )
 
 func NewManager(
-	logger config.Logger,
+	logger vlkext.Logger,
 	ld *logical.Device,
 	pd *physical.Device,
 	heap *alloc.Heap,

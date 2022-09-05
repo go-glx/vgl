@@ -6,14 +6,14 @@ import (
 
 	"github.com/vulkan-go/vulkan"
 
-	"github.com/go-glx/vgl/config"
 	"github.com/go-glx/vgl/internal/gpu/vlk/internal/def"
 	"github.com/go-glx/vgl/internal/gpu/vlk/internal/vkconv"
+	"github.com/go-glx/vgl/shared/vlkext"
 )
 
 type (
 	GPU struct {
-		logger             config.Logger
+		logger             vlkext.Logger
 		Ref                vulkan.PhysicalDevice
 		Props              vulkan.PhysicalDeviceProperties
 		Features           vulkan.PhysicalDeviceFeatures

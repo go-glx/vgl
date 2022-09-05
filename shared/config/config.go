@@ -1,10 +1,12 @@
 package config
 
+import "github.com/go-glx/vgl/shared/vlkext"
+
 type (
 	Config struct {
 		debug  bool
 		gpu    configSwapChain
-		logger Logger
+		logger vlkext.Logger
 	}
 
 	configSwapChain struct {
@@ -50,7 +52,7 @@ func WithMobileFriendly(enabled bool) Configure {
 // WithLogger allow to use custom logger
 // for library messages. If not set, default go
 // log.* package will be used for logging
-func WithLogger(logger Logger) Configure {
+func WithLogger(logger vlkext.Logger) Configure {
 	return func(config *Config) {
 		config.logger = logger
 	}

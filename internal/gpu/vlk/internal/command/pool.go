@@ -3,14 +3,14 @@ package command
 import (
 	"github.com/vulkan-go/vulkan"
 
-	"github.com/go-glx/vgl/config"
 	"github.com/go-glx/vgl/internal/gpu/vlk/internal/logical"
 	"github.com/go-glx/vgl/internal/gpu/vlk/internal/must"
 	"github.com/go-glx/vgl/internal/gpu/vlk/internal/physical"
+	"github.com/go-glx/vgl/shared/vlkext"
 )
 
 type Pool struct {
-	logger config.Logger
+	logger vlkext.Logger
 	pd     *physical.Device
 	ld     *logical.Device
 
@@ -21,7 +21,7 @@ type Pool struct {
 	mainBuffers []vulkan.CommandBuffer
 }
 
-func NewPool(logger config.Logger, pd *physical.Device, ld *logical.Device) *Pool {
+func NewPool(logger vlkext.Logger, pd *physical.Device, ld *logical.Device) *Pool {
 	pool, buffers := createPool(pd, ld)
 	return &Pool{
 		logger:      logger,

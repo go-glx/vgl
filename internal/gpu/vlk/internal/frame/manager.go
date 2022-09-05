@@ -5,12 +5,12 @@ import (
 
 	"github.com/vulkan-go/vulkan"
 
-	"github.com/go-glx/vgl/config"
 	"github.com/go-glx/vgl/internal/gpu/vlk/internal/command"
 	"github.com/go-glx/vgl/internal/gpu/vlk/internal/def"
 	"github.com/go-glx/vgl/internal/gpu/vlk/internal/logical"
 	"github.com/go-glx/vgl/internal/gpu/vlk/internal/renderpass"
 	"github.com/go-glx/vgl/internal/gpu/vlk/internal/swapchain"
+	"github.com/go-glx/vgl/shared/vlkext"
 )
 
 // todo: need some refactoring with available state management
@@ -19,7 +19,7 @@ import (
 const maxWaitImageErrorsCount = 32
 
 type Manager struct {
-	logger         config.Logger
+	logger         vlkext.Logger
 	chain          *swapchain.Chain
 	mainRenderPass *renderpass.Pass
 	ld             *logical.Device
@@ -39,7 +39,7 @@ type Manager struct {
 }
 
 func NewManager(
-	logger config.Logger,
+	logger vlkext.Logger,
 	ld *logical.Device,
 	pool *command.Pool,
 	chain *swapchain.Chain,

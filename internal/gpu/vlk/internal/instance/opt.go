@@ -3,11 +3,11 @@ package instance
 import (
 	"unsafe"
 
-	"github.com/go-glx/vgl/config"
+	"github.com/go-glx/vgl/shared/vlkext"
 )
 
 type CreateOptions struct {
-	logger             config.Logger
+	logger             vlkext.Logger
 	procAddr           unsafe.Pointer
 	appName            string
 	engineName         string
@@ -16,7 +16,7 @@ type CreateOptions struct {
 }
 
 func NewCreateOptions(
-	logger config.Logger,
+	logger vlkext.Logger,
 	procAddr unsafe.Pointer,
 	appName string,
 	engineName string,

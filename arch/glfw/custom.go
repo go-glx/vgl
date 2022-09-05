@@ -1,4 +1,4 @@
-package arch
+package glfw
 
 import (
 	"fmt"
@@ -10,11 +10,10 @@ import (
 )
 
 type (
-	GLFWCustom struct {
+	Custom struct {
 		appName    string
 		engineName string
-
-		glfwWindow *glfw.Window
+		window     *glfw.Window
 
 		windowResizeCb *glfwResizeCallback
 	}
@@ -26,11 +25,11 @@ func NewCustomGLFW(
 	appName string,
 	engineName string,
 	window *glfw.Window,
-) *GLFWCustom {
-	wm := &GLFWCustom{
+) *Custom {
+	wm := &Custom{
 		appName:    appName,
 		engineName: engineName,
-		glfwWindow: window,
+		window:     window,
 	}
 
 	window.SetFramebufferSizeCallback(func(w *glfw.Window, width int, height int) {
@@ -43,20 +42,20 @@ func NewCustomGLFW(
 	return wm
 }
 
-func (g *GLFWCustom) AppName() string {
+func (g *Custom) AppName() string {
 	return g.appName
 }
 
-func (g *GLFWCustom) EngineName() string {
+func (g *Custom) EngineName() string {
 	return g.engineName
 }
 
-func (g *GLFWCustom) OnWindowResized(f func(width int, height int)) {
+func (g *Custom) OnWindowResized(f func(width int, height int)) {
 	g.windowResizeCb = &f
 }
 
-func (g *GLFWCustom) CreateSurface(inst vulkan.Instance) (vulkan.Surface, error) {
-	surfacePtr, err := g.glfwWindow.CreateWindowSurface(inst, nil)
+func (g *Custom) CreateSurface(inst vulkan.Instance) (vulkan.Surface, error) {
+	surfacePtr, err := g.window.CreateWindowSurface(inst, nil)
 	if err != nil {
 		return nil, fmt.Errorf("failed create glfw surface: %w", err)
 	}
@@ -64,15 +63,15 @@ func (g *GLFWCustom) CreateSurface(inst vulkan.Instance) (vulkan.Surface, error)
 	return vulkan.SurfaceFromPointer(surfacePtr), nil
 }
 
-func (g *GLFWCustom) GetRequiredInstanceExtensions() []string {
-	return g.glfwWindow.GetRequiredInstanceExtensions()
+func (g *Custom) GetRequiredInstanceExtensions() []string {
+	return g.window.GetRequiredInstanceExtensions()
 }
 
-func (g *GLFWCustom) GetFramebufferSize() (width, height int) {
-	return g.glfwWindow.GetSize()
+func (g *Custom) GetFramebufferSize() (width, height int) {
+	return g.window.GetSize()
 }
 
-func (g *GLFWCustom) InitVulkanProcAddr() unsafe.Pointer {
+func (g *Custom) InitVulkanProcAddr() unsafe.Pointer {
 	procAddr := glfw.GetVulkanGetInstanceProcAddress()
 	if procAddr == nil {
 		panic(fmt.Errorf("failed get vulkan proc address"))
@@ -82,6 +81,6 @@ func (g *GLFWCustom) InitVulkanProcAddr() unsafe.Pointer {
 	return procAddr
 }
 
-func (g *GLFWCustom) Close() error {
+func (g *Custom) Close() error {
 	return nil
 }

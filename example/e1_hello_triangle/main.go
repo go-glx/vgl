@@ -6,12 +6,12 @@ import (
 
 	"github.com/go-glx/glx"
 	"github.com/go-glx/vgl"
-	"github.com/go-glx/vgl/arch"
-	"github.com/go-glx/vgl/config"
+	"github.com/go-glx/vgl/arch/glfw"
+	"github.com/go-glx/vgl/shared/config"
 )
 
 func main() {
-	wm := arch.NewGLFW("triangle", "triangle", false, 640, 480)
+	wm := glfw.NewGLFW("triangle", "triangle", false, 640, 480)
 	app := vgl.NewRender(wm, config.NewConfig())
 
 	appAlive := true

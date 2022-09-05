@@ -6,19 +6,19 @@ import (
 
 	"github.com/vulkan-go/vulkan"
 
-	"github.com/go-glx/vgl/config"
 	"github.com/go-glx/vgl/internal/gpu/vlk/internal/command"
 	"github.com/go-glx/vgl/internal/gpu/vlk/internal/instance"
 	"github.com/go-glx/vgl/internal/gpu/vlk/internal/logical"
 	"github.com/go-glx/vgl/internal/gpu/vlk/internal/must"
 	"github.com/go-glx/vgl/internal/gpu/vlk/internal/physical"
+	"github.com/go-glx/vgl/shared/vlkext"
 )
 
 type (
 	bufferID uint32
 
 	Allocator struct {
-		logger config.Logger
+		logger vlkext.Logger
 		inst   *instance.Instance
 		pd     *physical.Device
 		ld     *logical.Device
@@ -37,7 +37,7 @@ type (
 )
 
 func NewAllocator(
-	logger config.Logger,
+	logger vlkext.Logger,
 	inst *instance.Instance,
 	pd *physical.Device,
 	ld *logical.Device,

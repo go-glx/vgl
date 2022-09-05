@@ -3,16 +3,16 @@ package pipeline
 import (
 	"github.com/vulkan-go/vulkan"
 
-	"github.com/go-glx/vgl/config"
 	"github.com/go-glx/vgl/internal/gpu/vlk/internal/dscptr"
 	"github.com/go-glx/vgl/internal/gpu/vlk/internal/logical"
 	"github.com/go-glx/vgl/internal/gpu/vlk/internal/must"
 	"github.com/go-glx/vgl/internal/gpu/vlk/internal/renderpass"
 	"github.com/go-glx/vgl/internal/gpu/vlk/internal/swapchain"
+	"github.com/go-glx/vgl/shared/vlkext"
 )
 
 type Factory struct {
-	logger             config.Logger
+	logger             vlkext.Logger
 	ld                 *logical.Device
 	swapChain          *swapchain.Chain
 	mainRenderPass     *renderpass.Pass
@@ -29,7 +29,7 @@ type Info struct {
 }
 
 func NewFactory(
-	logger config.Logger,
+	logger vlkext.Logger,
 	ld *logical.Device,
 	swapChain *swapchain.Chain,
 	mainRenderPass *renderpass.Pass,

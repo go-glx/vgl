@@ -5,19 +5,18 @@ import (
 
 	"github.com/vulkan-go/vulkan"
 
-	"github.com/go-glx/vgl/arch"
-	"github.com/go-glx/vgl/config"
 	"github.com/go-glx/vgl/internal/gpu/vlk/internal/instance"
+	"github.com/go-glx/vgl/shared/vlkext"
 )
 
 type Surface struct {
-	logger config.Logger
+	logger vlkext.Logger
 	inst   *instance.Instance
 
 	ref vulkan.Surface
 }
 
-func NewSurface(logger config.Logger, inst *instance.Instance, wm arch.WindowManager) *Surface {
+func NewSurface(logger vlkext.Logger, inst *instance.Instance, wm vlkext.WindowManager) *Surface {
 	surface, err := wm.CreateSurface(inst.Ref())
 	if err != nil {
 		panic(fmt.Errorf("failed create vulkan surface: %w", err))

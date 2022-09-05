@@ -5,21 +5,21 @@ import (
 
 	"github.com/vulkan-go/vulkan"
 
-	"github.com/go-glx/vgl/config"
 	"github.com/go-glx/vgl/internal/gpu/vlk/internal/def"
 	"github.com/go-glx/vgl/internal/gpu/vlk/internal/logical"
 	"github.com/go-glx/vgl/internal/gpu/vlk/internal/must"
 	"github.com/go-glx/vgl/internal/gpu/vlk/internal/vkconv"
+	"github.com/go-glx/vgl/shared/vlkext"
 )
 
 type Manager struct {
-	logger  config.Logger
+	logger  vlkext.Logger
 	shaders map[string]*Shader
 
 	ld *logical.Device
 }
 
-func NewManager(logger config.Logger, ld *logical.Device) *Manager {
+func NewManager(logger vlkext.Logger, ld *logical.Device) *Manager {
 	return &Manager{
 		logger:  logger,
 		shaders: make(map[string]*Shader),

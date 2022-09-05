@@ -1,20 +1,20 @@
 package physical
 
 import (
-	"github.com/go-glx/vgl/config"
 	"github.com/go-glx/vgl/internal/gpu/vlk/internal/instance"
 	"github.com/go-glx/vgl/internal/gpu/vlk/internal/surface"
+	"github.com/go-glx/vgl/shared/vlkext"
 )
 
 type Device struct {
-	logger  config.Logger
+	logger  vlkext.Logger
 	inst    *instance.Instance
 	surface *surface.Surface
 
 	primaryGPU *GPU
 }
 
-func NewDevice(logger config.Logger, inst *instance.Instance, surface *surface.Surface) *Device {
+func NewDevice(logger vlkext.Logger, inst *instance.Instance, surface *surface.Surface) *Device {
 	dev := &Device{
 		logger:  logger,
 		inst:    inst,

@@ -1,4 +1,4 @@
-package arch
+package glfw
 
 import (
 	"fmt"
@@ -11,7 +11,7 @@ import (
 
 type (
 	GLFW struct {
-		custom *GLFWCustom
+		custom *Custom
 	}
 )
 

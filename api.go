@@ -1,9 +1,9 @@
 package vgl
 
 import (
-	"github.com/go-glx/vgl/arch"
-	"github.com/go-glx/vgl/config"
 	"github.com/go-glx/vgl/internal/gpu/vlk"
+	"github.com/go-glx/vgl/shared/config"
+	"github.com/go-glx/vgl/shared/vlkext"
 )
 
 type Render struct {
@@ -11,7 +11,7 @@ type Render struct {
 	api    *vlk.VLK
 }
 
-func NewRender(wm arch.WindowManager, cfg *config.Config) *Render {
+func NewRender(wm vlkext.WindowManager, cfg *config.Config) *Render {
 	closer := newCloser()
 	container := vlk.NewContainer(closer, wm, cfg)
 	renderer := container.VulkanRenderer()

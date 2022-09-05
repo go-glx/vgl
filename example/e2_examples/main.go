@@ -7,12 +7,15 @@ import (
 	_ "net/http/pprof"
 	"os"
 	"os/signal"
+	"sort"
+	"strings"
 	"time"
 
 	"github.com/go-glx/glx"
 	"github.com/go-glx/vgl"
-	"github.com/go-glx/vgl/arch"
-	"github.com/go-glx/vgl/config"
+	"github.com/go-glx/vgl/arch/glfw"
+	"github.com/go-glx/vgl/shared/config"
+	"github.com/go-glx/vgl/shared/metrics"
 )
 
 // --------------------------
@@ -21,8 +24,8 @@ import (
 
 const appWidth = 720
 const appHeight = 480
-const currentDemo = demoE5DefaultBlending
-const enablePprof = false
+const currentDemo = demoE3Points
+const enablePprof = true
 
 // --------------------------
 // Internal setup
@@ -47,7 +50,7 @@ var demos = map[int]func(rnd *vgl.Render){
 }
 
 func main() {
-	wm := arch.NewGLFW("examples", "VGL", false, appWidth, appHeight)
+	wm := glfw.NewGLFW("examples", "VGL", false, appWidth, appHeight)
 	rnd := vgl.NewRender(wm, config.NewConfig(
 		config.WithDebug(true),
 		config.WithMobileFriendly(true),
@@ -113,18 +116,21 @@ func pprof() {
 }
 
 var startTime = time.Now()
-var combinedStats = vgl.Stats{}
+var combinedStats = metrics.NewStats()
 
-func onFrameEndStats(stats vgl.Stats) {
+func onFrameEndStats(stats metrics.Stats) {
 	if stats.FrameIndex != 0 {
 		// print one time per second
 		combinedStats.DrawCalls += stats.DrawCalls
-		combinedStats.DrawChunks += stats.DrawChunks
-		combinedStats.DrawUniqueShaders += stats.DrawUniqueShaders
-		combinedStats.TimeCreatePipeline += stats.TimeCreatePipeline
-		combinedStats.TimeFlushVertexBuffer += stats.TimeFlushVertexBuffer
-		combinedStats.TimeRenderInstanced += stats.TimeRenderInstanced
-		combinedStats.TimeRenderFallback += stats.TimeRenderFallback
+		combinedStats.DrawGroups += stats.DrawGroups
+
+		for segment, duration := range stats.SegmentDuration {
+			if _, exist := combinedStats.SegmentDuration[segment]; !exist {
+				combinedStats.SegmentDuration[segment] = duration
+			}
+
+			combinedStats.SegmentDuration[segment] += duration
+		}
 		return
 	}
 
@@ -144,15 +150,12 @@ func onFrameEndStats(stats vgl.Stats) {
 	elapsed := time.Since(startTime)
 	fmt.Printf(""+
 		"+%3.0fs | FPS=%-2d  drawCalls=%.0f \n"+
-		"  us> | Pipl=%-4.0f  WrtVert=%-4.0f  DrwInd=%-4.0f  Drw=%-4.0f\n"+
+		"  us> | %s\n"+
 		"  mem | total=%s  vert=%s  ind=%s  ubo=%s  ssbo=%s\n",
 		elapsed.Seconds(),
 		stats.FPS,
 		float32(combinedStats.DrawCalls)/avg,
-		float32(combinedStats.TimeCreatePipeline.Microseconds())/avg,
-		float32(combinedStats.TimeFlushVertexBuffer.Microseconds())/avg,
-		float32(combinedStats.TimeRenderInstanced.Microseconds())/avg,
-		float32(combinedStats.TimeRenderFallback.Microseconds())/avg,
+		formatMetricDurations(combinedStats, avg),
 		printMem(stats.Memory.TotalSize, stats.Memory.TotalCapacity),
 		printMem(stats.Memory.VertexBuffers.Size, stats.Memory.VertexBuffers.Capacity),
 		printMem(stats.Memory.IndexBuffers.Size, stats.Memory.IndexBuffers.Capacity),
@@ -160,18 +163,47 @@ func onFrameEndStats(stats vgl.Stats) {
 		printMem(stats.Memory.StorageBuffers.Size, stats.Memory.StorageBuffers.Capacity),
 	)
 
-	resetCombinedStats(&combinedStats)
+	combinedStats.Reset()
 }
 
-func resetCombinedStats(s *vgl.Stats) {
-	s.DrawCalls = 0
-	s.DrawChunks = 0
-	s.DrawUniqueShaders = 0
+func formatMetricDurations(s metrics.Stats, avg float32) string {
+	const maxSlowSegments = 4
 
-	s.TimeCreatePipeline = 0
-	s.TimeFlushVertexBuffer = 0
-	s.TimeRenderInstanced = 0
-	s.TimeRenderFallback = 0
+	type seg struct {
+		name     string
+		duration time.Duration
+	}
 
-	s.Memory = vgl.MemoryStats{}
+	// map -> slice
+	segments := make([]seg, 0, len(s.SegmentDuration))
+
+	for name, duration := range s.SegmentDuration {
+		segments = append(segments, seg{
+			name:     name,
+			duration: duration,
+		})
+	}
+
+	// sort by duration (slow first)
+	sort.Slice(segments, func(i, j int) bool {
+		return segments[i].duration > segments[j].duration
+	})
+
+	// limit first N
+	if len(segments) > maxSlowSegments {
+		segments = segments[0:maxSlowSegments]
+	}
+
+	// format duration
+	formatted := make([]string, 0, len(segments))
+	for _, segment := range segments {
+		formatted = append(formatted, fmt.Sprintf("%s=%s (%.0f%%)",
+			segment.name,
+			segment.duration.String(),
+			segment.duration.Seconds()*100,
+		))
+	}
+
+	// join in one line
+	return strings.Join(formatted, ", ")
 }

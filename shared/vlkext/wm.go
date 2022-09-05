@@ -1,4 +1,4 @@
-package arch
+package vlkext
 
 import (
 	"io"

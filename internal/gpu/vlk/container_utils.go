@@ -1,7 +1,7 @@
 package vlk
 
 import (
-	"fmt"
+	"reflect"
 )
 
 type (
@@ -13,7 +13,7 @@ type (
 		EnqueueFree(fn func())
 	}
 
-	resourcesDict map[string]any
+	resourcesDict map[uintptr]any
 )
 
 var knownResources = resourcesDict{}
@@ -23,7 +23,7 @@ func resolver[T any](c resourceQueueCloser, factory func() *T) *T {
 	// all static function (defined in compile time), always has
 	// same memory pointers. So this is unique identify for factory
 	// that create this resource
-	ptr := fmt.Sprintf("%p", factory)
+	ptr := reflect.ValueOf(factory).Pointer()
 
 	if target, exist := knownResources[ptr]; exist {
 		return target.(*T)

@@ -6,22 +6,22 @@ import (
 
 	"github.com/vulkan-go/vulkan"
 
-	"github.com/go-glx/vgl/config"
 	"github.com/go-glx/vgl/internal/gpu/vlk/internal/def"
 	"github.com/go-glx/vgl/internal/gpu/vlk/internal/logical"
 	"github.com/go-glx/vgl/internal/gpu/vlk/internal/must"
+	"github.com/go-glx/vgl/shared/vlkext"
 )
 
 const framesCount = def.OptimalSwapChainBuffersCount
 
 type Pool struct {
-	logger config.Logger
+	logger vlkext.Logger
 	ld     *logical.Device
 
 	ref vulkan.DescriptorPool
 }
 
-func NewPool(logger config.Logger, ld *logical.Device) *Pool {
+func NewPool(logger vlkext.Logger, ld *logical.Device) *Pool {
 	return &Pool{
 		logger: logger,
 		ld:     ld,
@@ -39,7 +39,7 @@ func (p *Pool) Pool() vulkan.DescriptorPool {
 	return p.ref
 }
 
-func createPool(logger config.Logger, ld *logical.Device) vulkan.DescriptorPool {
+func createPool(logger vlkext.Logger, ld *logical.Device) vulkan.DescriptorPool {
 	bufferTypes := map[vulkan.DescriptorType]uint32{}
 	for _, layout := range blueprint {
 		for _, binding := range layout.bindings {

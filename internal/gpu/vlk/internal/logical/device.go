@@ -6,14 +6,14 @@ import (
 
 	"github.com/vulkan-go/vulkan"
 
-	"github.com/go-glx/vgl/config"
 	"github.com/go-glx/vgl/internal/gpu/vlk/internal/must"
 	"github.com/go-glx/vgl/internal/gpu/vlk/internal/physical"
 	"github.com/go-glx/vgl/internal/gpu/vlk/internal/vkconv"
+	"github.com/go-glx/vgl/shared/vlkext"
 )
 
 type Device struct {
-	logger config.Logger
+	logger vlkext.Logger
 	pd     *physical.Device
 
 	ref           vulkan.Device
@@ -21,7 +21,7 @@ type Device struct {
 	queuePresent  vulkan.Queue
 }
 
-func NewDevice(logger config.Logger, pd *physical.Device) *Device {
+func NewDevice(logger vlkext.Logger, pd *physical.Device) *Device {
 	dev := &Device{
 		logger: logger,
 		pd:     pd,

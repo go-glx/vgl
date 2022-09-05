@@ -4,7 +4,7 @@ import (
 	"github.com/vulkan-go/vulkan"
 
 	"github.com/go-glx/vgl/internal/gpu/vlk/internal/alloc"
-	"github.com/go-glx/vgl/internal/gpu/vlk/metrics"
+	"github.com/go-glx/vgl/shared/metrics"
 )
 
 // WarmUp will warm vlk renderer and create all needed
@@ -35,10 +35,12 @@ func (vlk *VLK) FrameStart() {
 		return
 	}
 
-	if vlk.statsResetQueued {
+	vlk.stats.Reset()
+
+	if vlk.statsUpdateFPSQueued {
 		vlk.stats.FPS = vlk.stats.FrameIndex
 		vlk.stats.FrameIndex = -1
-		vlk.statsResetQueued = false
+		vlk.statsUpdateFPSQueued = false
 	}
 
 	// start command buffers

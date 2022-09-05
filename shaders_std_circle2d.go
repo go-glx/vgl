@@ -77,6 +77,8 @@ func (d *shaderInputCircle2d) StorageData() []byte {
 	// 8
 	buff = append(buff, d.smooth.Data()...)
 	buff = append(buff, bytes.Repeat([]byte("0"), 4)...) // align to 8 bytes
+	// todo: move align outside of shader definition
+	// todo: 4 bytes is "magic" align, use device real align instead
 
 	return buff
 }

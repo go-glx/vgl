@@ -1,9 +1,4 @@
-package config
-
-// todo: check:
-// prefix "vk:"
-// suffix "\n"
-// on all logs calls
+package vlkext
 
 type Logger interface {
 	Debug(msg string)

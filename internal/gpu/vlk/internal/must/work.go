@@ -6,7 +6,7 @@ import (
 
 	"github.com/vulkan-go/vulkan"
 
-	"github.com/go-glx/vgl/config"
+	"github.com/go-glx/vgl/shared/vlkext"
 )
 
 // Work will panic when vkResult is not success
@@ -24,7 +24,7 @@ func Work(vkResult vulkan.Result) {
 // NotCare MUST be called from some util function, not directly
 // Code -> utilFn -> NotCare -> goError (3)
 // This will show n-3 stack trace line, where code is halted
-func NotCare(logger config.Logger, vkResult vulkan.Result) bool {
+func NotCare(logger vlkext.Logger, vkResult vulkan.Result) bool {
 	if vkResult == vulkan.Success {
 		return true
 	}

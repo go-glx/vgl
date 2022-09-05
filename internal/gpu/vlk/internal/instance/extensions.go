@@ -6,16 +6,16 @@ import (
 
 	"github.com/vulkan-go/vulkan"
 
-	"github.com/go-glx/vgl/config"
 	"github.com/go-glx/vgl/internal/gpu/vlk/internal/must"
 	"github.com/go-glx/vgl/internal/gpu/vlk/internal/vkconv"
+	"github.com/go-glx/vgl/shared/vlkext"
 )
 
 type (
 	extList map[string]any
 )
 
-func fetchAvailableExtensions(logger config.Logger) extList {
+func fetchAvailableExtensions(logger vlkext.Logger) extList {
 	var extCount uint32
 	must.Work(vulkan.EnumerateInstanceExtensionProperties("", &extCount, nil))
 

@@ -3,14 +3,14 @@ package renderpass
 import (
 	"github.com/vulkan-go/vulkan"
 
-	"github.com/go-glx/vgl/config"
 	"github.com/go-glx/vgl/internal/gpu/vlk/internal/logical"
 	"github.com/go-glx/vgl/internal/gpu/vlk/internal/physical"
+	"github.com/go-glx/vgl/shared/vlkext"
 )
 
 // NewMain return main render pass that used for rendering
 // buffers to window screen surface
-func NewMain(logger config.Logger, pd *physical.Device, ld *logical.Device) *Pass {
+func NewMain(logger vlkext.Logger, pd *physical.Device, ld *logical.Device) *Pass {
 	return newPass(
 		ld,
 		createPass(

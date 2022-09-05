@@ -3,6 +3,7 @@ package main
 import (
 	"github.com/go-glx/glx"
 	"github.com/go-glx/vgl"
+	"github.com/go-glx/vgl/shared/metrics"
 )
 
 var e1RenderOrderInv = false
@@ -31,7 +32,7 @@ func e1RectDrawOrder(rnd *vgl.Render) {
 
 	if !e1SubscribeSwitch {
 		e1SubscribeSwitch = true
-		rnd.ListenStats(func(stats vgl.Stats) {
+		rnd.ListenStats(func(stats metrics.Stats) {
 			if stats.FrameIndex == 0 {
 				e1RenderOrderInv = !e1RenderOrderInv
 			}

@@ -1,13 +1,16 @@
 package vlk
 
 import (
+	"strconv"
+	"time"
+
 	"github.com/vulkan-go/vulkan"
 
 	"github.com/go-glx/glx"
 	"github.com/go-glx/vgl/internal/gpu/vlk/internal/def"
 	"github.com/go-glx/vgl/internal/gpu/vlk/internal/dscptr"
 	"github.com/go-glx/vgl/internal/gpu/vlk/internal/pipeline"
-	"github.com/go-glx/vgl/internal/gpu/vlk/metrics"
+	"github.com/go-glx/vgl/shared/metrics"
 )
 
 type (
@@ -32,8 +35,8 @@ func (vlk *VLK) initDrawingPipeline() {
 				vlk.plSurfaceUpdateGlobalUniform,
 				vlk.plSurfaceOnEveryGroup(
 					vlk.plGroupStats,
-					vlk.plGroupUpdateRenderingPipeline,
-					vlk.plGroupUpdateIndexBuffer,
+					vlk.plGroupCreateRenderingPipeline,
+					vlk.plGroupFindIndexBuffer,
 					vlk.plGroupUpdateVertexBuffer,
 				),
 			),
@@ -128,13 +131,16 @@ func (vlk *VLK) plUpdateGlobalRendererVars(ctx *drawContext) {
 
 	vlk.stats.FrameIndex++
 	vlk.stats.DrawCalls = 0
-	vlk.stats.DrawChunks = 0
-	vlk.stats.DrawUniqueShaders = 0
+	vlk.stats.DrawGroups = 0
 	vlk.stats.Memory = metrics.MemoryStats{}
 }
 
 func (vlk *VLK) plClearVertexBuffers(ctx *drawContext) {
+	ts := time.Now()
+
 	vlk.cont.allocBuffers().ClearVertexBuffersOwnedBy(ctx.currentImageID)
+
+	vlk.stats.SegmentDuration[metrics.SegmentPlClearBuffers] += time.Since(ts)
 }
 
 func (vlk *VLK) plClearContext(ctx *drawContext) {
@@ -147,6 +153,8 @@ func (vlk *VLK) plClearContext(ctx *drawContext) {
 // ~=~=~=~=~=~=~=~=~=~=~=~=~=~=~=~=~=~=~=~=~=~=~=~=~=~=~=~=~=~=~=
 
 func (vlk *VLK) plSurfaceUpdateGlobalUniform(ctx *drawContext, surf *drawSurface) {
+	ts := time.Now()
+
 	// write global data to uniform buffers that need for every shader
 	view := glx.Mat4Identity()       // todo
 	projection := glx.Mat4Identity() // todo
@@ -166,6 +174,8 @@ func (vlk *VLK) plSurfaceUpdateGlobalUniform(ctx *drawContext, surf *drawSurface
 			0: uboData,            // layout=0, binding=0 (vert shader only)
 			1: surfaceSize.Data(), // layout=0, binding=1 (frag shader only)
 		})
+
+	vlk.stats.SegmentDuration[metrics.SegmentPlUpdateGlobalUniform] += time.Since(ts)
 }
 
 // ~=~=~=~=~=~=~=~=~=~=~=~=~=~=~=~=~=~=~=~=~=~=~=~=~=~=~=~=~=~=~=
@@ -173,16 +183,20 @@ func (vlk *VLK) plSurfaceUpdateGlobalUniform(ctx *drawContext, surf *drawSurface
 // ~=~=~=~=~=~=~=~=~=~=~=~=~=~=~=~=~=~=~=~=~=~=~=~=~=~=~=~=~=~=~=
 
 func (vlk *VLK) plGroupStats(_ *drawContext, _ *drawGroup) {
-	vlk.stats.DrawChunks++
+	vlk.stats.DrawGroups++
 }
 
-func (vlk *VLK) plGroupUpdateRenderingPipeline(_ *drawContext, g *drawGroup) {
-	vlk.stats.DrawUniqueShaders++
+func (vlk *VLK) plGroupCreateRenderingPipeline(_ *drawContext, g *drawGroup) {
+	cacheKey := g.shader.Meta().ID() + strconv.FormatInt(int64(g.polygonMode), 10)
 
-	// todo: cache
-	//       reuse created pipelines, when all shader input is same
+	if pipe, exist := vlk.drawPipelineCache[cacheKey]; exist {
+		g.renderPipe = pipe
+		return
+	}
 
-	g.renderPipe = vlk.cont.pipelineFactory().NewPipeline(
+	ts := time.Now()
+
+	pipe := vlk.cont.pipelineFactory().NewPipeline(
 		pipeline.WithStages([]vulkan.PipelineShaderStageCreateInfo{
 			g.shader.ModuleVert().Stage(),
 			g.shader.ModuleFrag().Stage(),
@@ -199,9 +213,16 @@ func (vlk *VLK) plGroupUpdateRenderingPipeline(_ *drawContext, g *drawGroup) {
 		pipeline.WithColorBlend(),
 		pipeline.WithMultisampling(),
 	)
+
+	g.renderPipe = pipe
+	vlk.drawPipelineCache[cacheKey] = pipe
+
+	vlk.stats.SegmentDuration[metrics.SegmentPlCreatePipeline] += time.Since(ts)
 }
 
-func (vlk *VLK) plGroupUpdateIndexBuffer(_ *drawContext, g *drawGroup) {
+func (vlk *VLK) plGroupFindIndexBuffer(_ *drawContext, g *drawGroup) {
+	ts := time.Now()
+
 	// find global shader indexes of this shader
 	indexes := vlk.indexBufferOf(g.shader)
 
@@ -211,9 +232,12 @@ func (vlk *VLK) plGroupUpdateIndexBuffer(_ *drawContext, g *drawGroup) {
 		buffer: indexes.Buffer,
 		offset: indexes.Offset,
 	}
+
+	vlk.stats.SegmentDuration[metrics.SegmentPlUpdateIndexes] += time.Since(ts)
 }
 
 func (vlk *VLK) plGroupUpdateVertexBuffer(ctx *drawContext, g *drawGroup) {
+	ts := time.Now()
 	chunks := vlk.cont.allocBuffers().WriteVertexBuffersFromInstances(ctx.currentImageID, g.instances)
 
 	firstInst := uint32(0)
@@ -233,6 +257,8 @@ func (vlk *VLK) plGroupUpdateVertexBuffer(ctx *drawContext, g *drawGroup) {
 
 		firstInst += chunk.InstanceCount
 	}
+
+	vlk.stats.SegmentDuration[metrics.SegmentPlUpdateVertexes] += time.Since(ts)
 }
 
 // ~=~=~=~=~=~=~=~=~=~=~=~=~=~=~=~=~=~=~=~=~=~=~=~=~=~=~=~=~=~=~=
@@ -240,7 +266,11 @@ func (vlk *VLK) plGroupUpdateVertexBuffer(ctx *drawContext, g *drawGroup) {
 // ~=~=~=~=~=~=~=~=~=~=~=~=~=~=~=~=~=~=~=~=~=~=~=~=~=~=~=~=~=~=~=
 
 func (vlk *VLK) plExecGroupBindPipeline(cb vulkan.CommandBuffer, _ *drawContext, _ *drawSurface, g *drawGroup) {
+	ts := time.Now()
+
 	vulkan.CmdBindPipeline(cb, vulkan.PipelineBindPointGraphics, g.renderPipe.Pipeline)
+
+	vlk.stats.SegmentDuration[metrics.SegmentPlBindPipeline] += time.Since(ts)
 }
 
 func (vlk *VLK) plExecGroupBindIndexBuffer(cb vulkan.CommandBuffer, _ *drawContext, _ *drawSurface, g *drawGroup) {
@@ -248,7 +278,11 @@ func (vlk *VLK) plExecGroupBindIndexBuffer(cb vulkan.CommandBuffer, _ *drawConte
 		return
 	}
 
+	ts := time.Now()
+
 	vulkan.CmdBindIndexBuffer(cb, g.indexes.buffer, g.indexes.offset, vulkan.IndexTypeUint16)
+
+	vlk.stats.SegmentDuration[metrics.SegmentPlBindIndexes] += time.Since(ts)
 }
 
 func (vlk *VLK) plExecGroupOnEveryCall(callFns ...drawCallExecFn) drawGroupExecFn {
@@ -266,6 +300,7 @@ func (vlk *VLK) plExecGroupOnEveryCall(callFns ...drawCallExecFn) drawGroupExecF
 // ~=~=~=~=~=~=~=~=~=~=~=~=~=~=~=~=~=~=~=~=~=~=~=~=~=~=~=~=~=~=~=
 
 func (vlk *VLK) plExecCallUpdateLocalUniforms(_ vulkan.CommandBuffer, ctx *drawContext, _ *drawSurface, _ *drawGroup, c *drawCall) {
+	ts := time.Now()
 	data := make([]byte, 0, 256)
 
 	for _, inst := range c.instances {
@@ -289,9 +324,13 @@ func (vlk *VLK) plExecCallUpdateLocalUniforms(_ vulkan.CommandBuffer, ctx *drawC
 		})
 
 	c.uniforms = append(c.uniforms, localUniform)
+
+	vlk.stats.SegmentDuration[metrics.SegmentPlUpdateSSBO] += time.Since(ts)
 }
 
 func (vlk *VLK) plExecCallBindUniforms(cb vulkan.CommandBuffer, _ *drawContext, surf *drawSurface, g *drawGroup, c *drawCall) {
+	ts := time.Now()
+
 	// layout = 0, global data
 	descriptorSets := []vulkan.DescriptorSet{surf.uniform}
 
@@ -310,6 +349,8 @@ func (vlk *VLK) plExecCallBindUniforms(cb vulkan.CommandBuffer, _ *drawContext, 
 		0,
 		nil,
 	)
+
+	vlk.stats.SegmentDuration[metrics.SegmentPlBindUniforms] += time.Since(ts)
 }
 
 func (vlk *VLK) plExecCallBindVertexBuffer(cb vulkan.CommandBuffer, _ *drawContext, _ *drawSurface, _ *drawGroup, c *drawCall) {
@@ -317,12 +358,18 @@ func (vlk *VLK) plExecCallBindVertexBuffer(cb vulkan.CommandBuffer, _ *drawConte
 		return
 	}
 
+	ts := time.Now()
+
 	buffers := []vulkan.Buffer{c.vertexes.buffer}
 	offsets := []vulkan.DeviceSize{c.vertexes.offset}
 	vulkan.CmdBindVertexBuffers(cb, 0, uint32(len(buffers)), buffers, offsets)
+
+	vlk.stats.SegmentDuration[metrics.SegmentPlBindVertex] += time.Since(ts)
 }
 
 func (vlk *VLK) plExecCallInstancedDraw(cb vulkan.CommandBuffer, _ *drawContext, _ *drawSurface, g *drawGroup, c *drawCall) {
+	ts := time.Now()
+
 	instanceCount := uint32(len(c.instances))
 	indexCount := uint32(len(g.shader.Meta().Indexes()))
 	vertexCount := g.shader.Meta().VertexCount()
@@ -344,4 +391,6 @@ func (vlk *VLK) plExecCallInstancedDraw(cb vulkan.CommandBuffer, _ *drawContext,
 
 		vlk.stats.DrawCalls++
 	}
+
+	vlk.stats.SegmentDuration[metrics.SegmentPlDraw] += time.Since(ts)
 }

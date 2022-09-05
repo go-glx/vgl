@@ -6,7 +6,8 @@ import (
 	"github.com/vulkan-go/vulkan"
 
 	"github.com/go-glx/vgl/internal/gpu/vlk/internal/alloc"
-	"github.com/go-glx/vgl/internal/gpu/vlk/metrics"
+	"github.com/go-glx/vgl/internal/gpu/vlk/internal/pipeline"
+	"github.com/go-glx/vgl/shared/metrics"
 )
 
 // todo: api for view,projection mat4
@@ -36,9 +37,9 @@ type VLK struct {
 	cont    *Container
 
 	// stats
-	stats            metrics.Stats
-	statsListeners   []func(metrics.Stats)
-	statsResetQueued bool
+	stats                metrics.Stats
+	statsListeners       []func(metrics.Stats)
+	statsUpdateFPSQueued bool
 
 	// surfaces
 	surfaceInd   surfaceID       // 0 - default (Screen, window); 1-255 reserved for user needs
@@ -50,6 +51,7 @@ type VLK struct {
 	drawContext          *drawContext
 	drawExecution        drawCtxFn
 	drawShaderIndexesMap map[string]alloc.Allocation // shaderID -> allocation (is pointer to index buffer for this shader)'
+	drawPipelineCache    map[string]pipeline.Info
 }
 
 func newVLK(cont *Container) *VLK {
@@ -58,16 +60,17 @@ func newVLK(cont *Container) *VLK {
 		cont:    cont,
 
 		// stats
-		stats:            metrics.Stats{},
-		statsListeners:   make([]func(metrics.Stats), 0),
-		statsResetQueued: false,
+		stats:                metrics.NewStats(),
+		statsListeners:       make([]func(metrics.Stats), 0),
+		statsUpdateFPSQueued: false,
 
 		// surface
 		surfaceInd:   surfaceIdMainWindow,
 		surfacesSize: [255][2]float32{},
 
-		// deprecated
+		// drawing
 		drawShaderIndexesMap: make(map[string]alloc.Allocation),
+		drawPipelineCache:    make(map[string]pipeline.Info), // todo: is useful / fast?
 	}
 
 	// set default screen size
@@ -115,7 +118,7 @@ func (vlk *VLK) countFPS() {
 	for {
 		select {
 		case <-ticker.C:
-			vlk.statsResetQueued = true
+			vlk.statsUpdateFPSQueued = true
 		}
 	}
 }

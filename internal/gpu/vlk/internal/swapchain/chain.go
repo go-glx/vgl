@@ -5,15 +5,15 @@ import (
 
 	"github.com/vulkan-go/vulkan"
 
-	"github.com/go-glx/vgl/config"
 	"github.com/go-glx/vgl/internal/gpu/vlk/internal/logical"
 	"github.com/go-glx/vgl/internal/gpu/vlk/internal/physical"
 	"github.com/go-glx/vgl/internal/gpu/vlk/internal/renderpass"
 	"github.com/go-glx/vgl/internal/gpu/vlk/internal/surface"
+	"github.com/go-glx/vgl/shared/vlkext"
 )
 
 type Chain struct {
-	logger    config.Logger
+	logger    vlkext.Logger
 	props     ChainProps
 	swapChain vulkan.Swapchain
 	images    []vulkan.Image
@@ -23,7 +23,7 @@ type Chain struct {
 	ld *logical.Device
 }
 
-func NewChain(logger config.Logger, width, height uint32, pd *physical.Device, ld *logical.Device, surface *surface.Surface, mainRenderPass *renderpass.Pass, mobileFriendly bool) *Chain {
+func NewChain(logger vlkext.Logger, width, height uint32, pd *physical.Device, ld *logical.Device, surface *surface.Surface, mainRenderPass *renderpass.Pass, mobileFriendly bool) *Chain {
 	props := newProps(width, height, pd, mobileFriendly)
 	sharingMode := deviceSharingMode(pd)
 	swapChain := newSwapChain(pd, ld, surface, props, sharingMode)

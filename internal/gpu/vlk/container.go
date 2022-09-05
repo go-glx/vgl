@@ -1,8 +1,8 @@
 package vlk
 
 import (
-	"github.com/go-glx/vgl/arch"
-	"github.com/go-glx/vgl/config"
+	"github.com/go-glx/vgl/shared/config"
+	"github.com/go-glx/vgl/shared/vlkext"
 )
 
 type closer interface {
@@ -12,9 +12,9 @@ type closer interface {
 
 type Container struct {
 	closer    closer
-	logger    config.Logger
+	logger    vlkext.Logger
 	rebuilder *rebuilder
-	wm        arch.WindowManager
+	wm        vlkext.WindowManager
 	cfg       *config.Config
 
 	// global state
@@ -27,7 +27,7 @@ type Container struct {
 
 func NewContainer(
 	closer closer,
-	wm arch.WindowManager,
+	wm vlkext.WindowManager,
 	cfg *config.Config,
 ) *Container {
 	cont := &Container{

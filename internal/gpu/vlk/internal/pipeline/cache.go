@@ -3,18 +3,18 @@ package pipeline
 import (
 	"github.com/vulkan-go/vulkan"
 
-	"github.com/go-glx/vgl/config"
 	"github.com/go-glx/vgl/internal/gpu/vlk/internal/logical"
+	"github.com/go-glx/vgl/shared/vlkext"
 )
 
 type Cache struct {
 	ref vulkan.PipelineCache
 
-	logger config.Logger
+	logger vlkext.Logger
 	ld     *logical.Device
 }
 
-func NewCache(logger config.Logger, ld *logical.Device) *Cache {
+func NewCache(logger vlkext.Logger, ld *logical.Device) *Cache {
 	info := &vulkan.PipelineCacheCreateInfo{
 		SType: vulkan.StructureTypePipelineCacheCreateInfo,
 	}
