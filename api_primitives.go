@@ -291,14 +291,16 @@ func (r *Render) Draw2dRect(p *Params2dRect) {
 
 // Params2dCircle is input for Draw2dCircle
 type Params2dCircle struct {
-	Center           glx.Vec2     // position in pixels from top,left corner of surface
-	Radius           float32      // radius in pixels
-	HoleRadius       float32      // value [0 .. 1]. 0=without hole, 0.1=90% circle is visible, 1=invisible circle
-	Smooth           float32      // value [-1, 0 .. 1]. -1=no smooth, 0.005=default, 1=full blur (default value will be used, if no value (0) specified)
-	Color            glx.Color    // color for circle body/border
-	ColorGradient    [4]glx.Color // color for circle part (tl, tr, br, bl)
-	ColorUseGradient bool         // will use ColorGradient instead of Color
-	NoCulling        bool         // will send render command to GPU, even if all vertexes outside of visible screen
+	Pos                [4]glx.Vec2  // pixel position from top,left corner of surface in clock-wise order
+	PosCenter          glx.Vec2     // position in pixels from top,left corner of surface
+	PosRadius          float32      // radius in pixels
+	PosUseCenterRadius bool         // will use PosCenter and PosRadius and ignore Pos (will be calculated)
+	HoleRadius         float32      // value [0 .. 1]. 0=without hole, 0.1=90% circle is visible, 1=invisible circle
+	Smooth             float32      // value [-1, 0 .. 1]. -1=no smooth, 0.005=default, 1=full blur (default value will be used, if no value (0) specified)
+	Color              glx.Color    // color for circle body/border
+	ColorGradient      [4]glx.Color // color for circle part (tl, tr, br, bl)
+	ColorUseGradient   bool         // will use ColorGradient instead of Color
+	NoCulling          bool         // will send render command to GPU, even if all vertexes outside of visible screen
 }
 
 // Draw2dCircle will draw circle on current surface with current blend mode
@@ -307,12 +309,17 @@ func (r *Render) Draw2dCircle(p *Params2dCircle) {
 		return
 	}
 
-	localRadius := r.toLocalAspectRation(p.Radius)
-	localPos := [4]glx.Vec2{
-		r.toLocalSpace2d(p.Center.Add(glx.Vec2{X: -p.Radius, Y: -p.Radius})), // tl
-		r.toLocalSpace2d(p.Center.Add(glx.Vec2{X: +p.Radius, Y: -p.Radius})), // tr
-		r.toLocalSpace2d(p.Center.Add(glx.Vec2{X: +p.Radius, Y: +p.Radius})), // br
-		r.toLocalSpace2d(p.Center.Add(glx.Vec2{X: -p.Radius, Y: +p.Radius})), // bl
+	localPos := [4]glx.Vec2{}
+	if p.PosUseCenterRadius {
+		localPos[0] = r.toLocalSpace2d(p.PosCenter.Add(glx.Vec2{X: -p.PosRadius, Y: -p.PosRadius})) // tl
+		localPos[1] = r.toLocalSpace2d(p.PosCenter.Add(glx.Vec2{X: +p.PosRadius, Y: -p.PosRadius})) // tr
+		localPos[2] = r.toLocalSpace2d(p.PosCenter.Add(glx.Vec2{X: +p.PosRadius, Y: +p.PosRadius})) // br
+		localPos[3] = r.toLocalSpace2d(p.PosCenter.Add(glx.Vec2{X: -p.PosRadius, Y: +p.PosRadius})) // bl
+	} else {
+		localPos[0] = r.toLocalSpace2d(p.Pos[0])
+		localPos[1] = r.toLocalSpace2d(p.Pos[1])
+		localPos[2] = r.toLocalSpace2d(p.Pos[2])
+		localPos[3] = r.toLocalSpace2d(p.Pos[3])
 	}
 
 	if !p.NoCulling && !r.cullingRect(localPos) {
@@ -353,11 +360,6 @@ func (r *Render) Draw2dCircle(p *Params2dCircle) {
 			{pos: localPos[2], color: localColor[2]},
 			{pos: localPos[3], color: localColor[3]},
 		},
-		center: glx.Vec2{
-			X: (localPos[0].X + localPos[1].X + localPos[2].X + localPos[3].X) / 4,
-			Y: (localPos[0].Y + localPos[1].Y + localPos[2].Y + localPos[3].Y) / 4,
-		},
-		radius:    glx.Vec1{X: localRadius},
 		thickness: glx.Vec1{X: glx.Clamp(p.HoleRadius, 0, 1)},
 		smooth:    glx.Vec1{X: glx.Clamp(p.Smooth, 0, 1)},
 	})

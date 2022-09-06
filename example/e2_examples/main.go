@@ -24,7 +24,7 @@ import (
 
 const appWidth = 720
 const appHeight = 480
-const currentDemo = demoE3Points
+const currentDemo = demoE4Circles
 const enablePprof = true
 
 // --------------------------

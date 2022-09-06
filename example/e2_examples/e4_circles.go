@@ -21,11 +21,12 @@ func e4Circles(rnd *vgl.Render) {
 	transformX := anim(animTransformX{}, time.Second*10, -200, 200)
 	transformY := anim(animTransformY{}, time.Second*15, -50, 50)
 	holeSize := anim(animHoleSize{}, time.Second*25, 0, 0.99)
-	smooth := anim(animSmooth{}, time.Second*5, 0.005, 0.01)
+	smooth := anim(animSmooth{}, time.Second*5, 0.005, 0.1)
 
 	rnd.Draw2dCircle(&vgl.Params2dCircle{
-		Center: glx.Vec2{X: centerX + transformX, Y: centerY + transformY},
-		Radius: radius,
+		PosUseCenterRadius: true,
+		PosCenter:          glx.Vec2{X: centerX + transformX, Y: centerY + transformY},
+		PosRadius:          radius,
 		ColorGradient: [4]glx.Color{
 			glx.ColorRed,
 			glx.ColorGreen,
@@ -37,10 +38,10 @@ func e4Circles(rnd *vgl.Render) {
 		Smooth:           smooth,
 	})
 
-	// todo: remove
 	rnd.Draw2dCircle(&vgl.Params2dCircle{
-		Center: glx.Vec2{X: centerX - transformX, Y: centerY + transformY},
-		Radius: radius,
+		PosUseCenterRadius: true,
+		PosCenter:          glx.Vec2{X: centerX - transformX, Y: centerY + transformY},
+		PosRadius:          radius,
 		ColorGradient: [4]glx.Color{
 			glx.ColorRed,
 			glx.ColorGreen,
@@ -48,7 +49,7 @@ func e4Circles(rnd *vgl.Render) {
 			glx.ColorWhite,
 		},
 		ColorUseGradient: true,
-		HoleRadius:       holeSize,
-		Smooth:           smooth,
+		HoleRadius:       0.5,
+		Smooth:           -1,
 	})
 }

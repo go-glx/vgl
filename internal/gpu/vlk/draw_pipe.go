@@ -383,10 +383,10 @@ func (vlk *VLK) plExecCallInstancedDraw(cb vulkan.CommandBuffer, _ *drawContext,
 		vulkan.CmdDrawIndexed(
 			cb,
 			indexCount*instPerCall,
-			instPerCall,
+			1, // todo
 			0,
 			int32(firstInst*vertexCount),
-			firstInst,
+			0,
 		)
 
 		vlk.stats.DrawCalls++

@@ -14,7 +14,6 @@ import (
 // todo: multisampling "vulkan.SampleCount4Bit" can be used for test "ErrorDeviceLost"
 // todo: set swapChain images count=1 (index out of range [1] with length 1) imageID > 0 can be created
 // todo: panic after 10-15 sec in circle demo at (result := vulkan.CreateGraphicsPipelines() in internal/pipeline/factory.go)
-// todo: slow points API (x500)
 // todo: validation warn, in e5_blending when switch screen resolution:
 //         UNASSIGNED-CoreValidation-DrawState-InvalidCommandBuffer-VkDescriptorSet(ERROR / SPEC):
 //         msgNum: -396268558 - Validation Error: [
@@ -25,6 +24,7 @@ import (
 //         You are adding vkCmdBindVertexBuffers() to VkCommandBuffer 0x1ea2518[]
 //         that is invalid because bound VkDescriptorSet 0x310000000031[] was destroyed or updated.
 // todo: new metrics api for timing groups
+// todo: panic when vertex buffer bigger than 16mb
 
 type (
 	surfaceID uint8

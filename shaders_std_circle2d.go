@@ -1,8 +1,6 @@
 package vgl
 
 import (
-	"bytes"
-
 	"github.com/vulkan-go/vulkan"
 
 	"github.com/go-glx/glx"
@@ -40,8 +38,6 @@ var (
 type (
 	shaderInputCircle2d struct {
 		vertexes  []shaderInputCircle2dVertex
-		center    glx.Vec2
-		radius    glx.Vec1
 		thickness glx.Vec1
 		smooth    glx.Vec1
 	}
@@ -65,18 +61,14 @@ func (d *shaderInputCircle2d) VertexData() []byte {
 }
 
 func (d *shaderInputCircle2d) StorageData() []byte {
-	buff := make([]byte, 0, glx.SizeOfVec2*3)
+	buff := make([]byte, 0, glx.SizeOfVec1*2)
 
 	// 8
-	buff = append(buff, d.center.Data()...)
-
-	// 8
-	buff = append(buff, d.radius.Data()...)
 	buff = append(buff, d.thickness.Data()...)
-
-	// 8
 	buff = append(buff, d.smooth.Data()...)
-	buff = append(buff, bytes.Repeat([]byte("0"), 4)...) // align to 8 bytes
+
+	// example:
+	// buff = append(buff, bytes.Repeat([]byte("0"), 4)...) // align to 8 bytes
 	// todo: move align outside of shader definition
 	// todo: 4 bytes is "magic" align, use device real align instead
 

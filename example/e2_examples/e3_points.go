@@ -42,8 +42,7 @@ func e3Points(rnd *vgl.Render) {
 		for x := gImg.Bounds().Min.X; x < gImg.Bounds().Max.X; x++ {
 			col := color.GrayModel.Convert(gImg.At(x, y)).(color.Gray)
 
-			// todo: 5 (after opt)
-			for i := 1; i <= 1; i++ {
+			for i := 1; i <= 5; i++ {
 				rnd.Draw2dPoint(&vgl.Params2dPoint{
 					Pos:   glx.Vec2{X: float32(x + (i * offset)), Y: float32(y + offset)},
 					Color: glx.ColorFromRGBA(col.Y, col.Y, col.Y, 255),

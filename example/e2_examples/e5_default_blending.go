@@ -87,8 +87,8 @@ func e5DefaultBlendingDrawTriangle(rnd *vgl.Render, origin glx.Vec2, angle glx.A
 
 func e5DefaultBlendingDrawCircle(rnd *vgl.Render, origin glx.Vec2, _ glx.Angle, size float32) {
 	rnd.Draw2dCircle(&vgl.Params2dCircle{
-		Center: origin,
-		Radius: size,
+		PosCenter: origin,
+		PosRadius: size,
 		ColorGradient: [4]glx.Color{
 			glx.ColorRed,
 			glx.ColorGreen,
