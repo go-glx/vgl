@@ -107,7 +107,7 @@ func (vlk *VLK) plSurfaceOnEveryGroup(groupFns ...drawGroupFn) drawSurfaceFn {
 
 func (vlk *VLK) plSurfaceOnEveryGroupExec(groupFns ...drawGroupExecFn) drawSurfaceFn {
 	return func(ctx *drawContext, surf *drawSurface) {
-		vlk.cont.frameManager().FrameApplyCommands(func(_ uint32, cb vulkan.CommandBuffer) {
+		vlk.cont.frameManager().FrameApplyCommands(vlk.drawFrameCtx, func(cb vulkan.CommandBuffer) {
 			for _, group := range surf.groups {
 				if len(group.instances) == 0 {
 					continue
@@ -127,7 +127,7 @@ func (vlk *VLK) plSurfaceOnEveryGroupExec(groupFns ...drawGroupExecFn) drawSurfa
 
 func (vlk *VLK) plUpdateGlobalRendererVars(ctx *drawContext) {
 	ctx.available = vlk.drawAvailable
-	ctx.currentImageID = vlk.drawImageID
+	ctx.currentFrameID = vlk.drawFrameCtx.FrameID()
 
 	vlk.stats.FrameIndex++
 	vlk.stats.DrawCalls = 0
@@ -138,7 +138,7 @@ func (vlk *VLK) plUpdateGlobalRendererVars(ctx *drawContext) {
 func (vlk *VLK) plClearVertexBuffers(ctx *drawContext) {
 	ts := time.Now()
 
-	vlk.cont.allocBuffers().ClearVertexBuffersOwnedBy(ctx.currentImageID)
+	vlk.cont.allocBuffers().ClearVertexBuffersOwnedBy(ctx.currentFrameID)
 
 	vlk.stats.SegmentDuration[metrics.SegmentPlClearBuffers] += time.Since(ts)
 }
@@ -168,7 +168,7 @@ func (vlk *VLK) plSurfaceUpdateGlobalUniform(ctx *drawContext, surf *drawSurface
 	uboData = append(uboData, projection.Data()...)
 
 	surf.uniform = vlk.cont.descriptorsManager().UpdateSet(
-		ctx.currentImageID,
+		ctx.currentFrameID,
 		dscptr.LayoutIndexGlobal,
 		map[uint32][]byte{
 			0: uboData,            // layout=0, binding=0 (vert shader only)
@@ -189,10 +189,11 @@ func (vlk *VLK) plGroupStats(_ *drawContext, _ *drawGroup) {
 func (vlk *VLK) plGroupCreateRenderingPipeline(_ *drawContext, g *drawGroup) {
 	cacheKey := g.shader.Meta().ID() + strconv.FormatInt(int64(g.polygonMode), 10)
 
-	if pipe, exist := vlk.drawPipelineCache[cacheKey]; exist {
-		g.renderPipe = pipe
-		return
-	}
+	// todo: cache is broken on screen resolution change
+	//if pipe, exist := vlk.drawPipelineCache[cacheKey]; exist {
+	//	g.renderPipe = pipe
+	//	return
+	//}
 
 	ts := time.Now()
 
@@ -238,7 +239,7 @@ func (vlk *VLK) plGroupFindIndexBuffer(_ *drawContext, g *drawGroup) {
 
 func (vlk *VLK) plGroupUpdateVertexBuffer(ctx *drawContext, g *drawGroup) {
 	ts := time.Now()
-	chunks := vlk.cont.allocBuffers().WriteVertexBuffersFromInstances(ctx.currentImageID, g.instances)
+	chunks := vlk.cont.allocBuffers().WriteVertexBuffersFromInstances(ctx.currentFrameID, g.instances)
 
 	firstInst := uint32(0)
 	lastInst := uint32(0)
@@ -317,7 +318,7 @@ func (vlk *VLK) plExecCallUpdateLocalUniforms(_ vulkan.CommandBuffer, ctx *drawC
 	}
 
 	localUniform := vlk.cont.descriptorsManager().UpdateSet(
-		ctx.currentImageID,
+		ctx.currentFrameID,
 		dscptr.LayoutIndexObject,
 		map[uint32][]byte{
 			0: data, // layout=1, binding=0 (all shaders)

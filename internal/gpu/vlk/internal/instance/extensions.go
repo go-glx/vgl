@@ -2,9 +2,8 @@ package instance
 
 import (
 	"fmt"
-	"strings"
-
 	"github.com/vulkan-go/vulkan"
+	"strings"
 
 	"github.com/go-glx/vgl/internal/gpu/vlk/internal/must"
 	"github.com/go-glx/vgl/internal/gpu/vlk/internal/vkconv"

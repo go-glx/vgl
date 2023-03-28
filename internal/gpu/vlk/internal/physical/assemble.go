@@ -28,17 +28,23 @@ func (d *Device) assembleGPU(logger vlkext.Logger, pd vulkan.PhysicalDevice) *GP
 		vkExtList = append(vkExtList, vkconv.NormalizeString(extName))
 	}
 
-	return &GPU{
+	gpu := &GPU{
 		logger:             logger,
 		Ref:                pd,
 		Props:              props,
 		Features:           features,
 		MemProperties:      memProperties,
 		Families:           d.assembleFamilies(pd),
-		Extensions:         d.assembleExtensions(pd),
-		SurfaceProps:       d.assembleSurfaceProps(pd),
 		RequiredExtensions: vkExtList,
 	}
+
+	if gpu.Families.supportGraphics && gpu.Families.supportPresent {
+		// load another gpu props only if gpu suitable for drawing
+		gpu.Extensions = d.assembleExtensions(pd)
+		gpu.SurfaceProps = d.assembleSurfaceProps(pd)
+	}
+
+	return gpu
 }
 
 func (d *Device) assembleFamilies(device vulkan.PhysicalDevice) Families {

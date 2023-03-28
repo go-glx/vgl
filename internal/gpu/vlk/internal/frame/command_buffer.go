@@ -6,16 +6,16 @@ import (
 	"github.com/go-glx/vgl/internal/gpu/vlk/internal/must"
 )
 
-func (m *Manager) commandBufferBegin() {
+func (m *Manager) commandBufferBegin(ctx Context) {
 	must.Work(
-		vulkan.BeginCommandBuffer(m.commandBuffers[m.frameID], &vulkan.CommandBufferBeginInfo{
+		vulkan.BeginCommandBuffer(m.commandBuffers[ctx.frameID], &vulkan.CommandBufferBeginInfo{
 			SType: vulkan.StructureTypeCommandBufferBeginInfo,
 		}),
 	)
 }
 
-func (m *Manager) commandBufferEnd() {
+func (m *Manager) commandBufferEnd(ctx Context) {
 	must.Work(
-		vulkan.EndCommandBuffer(m.commandBuffers[m.frameID]),
+		vulkan.EndCommandBuffer(m.commandBuffers[ctx.frameID]),
 	)
 }

@@ -1,6 +1,7 @@
 package vlk
 
 import (
+	"github.com/go-glx/vgl/internal/gpu/vlk/internal/frame"
 	"time"
 
 	"github.com/vulkan-go/vulkan"
@@ -25,6 +26,8 @@ import (
 //         that is invalid because bound VkDescriptorSet 0x310000000031[] was destroyed or updated.
 // todo: new metrics api for timing groups
 // todo: panic when vertex buffer bigger than 16mb
+// todo: pipeline cache is broken on screen resolution change (currently commented, need fix)
+// todo: broken caches/binds on resolution change in draw_pipe.go
 
 type (
 	surfaceID uint8
@@ -47,7 +50,7 @@ type VLK struct {
 
 	// drawing
 	drawAvailable        bool
-	drawImageID          uint32
+	drawFrameCtx         frame.Context
 	drawContext          *drawContext
 	drawExecution        drawCtxFn
 	drawShaderIndexesMap map[string]alloc.Allocation // shaderID -> allocation (is pointer to index buffer for this shader)'

@@ -2,7 +2,6 @@ package frame
 
 import (
 	"fmt"
-
 	"github.com/vulkan-go/vulkan"
 
 	"github.com/go-glx/vgl/internal/gpu/vlk/internal/command"
@@ -16,7 +15,22 @@ import (
 // todo: need some refactoring with available state management
 
 // how many continues errors is ok, before crash
-const maxWaitImageErrorsCount = 32
+const maxWaitImageErrorsCount = 16
+
+type (
+	frameID uint32
+	imageID uint32
+
+	Context struct {
+		isAvailable bool
+		frameID     frameID
+		imageID     imageID
+	}
+)
+
+func (c Context) FrameID() uint32 {
+	return uint32(c.frameID)
+}
 
 type Manager struct {
 	logger         vlkext.Logger
@@ -25,17 +39,12 @@ type Manager struct {
 	ld             *logical.Device
 	onSuboptimal   func()
 
-	available         *bool
-	frameID           uint32
-	imageID           uint32
-	count             uint32
-	waitImageErrCount uint32
+	count uint32
 
-	semRenderAvailable  map[uint32]vulkan.Semaphore
-	semPresentAvailable map[uint32]vulkan.Semaphore
-	syncFrameBusy       map[uint32]vulkan.Fence
-	syncImageBusy       map[uint32]vulkan.Fence
-	commandBuffers      map[uint32]vulkan.CommandBuffer
+	semRenderAvailable  map[frameID]vulkan.Semaphore
+	semPresentAvailable map[frameID]vulkan.Semaphore
+	syncFrameBusy       map[frameID]vulkan.Fence
+	commandBuffers      map[frameID]vulkan.CommandBuffer
 }
 
 func NewManager(
@@ -45,7 +54,6 @@ func NewManager(
 	chain *swapchain.Chain,
 	renderToScreenPass *renderpass.Pass,
 	onSuboptimal func(),
-	available *bool,
 ) *Manager {
 	m := &Manager{
 		logger:         logger,
@@ -53,25 +61,20 @@ func NewManager(
 		mainRenderPass: renderToScreenPass,
 		ld:             ld,
 		onSuboptimal:   onSuboptimal,
-		available:      available,
 
-		frameID:           0,
-		imageID:           0,
-		count:             uint32(pool.MainBuffersCount()),
-		waitImageErrCount: 0,
+		count: uint32(pool.MainBuffersCount()),
 
-		semRenderAvailable:  make(map[uint32]vulkan.Semaphore),
-		semPresentAvailable: make(map[uint32]vulkan.Semaphore),
-		syncFrameBusy:       make(map[uint32]vulkan.Fence),
-		syncImageBusy:       make(map[uint32]vulkan.Fence),
-		commandBuffers:      make(map[uint32]vulkan.CommandBuffer),
+		semRenderAvailable:  make(map[frameID]vulkan.Semaphore),
+		semPresentAvailable: make(map[frameID]vulkan.Semaphore),
+		syncFrameBusy:       make(map[frameID]vulkan.Fence),
+		commandBuffers:      make(map[frameID]vulkan.CommandBuffer),
 	}
 
 	for fID := uint32(0); fID < m.count; fID++ {
-		m.commandBuffers[fID] = pool.MainCommandBuffer(int(fID))
-		m.semRenderAvailable[fID] = allocateSemaphore(ld)
-		m.semPresentAvailable[fID] = allocateSemaphore(ld)
-		m.syncFrameBusy[fID] = allocateFence(ld)
+		m.commandBuffers[frameID(fID)] = pool.MainCommandBuffer(int(fID))
+		m.semRenderAvailable[frameID(fID)] = allocateSemaphore(ld)
+		m.semPresentAvailable[frameID(fID)] = allocateSemaphore(ld)
+		m.syncFrameBusy[frameID(fID)] = allocateFence(ld)
 	}
 
 	logger.Debug("frame manager created")
@@ -80,125 +83,113 @@ func NewManager(
 
 func (m *Manager) Free() {
 	for fID := uint32(0); fID < m.count; fID++ {
-		vulkan.DestroyFence(m.ld.Ref(), m.syncFrameBusy[fID], nil)
-		vulkan.DestroySemaphore(m.ld.Ref(), m.semPresentAvailable[fID], nil)
-		vulkan.DestroySemaphore(m.ld.Ref(), m.semRenderAvailable[fID], nil)
+		vulkan.DestroyFence(m.ld.Ref(), m.syncFrameBusy[frameID(fID)], nil)
+		vulkan.DestroySemaphore(m.ld.Ref(), m.semPresentAvailable[frameID(fID)], nil)
+		vulkan.DestroySemaphore(m.ld.Ref(), m.semRenderAvailable[frameID(fID)], nil)
 	}
 
 	m.logger.Debug("freed: frames manager")
 }
 
-func (m *Manager) FrameBegin() (uint32, bool) {
-	m.prepareFrame()
-	if !*m.available {
-		m.nextFrame()
-		return 0, false
+func (m *Manager) FrameBegin(prev Context) (Context, bool) {
+	// get next frame id
+	frmID := m.nextFrameID(prev.frameID)
+
+	// wait until this frame is ready for rendering to (frame = logical)
+	m.waitUntilFrameReady(frmID)
+
+	// acquire new imageID for rendering into (image = physical)
+	imgID, available := m.acquireNextImage(frmID)
+	if !available {
+		return Context{
+			isAvailable: false,
+			frameID:     0,
+			imageID:     0,
+		}, false
 	}
 
-	// start buffer
-	m.commandBufferBegin()
+	// create new context
+	ctx := Context{
+		isAvailable: true,
+		frameID:     frmID,
+		imageID:     imgID,
+	}
+
+	// run start commands
+	m.commandBufferBegin(ctx)
 
 	// start render pass
-	m.FrameApplyCommands(func(imageID uint32, cb vulkan.CommandBuffer) {
-		m.renderPassMainBegin(imageID, cb)
+	m.FrameApplyCommands(ctx, func(cb vulkan.CommandBuffer) {
+		m.renderPassMainBegin(uint32(imgID), cb)
 	})
 
-	// return current image
-	return m.imageID, true
+	// start user space command listening
+	return ctx, true
 }
 
-func (m *Manager) prepareFrame() {
-	*m.available = true
-	timeout := uint64(def.FrameAcquireTimeout.Nanoseconds())
-	renderDone := m.syncFrameBusy[m.frameID]
-
-	// wait for rendering in current frame is done
-	// then we can occupy current frame for next rendering
-	ok := m.notice(vulkan.WaitForFences(m.ld.Ref(), 1, []vulkan.Fence{renderDone}, vulkan.True, timeout))
-	if !ok {
-		*m.available = false
-		m.waitImageErrCount++
-
-		if m.waitImageErrCount > maxWaitImageErrorsCount {
-			panic(fmt.Errorf("render image not available after %d tries", maxWaitImageErrorsCount))
-		}
+func (m *Manager) FrameApplyCommands(ctx Context, apply func(cb vulkan.CommandBuffer)) {
+	if !ctx.isAvailable {
 		return
 	}
 
-	m.waitImageErrCount = 0
-
-	// acquire new image
-	var hasNextImage bool
-	m.imageID, hasNextImage = m.acquireNextImage()
-
-	if !hasNextImage {
-		// frame suboptimal, skip rendering
-		*m.available = false
-		return
-	}
-
-	// wait when image will be available
-	if imageBusy, inFlight := m.syncImageBusy[m.imageID]; inFlight {
-		m.notice(vulkan.WaitForFences(m.ld.Ref(), 1, []vulkan.Fence{imageBusy}, vulkan.True, timeout))
-	}
-	m.syncImageBusy[m.imageID] = renderDone
-
-	// reset render done fence
-	vulkan.ResetFences(m.ld.Ref(), 1, []vulkan.Fence{renderDone})
+	apply(m.commandBuffers[ctx.frameID])
 }
 
-func (m *Manager) FrameEnd() {
-	if !*m.available {
+func (m *Manager) FrameEnd(ctx Context) {
+	if !ctx.isAvailable {
 		return
 	}
 
 	// end render pass
-	m.FrameApplyCommands(func(imageID uint32, cb vulkan.CommandBuffer) {
+	m.FrameApplyCommands(ctx, func(cb vulkan.CommandBuffer) {
 		m.renderPassMainEnd(cb)
 	})
 
 	// end buffer
-	m.commandBufferEnd()
+	m.commandBufferEnd(ctx)
 
 	// submit rendering on GPU
-	m.submit()
-
-	// frame end
-	m.nextFrame()
+	m.submit(ctx.frameID, ctx.imageID)
 }
 
-func (m *Manager) FrameApplyCommands(apply func(imageID uint32, cb vulkan.CommandBuffer)) {
-	if !*m.available {
-		return
-	}
-
-	apply(m.imageID, m.commandBuffers[m.frameID])
+func (m *Manager) nextFrameID(current frameID) frameID {
+	return (current + 1) % frameID(m.count)
 }
 
-func (m *Manager) nextFrame() {
-	m.frameID = (m.frameID + 1) % m.count
+func (m *Manager) waitUntilFrameReady(frameID frameID) {
+	m.waitUntilFenceReady(m.syncFrameBusy[frameID])
 }
 
-func (m *Manager) submit() {
-	if !m.render() {
-		return
-	}
-
-	if !m.present() {
-		return
-	}
-
-	vulkan.QueueWaitIdle(m.ld.QueuePresent())
-}
-
-func (m *Manager) acquireNextImage() (uint32, bool) {
+func (m *Manager) waitUntilFenceReady(fence vulkan.Fence) {
 	timeout := uint64(def.FrameAcquireTimeout.Nanoseconds())
-	imageID := uint32(0)
+	triesCount := maxWaitImageErrorsCount
 
-	result := vulkan.AcquireNextImage(m.ld.Ref(), m.chain.Ref(), timeout, m.semRenderAvailable[m.frameID], nil, &imageID)
+	for triesCount > 0 {
+		// wait for rendering/logic in current frame is done
+		ok := m.notice(vulkan.WaitForFences(m.ld.Ref(), 1, []vulkan.Fence{fence}, vulkan.True, timeout))
+		if ok {
+			vulkan.ResetFences(m.ld.Ref(), 1, []vulkan.Fence{fence})
+			return
+		}
+
+		triesCount--
+		m.logger.Notice(fmt.Sprintf("busy: wait for device rendering done (%d tries left)..", triesCount))
+	}
+
+	panic(fmt.Errorf("render image not available after %d tries", maxWaitImageErrorsCount))
+	return
+}
+
+func (m *Manager) acquireNextImage(frameID frameID) (imageID, bool) {
+	timeout := uint64(def.FrameAcquireTimeout.Nanoseconds())
+
+	id := uint32(0)
+	result := vulkan.AcquireNextImage(m.ld.Ref(), m.chain.Ref(), timeout, m.semRenderAvailable[frameID], nil, &id)
+
 	if result == vulkan.ErrorOutOfDate || result == vulkan.Suboptimal {
 		// buffer size changes (window rebuildGraphicsPipeline, minimize, etc..)
 		// and not more valid
+		m.logger.Notice("Suboptimal or outOfDate image (maybe resolution changed). Will enforce pipeline recreation..")
 		m.onSuboptimal()
 		return 0, false
 	}
@@ -208,32 +199,44 @@ func (m *Manager) acquireNextImage() (uint32, bool) {
 		return 0, false
 	}
 
-	return imageID, true
+	return imageID(id), true
 }
 
-func (m *Manager) render() bool {
+func (m *Manager) submit(frameID frameID, imageID imageID) {
+	if !m.render(frameID) {
+		return
+	}
+
+	if !m.present(frameID, imageID) {
+		return
+	}
+
+	vulkan.QueueWaitIdle(m.ld.QueuePresent())
+}
+
+func (m *Manager) render(frameID frameID) bool {
 	info := vulkan.SubmitInfo{
 		SType:                vulkan.StructureTypeSubmitInfo,
 		WaitSemaphoreCount:   1,
-		PWaitSemaphores:      []vulkan.Semaphore{m.semRenderAvailable[m.frameID]},
+		PWaitSemaphores:      []vulkan.Semaphore{m.semRenderAvailable[frameID]},
 		PWaitDstStageMask:    []vulkan.PipelineStageFlags{vulkan.PipelineStageFlags(vulkan.PipelineStageColorAttachmentOutputBit)},
 		CommandBufferCount:   1,
-		PCommandBuffers:      []vulkan.CommandBuffer{m.commandBuffers[m.frameID]},
+		PCommandBuffers:      []vulkan.CommandBuffer{m.commandBuffers[frameID]},
 		SignalSemaphoreCount: 1,
-		PSignalSemaphores:    []vulkan.Semaphore{m.semPresentAvailable[m.frameID]},
+		PSignalSemaphores:    []vulkan.Semaphore{m.semPresentAvailable[frameID]},
 	}
 
-	return m.notice(vulkan.QueueSubmit(m.ld.QueueGraphics(), 1, []vulkan.SubmitInfo{info}, m.syncFrameBusy[m.frameID]))
+	return m.notice(vulkan.QueueSubmit(m.ld.QueueGraphics(), 1, []vulkan.SubmitInfo{info}, m.syncFrameBusy[frameID]))
 }
 
-func (m *Manager) present() bool {
+func (m *Manager) present(frameID frameID, imageID imageID) bool {
 	info := &vulkan.PresentInfo{
 		SType:              vulkan.StructureTypePresentInfo,
 		WaitSemaphoreCount: 1,
-		PWaitSemaphores:    []vulkan.Semaphore{m.semPresentAvailable[m.frameID]},
+		PWaitSemaphores:    []vulkan.Semaphore{m.semPresentAvailable[frameID]},
 		SwapchainCount:     1,
 		PSwapchains:        []vulkan.Swapchain{m.chain.Ref()},
-		PImageIndices:      []uint32{m.imageID},
+		PImageIndices:      []uint32{uint32(imageID)},
 	}
 
 	return m.notice(vulkan.QueuePresent(m.ld.QueuePresent(), info))

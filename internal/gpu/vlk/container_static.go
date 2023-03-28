@@ -2,7 +2,6 @@ package vlk
 
 import (
 	"fmt"
-
 	"github.com/vulkan-go/vulkan"
 
 	"github.com/go-glx/vgl/internal/gpu/vlk/internal/alloc"

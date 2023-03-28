@@ -56,7 +56,6 @@ func main() {
 		config.WithMobileFriendly(true),
 	))
 	rnd.ListenStats(onFrameEndStats)
-	gui := newGUI(rnd)
 
 	appAlive := true
 	go listenSignals(&appAlive)
@@ -66,12 +65,10 @@ func main() {
 
 	for appAlive {
 		rnd.FrameStart()
-		gui.frameStart()
 
 		clearScreen(rnd)
 		drawDemo(rnd)
 
-		gui.frameEnd()
 		rnd.FrameEnd()
 	}
 

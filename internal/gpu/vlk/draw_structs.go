@@ -19,7 +19,7 @@ const defaultInstancesCapacity = 512
 type (
 	drawContext struct {
 		available      bool           // is render available?
-		currentImageID uint32         // current swapChain imageID
+		currentFrameID uint32         // current swapChain imageID
 		surfaces       []*drawSurface // surfaces render queue
 	}
 

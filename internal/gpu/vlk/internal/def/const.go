@@ -35,8 +35,10 @@ var RequiredDeviceExtensions = []string{
 
 // OptimalSwapChainBuffersCount defines how many images/buffers we want
 // for optimal rendering
-//  Min: 2 (double buffering)
-//  Max: 3 (triple buffering)
+//
+//	Min: 2 (double buffering)
+//	Max: 3 (triple buffering)
+//
 // Recommended value 3. If GPU not support X Buffers, this will be
 // automatic clamped as clamp(X, gpuMin, gpuMax)
 const OptimalSwapChainBuffersCount = 3
@@ -59,8 +61,8 @@ const (
 // for latest frame<n = OptimalSwapChainBuffersCount - 1>
 // at frameStart. If GPU hang/lag and not present this N frame
 // on screen, after FrameAcquireTimeout CPU will panic and crash
-// application
-const FrameAcquireTimeout = time.Second * 3
+// application (before panic this will be retries X times)
+const FrameAcquireTimeout = time.Second
 
 // ShaderEntryPoint is entry point in shader bytecode
 // where GPU start executing shader code
@@ -75,18 +77,18 @@ const ShaderEntryPoint = "main"
 // it will be split into few draw Calls and buffer flush
 //
 // Recommended value:
-//  - too small = more draw calls, less performance in intensive applications
-//  - too big   = less draw calls, slower copy speed cpu->gpu = less performance in simple applications
-//  - 16MB      = good in most cases
+//   - too small = more draw calls, less performance in intensive applications
+//   - too big   = less draw calls, slower copy speed cpu->gpu = less performance in simple applications
+//   - 16MB      = good in most cases
 const BufferVertexSizeBytes = 16 * 1024 * 1024
 
 // BufferIndexSizeBytes used for initial pre-generated shader indexes
 // Count of indexed (batched) draw calls primary depend on this value
 //
 // Recommended value:
-//  - too small = more draw calls, less performance in intensive applications
-//  - too big   = just more GPU local immutable memory usage
-//  - 4MB       = good in most cases
+//   - too small = more draw calls, less performance in intensive applications
+//   - too big   = just more GPU local immutable memory usage
+//   - 4MB       = good in most cases
 const BufferIndexSizeBytes = 4 * 1024 * 1024
 
 // BufferUniformSizeBytes
@@ -109,10 +111,11 @@ const BufferStorageSizeBytes = 32 * 1024 * 1024
 // instanceSize = vertexSize * vertexesCount
 //
 // example:
-//   for triangle, we need 3 vertexes
-//   each vertex has 24 bytes (vec2(xy) + vec4(rgba))
-//   total is 72 bytes per instance
-//   total is 4_718_592 bytes (or 4.71 MB)
+//
+//	for triangle, we need 3 vertexes
+//	each vertex has 24 bytes (vec2(xy) + vec4(rgba))
+//	total is 72 bytes per instance
+//	total is 4_718_592 bytes (or 4.71 MB)
 //
 // this is maximum instance count, that can be drawn
 // in one draw-call. So, when we want draw 100k instances

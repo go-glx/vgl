@@ -44,7 +44,7 @@ func (vlk *VLK) FrameStart() {
 	}
 
 	// start command buffers
-	vlk.drawImageID, vlk.drawAvailable = vlk.cont.frameManager().FrameBegin()
+	vlk.drawFrameCtx, vlk.drawAvailable = vlk.cont.frameManager().FrameBegin(vlk.drawFrameCtx)
 }
 
 func (vlk *VLK) FrameEnd() {
@@ -56,7 +56,7 @@ func (vlk *VLK) FrameEnd() {
 	vlk.draw()
 
 	// submit command buffers
-	vlk.cont.frameManager().FrameEnd()
+	vlk.cont.frameManager().FrameEnd(vlk.drawFrameCtx)
 
 	// collect memory stats and then clean garbage
 	vlk.collectMemoryStats()

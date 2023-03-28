@@ -16,13 +16,6 @@ type Container struct {
 	rebuilder *rebuilder
 	wm        vlkext.WindowManager
 	cfg       *config.Config
-
-	// global state
-
-	// this only for use inside of Frame Manager
-	// it cannot be part of fm struct, because FM
-	// will be recreated every time, when GPU suboptimal (window resize)
-	vlkFrameRenderingAvailable bool
 }
 
 func NewContainer(

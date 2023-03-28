@@ -27,7 +27,6 @@ func (c *Container) frameManager() *frame.Manager {
 			c.swapChain(),
 			c.renderPassMain(),
 			c.rebuild,
-			&c.vlkFrameRenderingAvailable,
 		)
 	})
 }

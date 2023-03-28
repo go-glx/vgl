@@ -12,6 +12,35 @@ Also support custom SPIR-V shaders
 
 This library use Vulkan for sending GPU commands.
 
+## Development
+
+Currently package configured for development in go-work namespace (this will not change until 1.0 release)
+
+1. Install vgl, glx and other packages from `go.mod` into `/home/../go/src/github.com/go-glx`
+2. Add `go.work` file
+
+```
+go 1.20
+
+use (
+	vgl
+	vgl/arch/glfw
+	vgl/example
+	glx
+)
+```
+
+3. Run with CG `CGO_ENABLED=1` env variable (you need install gcc compiler)
+
+### Requirements in host (for lib development)
+
+- gcc
+- g++
+- deps for chosen window render arch:
+  - for glfw: x-libs (see instructions in https://github.com/go-gl/glfw)
+  - for opengl: todo 
+  - for SDL: todo 
+
 ## Usage
 
 This library can be used in high performance and rich graphic

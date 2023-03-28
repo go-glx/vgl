@@ -2,6 +2,8 @@ package command
 
 import (
 	"github.com/vulkan-go/vulkan"
+	"sync"
+	"time"
 
 	"github.com/go-glx/vgl/internal/gpu/vlk/internal/logical"
 	"github.com/go-glx/vgl/internal/gpu/vlk/internal/must"
@@ -19,20 +21,26 @@ type Pool struct {
 	// main command buffers, used for draw commands
 	// one buffer for each swapChain image
 	mainBuffers []vulkan.CommandBuffer
+
+	// tmp buffers copy sync
+	tmpBufferGPUSyncFence vulkan.Fence
+	tmpBufferCPUSyncMux   sync.Mutex
 }
 
 func NewPool(logger vlkext.Logger, pd *physical.Device, ld *logical.Device) *Pool {
 	pool, buffers := createPool(pd, ld)
 	return &Pool{
-		logger:      logger,
-		pd:          pd,
-		ld:          ld,
-		ref:         pool,
-		mainBuffers: buffers,
+		logger:                logger,
+		pd:                    pd,
+		ld:                    ld,
+		ref:                   pool,
+		mainBuffers:           buffers,
+		tmpBufferGPUSyncFence: allocateFence(ld),
 	}
 }
 
 func (p *Pool) Free() {
+	vulkan.DestroyFence(p.ld.Ref(), p.tmpBufferGPUSyncFence, nil)
 	vulkan.FreeCommandBuffers(p.ld.Ref(), p.ref, uint32(len(p.mainBuffers)), p.mainBuffers)
 	vulkan.DestroyCommandPool(p.ld.Ref(), p.ref, nil)
 
@@ -55,6 +63,11 @@ func (p *Pool) MainCommandBuffer(ind int) vulkan.CommandBuffer {
 // All written commands will be automatically executed in GPU
 // after exec
 func (p *Pool) TemporaryBuffer(exec func(cb vulkan.CommandBuffer)) {
+	// lock cpu
+	p.tmpBufferCPUSyncMux.Lock()
+	defer p.tmpBufferCPUSyncMux.Unlock()
+	vulkan.ResetFences(p.ld.Ref(), 1, []vulkan.Fence{p.tmpBufferGPUSyncFence})
+
 	// create tmp command buffer
 	buffers := createBuffers(p.ld.Ref(), p.ref, 1)
 	tmpBuffer := buffers[0]
@@ -73,12 +86,13 @@ func (p *Pool) TemporaryBuffer(exec func(cb vulkan.CommandBuffer)) {
 	submitInfo := vulkan.SubmitInfo{
 		SType:              vulkan.StructureTypeSubmitInfo,
 		CommandBufferCount: 1,
-		PCommandBuffers:    []vulkan.CommandBuffer{buffers[0]},
+		PCommandBuffers:    []vulkan.CommandBuffer{tmpBuffer},
 	}
-	vulkan.QueueSubmit(p.ld.QueueGraphics(), 1, []vulkan.SubmitInfo{submitInfo}, nil)
+	vulkan.QueueSubmit(p.ld.QueueGraphics(), 1, []vulkan.SubmitInfo{submitInfo}, p.tmpBufferGPUSyncFence)
 
 	// wait for GPU execute it
-	vulkan.QueueWaitIdle(p.ld.QueuePresent())
+	timeout := uint64((time.Millisecond * 300).Nanoseconds())
+	must.NotCare(p.logger, vulkan.WaitForFences(p.ld.Ref(), 1, []vulkan.Fence{p.tmpBufferGPUSyncFence}, vulkan.True, timeout))
 
 	// now command buffer is not used anymore
 	// and can be destroyed safely
@@ -116,4 +130,16 @@ func createBuffers(ld vulkan.Device, pool vulkan.CommandPool, buffersCount uint3
 	must.Work(vulkan.AllocateCommandBuffers(ld, allocInfo, buffers))
 
 	return buffers
+}
+
+func allocateFence(ld *logical.Device) vulkan.Fence {
+	createInfo := &vulkan.FenceCreateInfo{
+		SType: vulkan.StructureTypeFenceCreateInfo,
+		Flags: vulkan.FenceCreateFlags(vulkan.FenceCreateSignaledBit),
+	}
+
+	var fence vulkan.Fence
+	must.Work(vulkan.CreateFence(ld.Ref(), createInfo, nil, &fence))
+
+	return fence
 }
